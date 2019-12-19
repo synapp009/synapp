@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'arrow.dart';
 import 'window.dart';
 
 class Constants {
@@ -21,20 +22,15 @@ class Constants {
     return positionForDrop = Offset(null, null);
   }
 
-  static Map<Key, dynamic> initializeArrowMap(Map<Key, dynamic> arrowMap) {
-    return arrowMap = {
-      null: Arrow(
-        target: null,
-        arrowed: true,
-        size: Size(0, 0),
-      )
+static Map<Key,bool> initializeSelectedMap(Map<Key,bool> selectedMap){
+  return selectedMap = {null:false};
+}
+
+  static Map<Key,List<Arrow>> initializeArrowMap(Map<Key,List<Arrow>> arrowMap) {
+    return arrowMap = { null: 
+      []
     };
   }
 }
 
-class Arrow {
-  Key target;
-  bool arrowed;
-  Size size;
-  Arrow({this.target, this.arrowed, this.size});
-}
+

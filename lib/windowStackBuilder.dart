@@ -51,24 +51,4 @@ class WindowStackBuilder extends StatelessWidget {
     return stackItemsList;
   }
 
-
-List<Widget> arrowItems(BuildContext context) {
-  var dataProvider = Provider.of<Data>(context);
-  List<Widget> arrowItemsList = [];
-  var arrowItemMoveable;
-  List childKeyList =[];
-print(dataProvider.arrowMap);
-  if (dataProvider.arrowMap.length > 1) {
-    dataProvider.arrowMap.forEach((k, v) => {
-          if (k == null || itemKey != k ) {print('$k not!')}else{childKeyList.add(k)}
-        });
-
-    for (int i = 0; i < childKeyList.length; i++) {
-      arrowItemMoveable = ArrowWidget(childKeyList[i]);
-
-      arrowItemsList.add(arrowItemMoveable);
-    }
-  }
-  return arrowItemsList;
-}
 }

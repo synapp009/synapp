@@ -1,81 +1,84 @@
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
 
+import 'arrow.dart';
 import 'data.dart';
 
 class ArrowWidget extends StatelessWidget {
-  Key itemKey;
-  ArrowWidget(this.itemKey);
+  Key originKey;
+  Key targetKey;
+  ArrowWidget(this.originKey, this.targetKey);
 
   var width;
   var top;
   var left;
-
   var size;
   var sector;
+
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-    var itemScale = dataProvider.structureMap[itemKey].scale;
+    var itemScale = dataProvider.structureMap[originKey].scale;
     var stackScale = dataProvider.stackScale;
-    var itemPosition = (dataProvider.getPositionOfRenderBox(itemKey) -
+    var itemPosition = (dataProvider.getPositionOfRenderBox(originKey) -
             dataProvider.stackOffset) /
         stackScale;
-    var itemSize = dataProvider.structureMap[itemKey].size * itemScale;
+    var itemSize = dataProvider.structureMap[originKey].size * itemScale;
 
+    Size connectedSizeCalculator() {
+      //print('$originKey, has ${arrow.target} and ${arrow.origin}');
+
+      var targetPosition = (dataProvider.getPositionOfRenderBox(targetKey) -
+              dataProvider.stackOffset) /
+          stackScale;
+      var width = targetPosition.dx - itemPosition.dx;
+      var height = targetPosition.dy - itemPosition.dy;
+      var tempSize;
+      return tempSize = Size(width, height);
+    }
+
+    // print('$originKey, has ${arrow.size}');
     Offset cartesianPosition() {
       var dy;
       var dx;
-      Offset tempOffset;
+      var arrow;
+      dataProvider.arrowMap[originKey].forEach((Arrow k) => {
+            if (k.target == targetKey) {arrow = k}
+          });
 
-      if (dataProvider.arrowMap[itemKey].size.height > 0 &&
-          dataProvider.arrowMap[itemKey].size.width > 0) {
+      if (arrow.size.height > 0 && arrow.size.width > 0) {
         //X2
         sector = 2;
         dy = itemPosition.dy + (itemSize.height / 2);
         dx = itemPosition.dx + (itemSize.width / 2);
-      } else if (dataProvider.arrowMap[itemKey].size.height < 0 &&
-          dataProvider.arrowMap[itemKey].size.width > 0) {
+      } else if (arrow.size.height < 0 && arrow.size.width > 0) {
         //X1
         sector = 1;
-        dy = (itemPosition.dy + itemSize.height / 2) +
-            dataProvider.arrowMap[itemKey].size.height;
+        dy = (itemPosition.dy + itemSize.height / 2) + arrow.size.height;
         dx = itemPosition.dx + itemSize.width / 2;
-      } else if (dataProvider.arrowMap[itemKey].size.height > 0 &&
-          dataProvider.arrowMap[itemKey].size.width < 0) {
+      } else if (arrow.size.height > 0 && arrow.size.width < 0) {
         //X3
         sector = 3;
         dy = itemPosition.dy + itemSize.height / 2;
-        dx = itemPosition.dx +
-            itemSize.width / 2 +
-            dataProvider.arrowMap[itemKey].size.width;
+        dx = itemPosition.dx + itemSize.width / 2 + arrow.size.width;
       } else {
         //X4
         sector = 4;
-        dy = (itemPosition.dy + itemSize.height / 2) +
-            dataProvider.arrowMap[itemKey].size.height;
-        dx = itemPosition.dx +
-            itemSize.width / 2 +
-            dataProvider.arrowMap[itemKey].size.width;
+        dy = (itemPosition.dy + itemSize.height / 2) + arrow.size.height;
+        dx = itemPosition.dx + itemSize.width / 2 + arrow.size.width;
       }
+      var tempOffset = Offset(dx, dy);
 
-      return tempOffset = Offset(dx, dy);
+      return tempOffset;
     }
 
     return Positioned(
       top: cartesianPosition().dy,
       left: cartesianPosition().dx,
-      child: Container(
-        width: (dataProvider.arrowMap[itemKey].size.width + (itemScale - 1/itemScale)*itemSize.width).abs(),
-        height: dataProvider.arrowMap[itemKey].size.height.abs(),
-        color: Colors.green,
-        child: CustomPaint(
-          size: Size(
-            dataProvider.arrowMap[itemKey].size.width,
-            dataProvider.arrowMap[itemKey].size.height,
-          ),
-          foregroundPainter: MyPainter(sector),
-        ),
+      child: CustomPaint(
+        size: connectedSizeCalculator(),
+        foregroundPainter: MyPainter(sector),
       ),
     );
   }

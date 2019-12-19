@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
@@ -21,7 +22,7 @@ class _WindowWidgetState extends State<WindowWidget>
   double _scale;
   AnimationController _controller;
   Timer _timer;
-  bool _isSelected = false;
+
   int maxSimultaneousDrags = 1;
   bool _isTapped = false;
 
@@ -59,31 +60,6 @@ class _WindowWidgetState extends State<WindowWidget>
   double stackScale;
   Offset offset = Offset(0, 0);
 
-  _isPointerMoving() {
-    _timer = new Timer(const Duration(milliseconds: 200), () {
-      setState(() {
-        if (!pointerMoving && !_isSelected) {
-          _controller.forward();
-          if (pointerUp) {
-            _controller.reverse();
-            pointerUp = false;
-          }
-        }
-      });
-    });
-  }
-
-  _animation() {
-    _controller.forward();
-    _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
-      setState(() {
-        _isSelected = _isSelected ? false : true;
-
-        _controller.reverse();
-      });
-    });
-  }
-
   tonedColor(Color color) {
     Color tempColor;
     var newR = color.red * (1 / 1.2);
@@ -96,8 +72,39 @@ class _WindowWidgetState extends State<WindowWidget>
   @override
   Widget build(BuildContext context) {
     dataProvider = Provider.of<Data>(context);
+    //bool dataProvider.selectedMap[key] = dataProvider.selectedMap[key];
+
+    _isPointerMoving() {
+      _timer = new Timer(const Duration(milliseconds: 200), () {
+        setState(() {
+          if (!pointerMoving && !dataProvider.selectedMap[key]) {
+            _controller.forward();
+            if (pointerUp) {
+              _controller.reverse();
+              pointerUp = false;
+            }
+          }
+        });
+      });
+    }
+
+    _animation() {
+      _controller.forward();
+      _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
+        setState(() {
+          dataProvider.selectedMap[key] =
+              dataProvider.selectedMap[key] ? false : true;
+
+          _controller.reverse();
+        });
+      });
+    }
+
     stackScale = dataProvider.stackScale;
     itemScale = dataProvider.structureMap[key].scale;
+
+    //scale-animation
+
     if (key == dataProvider.actualItemKey && !pointerMoving && !_isTapped) {
       _scale = 1 + _controller.value;
     } else if (key == dataProvider.actualItemKey &&
@@ -154,24 +161,65 @@ class _WindowWidgetState extends State<WindowWidget>
                 onLongPressStart: (details) {
                   HapticFeedback.lightImpact();
                   dataProvider.addArrow(key);
+                  dataProvider.onlySelectThis(key);
                 },
                 onLongPressMoveUpdate: (details) {
+                  Map<Key, Offset> renderBoxesOffset = {};
+                  List targetList = [];
+                  dataProvider.structureMap.forEach((k, v) => {
+                        renderBoxesOffset[k] =
+                            dataProvider.getPositionOfRenderBox(k),
+                        // print('renderBoxOffset $k ${renderBoxesOffset[k].dy}'),
+                        //print('details global position dy ${details.globalPosition.dy}'),
+                        //print(dataProvider.statusBarHeight),
+                        if (details.globalPosition.dx >
+                                renderBoxesOffset[k].dx &&
+                            details.globalPosition.dx <
+                                renderBoxesOffset[k].dx +
+                                    dataProvider.structureMap[k].size.width *
+                                        dataProvider.structureMap[k].scale &&
+                            (details.globalPosition.dy -
+                                    dataProvider.headerHeight()) >
+                                renderBoxesOffset[k].dy &&
+                            details.globalPosition.dy -
+                                    dataProvider.headerHeight() <
+                                renderBoxesOffset[k].dy +
+                                    dataProvider.structureMap[k].size.height *
+                                        dataProvider.structureMap[k].scale)
+                          {
+                            dataProvider.selectedMap[k] = true,
+                            targetList = dataProvider.getAllTargets(k),
+                            targetList.forEach(
+                                (k) => dataProvider.selectedMap[k] = false)
+                          }
+                        else
+                          {
+                            k != key
+                                ? dataProvider.selectedMap[k] = false
+                                : dataProvider.selectedMap[k] = true
+                          }
+                      });
+
                   dataProvider.sizeSetter(key, details.globalPosition);
+                },
+                onLongPressEnd: (details) {
+                  dataProvider.connectAndUnselect(key);
+           
                 },
                 onTap: () {
                   FocusScope.of(context).requestFocus(
                     new FocusNode(),
                   );
                   _isTapped = true;
-                  //_isSelected = !_isSelected;
+                  //dataProvider.selectedMap[key] = !dataProvider.selectedMap[key];
                   _animation();
-                  maxSimultaneousDrags = _isSelected ? 0 : 1;
+                  maxSimultaneousDrags = dataProvider.selectedMap[key] ? 0 : 1;
                   _isTapped = false;
                 },
                 child: LongPressDraggable(
                     key: draggableKey,
                     hapticFeedbackOnStart: true,
-                    maxSimultaneousDrags: _isSelected ? 0 : 1,
+                    maxSimultaneousDrags: dataProvider.selectedMap[key] ? 0 : 1,
                     onDragEnd: (DraggableDetails details) {
                       onDragEndOffset = details.offset;
                     },
@@ -260,11 +308,13 @@ class _WindowWidgetState extends State<WindowWidget>
               child: Material(
                 shape: SuperellipseShape(
                     side: BorderSide(
-                        color: _isSelected ? Colors.black : Colors.transparent,
+                        color: dataProvider.selectedMap[key]
+                            ? Colors.black
+                            : Colors.transparent,
                         width: 1 * itemScale),
                     borderRadius: BorderRadius.circular(28 * itemScale)),
                 //margin: EdgeInsets.all(0),
-                color: _isSelected
+                color: dataProvider.selectedMap[key]
                     ? tonedColor(dataProvider.structureMap[key].color)
                     : dataProvider.structureMap[key].color,
                 child: WindowStackBuilder(key),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'arrow.dart';
 import 'textboxWidget.dart';
 
 import 'windowWidget.dart';
@@ -10,7 +11,6 @@ import 'data.dart';
 class ItemStackBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    print('$key itmeStackbulider rebuild');
     //print(Provider.of<Data>(context).notifier.value.getRow(0)[0]);
     var dataProvider = Provider.of<Data>(context);
 
@@ -43,9 +43,9 @@ class ItemStackBuilder extends StatelessWidget {
         },
         onLeave: (dynamic data) {},
         onAccept: (dynamic data) {},
-      ),...stackItems(context),...arrowItems(context),
-      
-      
+      ),
+      ...stackItems(context),
+      ...arrowItems(context)
     ]);
   }
 
@@ -72,19 +72,11 @@ class ItemStackBuilder extends StatelessWidget {
 List<Widget> arrowItems(BuildContext context) {
   var dataProvider = Provider.of<Data>(context);
   List<Widget> arrowItemsList = [];
-  var arrowItemMoveable;
-  List childKeyList =[];
+  Map<Key, List<Arrow>> arrowMap = dataProvider.arrowMap;
+  arrowMap.forEach((Key originKey, List<Arrow> arrowList) => {
+        arrowList.forEach((Arrow tempArrow) =>
+            arrowItemsList.add(ArrowWidget(originKey, tempArrow.target)))
+      });
 
-  if (dataProvider.arrowMap.length > 1) {
-    dataProvider.arrowMap.forEach((k, v) => {
-          if (k == null ) {}else{childKeyList.add(k)}
-        });
-
-    for (int i = 0; i < childKeyList.length; i++) {
-      arrowItemMoveable = ArrowWidget(childKeyList[i]);
-
-      arrowItemsList.add(arrowItemMoveable);
-    }
-  }
   return arrowItemsList;
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
+import 'arrow.dart';
 import 'constants.dart';
 import 'fitTextField.dart';
 import 'window.dart';
@@ -10,7 +11,8 @@ class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
 
   Map<Key, dynamic> structureMap;
-  Map<Key, dynamic> arrowMap;
+  Map<Key, List<Arrow>> arrowMap;
+  Map<Key, bool> selectedMap;
 
   Key actualTarget;
   Offset positionForDrop;
@@ -29,9 +31,10 @@ class Data with ChangeNotifier {
     structureMap = Constants.initializeStructure(structureMap);
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
+    selectedMap = Constants.initializeSelectedMap(selectedMap);
   }
 
-  Map<Key, Map<Key, bool>> get getArrowMap => arrowMap;
+  Map<Key, List<Arrow>> get getArrowMap => arrowMap;
 
   Map<Key, dynamic> get getStructureMap => structureMap;
 
@@ -75,7 +78,7 @@ class Data with ChangeNotifier {
         title: windowKey.toString(),
         childKeys: [],
         scale: 1.0);
-
+    selectedMap[windowKey] = false;
     notifyListeners();
   }
 
@@ -97,6 +100,14 @@ class Data with ChangeNotifier {
         scale: 1.0,
         textSize: 16);
 
+    notifyListeners();
+  }
+
+  void onlySelectThis(key) {
+    selectedMap.forEach((k, v) => {
+          if (k != key) {selectedMap[k] = false}
+        });
+    print(selectedMap);
     notifyListeners();
   }
 
@@ -174,25 +185,37 @@ class Data with ChangeNotifier {
   }
 
   void addArrow(key) {
-    arrowMap[key] = Arrow(
-      target: null,
-      arrowed: false,
-      size: Size(0, 0),
+    //adds an Arrow to the list of arrows from origin widget to null
+if(arrowMap[key] == null){
+  arrowMap[key] = [];
+}
+    arrowMap[key].add(
+      Arrow(arrowed: false, target: null,size:Size(0,0),),
     );
+
     notifyListeners();
   }
 
   sizeSetter(Key startKey, actualPointer) {
+    //set the size of the Arrow between to widgets and also the color
+
     var stackScale = notifier.value.row0[0];
     var itemSize = structureMap[startKey].size;
     var itemOffset = getPositionOfRenderBox(startKey);
-    var width =
-        (actualPointer.dx - itemOffset.dx) / stackScale - (itemSize.height / 2);
+    var itemScale = structureMap[startKey].scale;
+    var width = (actualPointer.dx - itemOffset.dx) / stackScale -
+        (itemSize.height / 2) * itemScale;
     var height =
         (actualPointer.dy - headerHeight() - itemOffset.dy) / stackScale -
-            (itemSize.height / 2);
+            (itemSize.height / 2) * itemScale;
 
-    arrowMap[startKey].size = Size(width, height);
+    arrowMap[startKey].forEach((k)=>{
+      if (k.target == null){
+        k.size = Size(width,height)
+      }
+    });
+
+
     notifyListeners();
   }
 
@@ -208,5 +231,22 @@ class Data with ChangeNotifier {
                 itemScale /
                 stackScale -
             pointerDownOffset.dy));
+  }
+
+  connectAndUnselect(Key itemKey) {
+    //connect two widgets with ArrowWidget and unselect all afterwards
+    selectedMap.forEach((Key k, bool v) => {
+          if (k != itemKey && v == true)
+            {selectedMap[k] = false, 
+            arrowMap[itemKey].forEach((l)=>{
+              if(l.target == null) {
+                l.target = k
+              }
+            })
+        }});
+
+    selectedMap[itemKey] = false;
+
+    notifyListeners();
   }
 }
