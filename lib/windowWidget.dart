@@ -25,6 +25,8 @@ class _WindowWidgetState extends State<WindowWidget>
 
   int maxSimultaneousDrags = 1;
   bool _isTapped = false;
+  bool _dragStarted = false;
+  GlobalKey feedbackKey = GlobalKey();
 
   @override
   void initState() {
@@ -136,6 +138,7 @@ class _WindowWidgetState extends State<WindowWidget>
               },
               onPointerCancel: (details) {
                 pointerMoving = false;
+                dataProvider.actualFeedbackKey = null;
               },
               onPointerUp: (PointerUpEvent event) {
                 _controller.reverse();
@@ -144,12 +147,20 @@ class _WindowWidgetState extends State<WindowWidget>
                 pointerMoving = false;
                 dataProvider.firstItem = true;
                 offset = Offset(0, 0);
+                dataProvider.actualFeedbackKey = null;
               },
               onPointerMove: (PointerMoveEvent event) {
+                if (_dragStarted && dataProvider.arrowMap[key] != null) {
+                  dataProvider.updateArrowNet(key, feedbackKey);
+                  dataProvider.actualFeedbackKey = feedbackKey;
+                }
+
                 offset = Offset(
                     offset.dx + event.delta.dx, offset.dy + event.delta.dy);
 
                 _controller.reverse();
+
+                //set if Pointer is Moving with threshold
                 if ((event.localPosition.dx - pointerDownOffset.dx).abs() >
                         30 / itemScale ||
                     (event.localPosition.dy - pointerDownOffset.dy).abs() >
@@ -160,13 +171,17 @@ class _WindowWidgetState extends State<WindowWidget>
               child: GestureDetector(
                 onLongPressStart: (details) {
                   HapticFeedback.lightImpact();
+
                   dataProvider.addArrow(key);
+
                   dataProvider.onlySelectThis(key);
                 },
                 onLongPressMoveUpdate: (details) {
                   Map<Key, Offset> renderBoxesOffset = {};
                   List targetList = [];
+
                   dataProvider.structureMap.forEach((k, v) => {
+                        //hit Test
                         renderBoxesOffset[k] =
                             dataProvider.getPositionOfRenderBox(k),
                         // print('renderBoxOffset $k ${renderBoxesOffset[k].dy}'),
@@ -204,7 +219,6 @@ class _WindowWidgetState extends State<WindowWidget>
                 },
                 onLongPressEnd: (details) {
                   dataProvider.connectAndUnselect(key);
-           
                 },
                 onTap: () {
                   FocusScope.of(context).requestFocus(
@@ -222,8 +236,11 @@ class _WindowWidgetState extends State<WindowWidget>
                     maxSimultaneousDrags: dataProvider.selectedMap[key] ? 0 : 1,
                     onDragEnd: (DraggableDetails details) {
                       onDragEndOffset = details.offset;
+                      _dragStarted = false;
                     },
-                    onDragStarted: () {},
+                    onDragStarted: () {
+                      _dragStarted = true;
+                    },
                     onDragCompleted: () {
                       setState(() {
                         dataProvider.structureMap[key].position =
@@ -242,7 +259,8 @@ class _WindowWidgetState extends State<WindowWidget>
                     childWhenDragging: Container(),
                     feedback: ListenableProvider<Data>.value(
                       value: Provider.of<Data>(context),
-                      child: FeedbackWindowWidget(key, pointerDownOffset),
+                      child: FeedbackWindowWidget(
+                          key, pointerDownOffset, feedbackKey),
                     ),
                     child: _animatedButtonUI,
                     data: dataProvider.structureMap[key]),

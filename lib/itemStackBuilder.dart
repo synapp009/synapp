@@ -15,38 +15,38 @@ class ItemStackBuilder extends StatelessWidget {
     var dataProvider = Provider.of<Data>(context);
 
     return Stack(overflow: Overflow.visible, children: [
-      DragTarget(
-        builder: (buildContext, List<dynamic> candidateData, rejectData) {
-          return Container(
-              color: Colors.blue,
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height);
-        },
-        onWillAccept: (dynamic data) {
-          dataProvider.actualTarget = null;
-          if (dataProvider.structureMap[key].key !=
-                  data.key /*&&
-              !dataProvider.structureMap[data.key].childKeys.contains(key) &&
-              !dataProvider.structureMap[key].childKeys.contains(data.key)*/
-              ) {
-            // dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
-            var stackOffset = Offset(dataProvider.notifier.value.row0.a,
-                dataProvider.notifier.value.row1.a);
-            dataProvider.actualTarget = null;
-            dataProvider.structureMap[data.key].scale = 1.0;
-            dataProvider.currentTargetPosition = stackOffset;
-            dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
-            return true;
-          } else {
-            return false;
-          }
-        },
-        onLeave: (dynamic data) {},
-        onAccept: (dynamic data) {},
-      ),
-      ...stackItems(context),
-      ...arrowItems(context)
-    ]);
+        DragTarget(
+    builder: (buildContext, List<dynamic> candidateData, rejectData) {
+      return Container(
+          color: Color.fromARGB(100, 71, 2, 255),
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height);
+    },
+    onWillAccept: (dynamic data) {
+      dataProvider.actualTarget = null;
+      if (dataProvider.structureMap[key].key !=
+              data.key /*&&
+          !dataProvider.structureMap[data.key].childKeys.contains(key) &&
+          !dataProvider.structureMap[key].childKeys.contains(data.key)*/
+          ) {
+        // dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
+        var stackOffset = Offset(dataProvider.notifier.value.row0.a,
+            dataProvider.notifier.value.row1.a);
+        dataProvider.actualTarget = null;
+        dataProvider.structureMap[data.key].scale = 1.0;
+        dataProvider.currentTargetPosition = stackOffset;
+        dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
+        return true;
+      } else {
+        return false;
+      }
+    },
+    onLeave: (dynamic data) {},
+    onAccept: (dynamic data) {},
+        ),
+        ...stackItems(context),
+        ...arrowItems(context)
+      ]);
   }
 
   List<Widget> stackItems(BuildContext context) {

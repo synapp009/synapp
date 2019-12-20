@@ -4,7 +4,8 @@ class Arrow {
 
   Key target;
   bool arrowed;
+  Offset position;
   Size size;
   Color color;
-  Arrow({this.target, this.arrowed, this.size});
+  Arrow({this.target, this.arrowed, this.position, this.size});
 }

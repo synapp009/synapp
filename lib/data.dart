@@ -22,6 +22,7 @@ class Data with ChangeNotifier {
   double stackScale = 1.0;
   double statusBarHeight;
 
+  Key actualFeedbackKey;
   Key actualItemKey;
   bool firstItem = true;
 
@@ -107,7 +108,6 @@ class Data with ChangeNotifier {
     selectedMap.forEach((k, v) => {
           if (k != key) {selectedMap[k] = false}
         });
-    print(selectedMap);
     notifyListeners();
   }
 
@@ -133,13 +133,14 @@ class Data with ChangeNotifier {
   }
 
   Offset getPositionOfRenderBox(targetKey) {
-    //with expensive RenderedBox, maybe better options?
-    Offset tempPosition;
+    //with expensive RenderedBox, --> maybe better options?
 
+    Offset tempPosition;
     if (targetKey != null) {
       RenderBox targetRenderObject =
           targetKey.currentContext.findRenderObject();
       tempPosition = targetRenderObject.localToGlobal(Offset.zero);
+
       currentTargetPosition =
           Offset(tempPosition.dx, tempPosition.dy - headerHeight());
       return tempPosition = currentTargetPosition;
@@ -186,41 +187,83 @@ class Data with ChangeNotifier {
 
   void addArrow(key) {
     //adds an Arrow to the list of arrows from origin widget to null
-if(arrowMap[key] == null){
-  arrowMap[key] = [];
-}
+    if (arrowMap[key] == null) {
+      arrowMap[key] = [];
+    }
     arrowMap[key].add(
-      Arrow(arrowed: false, target: null,size:Size(0,0),),
+      Arrow(
+        arrowed: false,
+        target: null,
+        size: Size(0, 0),
+        position: Offset(0, 0),
+      ),
     );
 
     notifyListeners();
   }
 
-  sizeSetter(Key startKey, actualPointer) {
-    //set the size of the Arrow between to widgets and also the color
+  updateArrowNet(Key originKey, GlobalKey feedbackKey) {
+//web the net of arrows a) origing in and b) targeting originKey
 
-    var stackScale = notifier.value.row0[0];
-    var itemSize = structureMap[startKey].size;
-    var itemOffset = getPositionOfRenderBox(startKey);
-    var itemScale = structureMap[startKey].scale;
-    var width = (actualPointer.dx - itemOffset.dx) / stackScale -
-        (itemSize.height / 2) * itemScale;
-    var height =
-        (actualPointer.dy - headerHeight() - itemOffset.dy) / stackScale -
-            (itemSize.height / 2) * itemScale;
+    var originSize = structureMap[originKey].size;
+    var originOffset = getPositionOfRenderBox(originKey);
+    var originScale = structureMap[originKey].scale;
 
-    arrowMap[startKey].forEach((k)=>{
-      if (k.target == null){
-        k.size = Size(width,height)
-      }
-    });
+    RenderBox feedbackRenderBox = feedbackKey.currentContext.findRenderObject();
+    var feedbackSize = originSize * 0.1;
+    var feedbackOffset = feedbackRenderBox.globalToLocal(Offset.zero);
 
+    print('feedbackoffset $feedbackOffset');
+    var feedbackScale = originScale;
+    var width;
+    var height;
+    var top;
+    var left;
+
+    //a)origin
+    arrowMap[originKey].forEach((Arrow arrow) => {
+          //print('originoffset $originOffset'),
+          width = (feedbackOffset.dx - originOffset.dx) / stackScale -
+              (originSize.width / 2) * originScale,
+          height = (feedbackOffset.dy - originOffset.dy - headerHeight()) /
+                  stackScale -
+              (originSize.height / 2) * originScale,
+
+          top = (feedbackOffset.dy),
+          left = (feedbackOffset.dx),
+          arrow.size = Size(width, height),
+          arrow.position = Offset(left, top)
+          // print('updateNet ${arrow.size}')
+        });
+
+    //b)targeting the 'originKey'
+    
 
     notifyListeners();
   }
 
+  sizeSetter(Key startKey, Offset actualPointer) {
+    //set the size of the Arrow between widget and pointer
+
+    var itemSize = structureMap[startKey].size;
+    var itemOffset = getPositionOfRenderBox(startKey);
+    var itemScale = structureMap[startKey].scale;
+    var width;
+    var height;
+
+    arrowMap[startKey].forEach((Arrow tempArrow) => {
+          width = (actualPointer.dx - itemOffset.dx) / stackScale -
+              (itemSize.width / 2) * itemScale,
+          height =
+              (actualPointer.dy - headerHeight() - itemOffset.dy) / stackScale -
+                  (itemSize.height / 2) * itemScale,
+          tempArrow.size = Size(width, height)
+        });
+
+    //notifyListeners();
+  }
+
   Offset itemDropPosition(key, pointerDownOffset, pointerUpOffset) {
-    var stackScale = notifier.value.row0[0];
     var itemScale = structureMap[key].scale;
     var targetKey = getActualTargetKey(key);
     var targetOffset = getPositionOfRenderBox(targetKey);
@@ -234,16 +277,22 @@ if(arrowMap[key] == null){
   }
 
   connectAndUnselect(Key itemKey) {
-    //connect two widgets with ArrowWidget and unselect all afterwards
-    selectedMap.forEach((Key k, bool v) => {
-          if (k != itemKey && v == true)
-            {selectedMap[k] = false, 
-            arrowMap[itemKey].forEach((l)=>{
-              if(l.target == null) {
-                l.target = k
-              }
-            })
-        }});
+    //connect two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
+
+    selectedMap.forEach((Key k, bool isSelected) => {
+          if (k != itemKey && isSelected == true)
+            {
+              selectedMap[k] = false,
+              arrowMap[itemKey].forEach((Arrow l) => {
+                    if (l.target == null) {l.target = k}
+                  })
+            }
+        });
+    for (int i = 0; i < arrowMap[itemKey].length; i++) {
+      if (arrowMap[itemKey][i].target == null) {
+        arrowMap[itemKey].removeAt(i);
+      }
+    }
 
     selectedMap[itemKey] = false;
 

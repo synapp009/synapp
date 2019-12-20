@@ -9,9 +9,9 @@ class HomeView extends StatelessWidget {
     Provider.of<Data>(context).statusBarHeight =
         MediaQuery.of(context).padding.top;
 
-    return MaterialApp(
-      home: Scaffold(
+    return Scaffold(
         appBar: AppBar(
+          backgroundColor: Color.fromARGB(100, 71, 2, 255),
           title: Text('Synapp'),
           actions: <Widget>[
             IconButton(
@@ -34,10 +34,9 @@ class HomeView extends StatelessWidget {
             ),
           ],
         ),
-        body:
-          StackAnimator(),
-        ),
-      
-    );
+        body: StackAnimator(),
+        
+      );
+    
   }
 }

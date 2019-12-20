@@ -8,7 +8,8 @@ import 'data.dart';
 class FeedbackWindowWidget extends StatelessWidget {
   final Key itemKey;
   final Offset pointerDownOffset;
-  FeedbackWindowWidget(this.itemKey, this.pointerDownOffset);
+  final GlobalKey feedbackKey;
+  FeedbackWindowWidget(this.itemKey, this.pointerDownOffset, this.feedbackKey);
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +44,11 @@ class FeedbackWindowWidget extends StatelessWidget {
         alignment: Alignment.topLeft,
         scale: stackScale + (stackScale * 0.1),
         child: SizedBox(
-          height:
-              dataProvider.structureMap[itemKey].size.height * (itemScale),
+          key: feedbackKey,
+          height: dataProvider.structureMap[itemKey].size.height * (itemScale),
           width: dataProvider.structureMap[itemKey].size.width * (itemScale),
           child: Material(
             shape: SuperellipseShape(
-                
                 borderRadius: BorderRadius.circular(28 * itemScale)),
             //margin: EdgeInsets.all(0),
             color: dataProvider.structureMap[itemKey].color,
