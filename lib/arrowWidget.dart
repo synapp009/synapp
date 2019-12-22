@@ -44,41 +44,11 @@ class _ArrowWidgetState extends State<ArrowWidget> {
       //sets correct Size for arrow Paint canvas xy 2d coordinate system
       //a)from origin to pointer b)from origin to target c)when moving: from feedback to target
 
-      if (tempTargetKey == null) {
-        return Size(tempArrow.size.width.abs(), tempArrow.size.height.abs());
-      }
-      var targetPosition;
-      var originPosition;
-      var width;
-      var height;
-      if (dataProvider.actualFeedbackKey != null) {
-    //b) origin to target and c) feedback to target
-        GlobalKey tempKey = dataProvider.actualFeedbackKey;
-        RenderBox tempBox = tempKey.currentContext.findRenderObject();
-        var feedbackBoxSize = tempBox.size;
-
-        targetPosition = (dataProvider.getPositionOfRenderBox(tempTargetKey) -
-                dataProvider.stackOffset) /
-            stackScale;
-        originPosition = (dataProvider
-                    .getPositionOfRenderBox(dataProvider.actualFeedbackKey) -
-                dataProvider.stackOffset) /
-            stackScale;
-
-        width = ((originPosition.dx + feedbackBoxSize.width / 2) -
-            (targetPosition.dx +
-                dataProvider.structureMap[tempTargetKey].size.width / 2));
-        height = ((originPosition.dy + feedbackBoxSize.height) -
-            (targetPosition.dy +
-                dataProvider.structureMap[tempTargetKey].size.height));
-      } else {
-        //a)from origin to pointer
-        targetPosition = (dataProvider.getPositionOfRenderBox(tempTargetKey) -
-                dataProvider.stackOffset) /
-            stackScale;
-        originPosition = (dataProvider.getPositionOfRenderBox(tempOriginKey) -
-                dataProvider.stackOffset) /
-            stackScale;
+      var centerOfOrigin;
+      RenderBox originBox = originKey.currentContext.findRenderObject();
+      Offset originBoxPosition = originBox.globalToLocal(Offset.zero);
+      Size originBoxSize = originBox.size;
+      //double originBoxScale = dataProvider.structureMap[originKey].scale;
 
         width = ((originPosition.dx +
                 dataProvider.structureMap[tempOriginKey].size.width / 2) -
