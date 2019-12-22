@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
 
+import 'arrow.dart';
 import 'data.dart';
 
 import 'windowStackBuilder.dart';
@@ -61,6 +62,9 @@ class _WindowWidgetState extends State<WindowWidget>
   var dataProvider;
   double stackScale;
   Offset offset = Offset(0, 0);
+  Map<Key, List<Key>> hasArrowToKeyMap = {};
+
+  bool hasArrow = false;
 
   tonedColor(Color color) {
     Color tempColor;
@@ -102,6 +106,39 @@ class _WindowWidgetState extends State<WindowWidget>
       });
     }
 
+    _hitTest(details) {
+      Map<Key, Offset> renderBoxesOffset = {};
+      List targetList = [];
+
+      dataProvider.structureMap.forEach((k, v) => {
+            //hit Test
+            renderBoxesOffset[k] = dataProvider.getPositionOfRenderBox(k),
+
+            if (details.globalPosition.dx > renderBoxesOffset[k].dx &&
+                details.globalPosition.dx <
+                    renderBoxesOffset[k].dx +
+                        dataProvider.structureMap[k].size.width *
+                            dataProvider.structureMap[k].scale &&
+                (details.globalPosition.dy - dataProvider.headerHeight()) >
+                    renderBoxesOffset[k].dy &&
+                details.globalPosition.dy - dataProvider.headerHeight() <
+                    renderBoxesOffset[k].dy +
+                        dataProvider.structureMap[k].size.height *
+                            dataProvider.structureMap[k].scale)
+              {
+                dataProvider.selectedMap[k] = true,
+                targetList = dataProvider.getAllTargets(k),
+                targetList.forEach((k) => dataProvider.selectedMap[k] = false)
+              }
+            else
+              {
+                k != key
+                    ? dataProvider.selectedMap[k] = false
+                    : dataProvider.selectedMap[k] = true
+              }
+          });
+    }
+
     stackScale = dataProvider.stackScale;
     itemScale = dataProvider.structureMap[key].scale;
 
@@ -116,7 +153,6 @@ class _WindowWidgetState extends State<WindowWidget>
     } else {
       _scale = 1;
     }
-
     return Positioned(
       top: dataProvider.structureMap[key].position.dy * itemScale,
       left: dataProvider.structureMap[key].position.dx * itemScale,
@@ -124,8 +160,28 @@ class _WindowWidgetState extends State<WindowWidget>
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
             return Listener(
               onPointerDown: (PointerDownEvent event) {
+                List childList = dataProvider.getAllChildren(key);
+                childList.add(key);
+
                 if (dataProvider.firstItem) {
                   dataProvider.actualItemKey = key;
+
+                  if (dataProvider.arrowMap.length > 0) {
+                    childList.forEach((childKey) => {
+                          dataProvider.arrowMap.forEach((k, v) => {
+                                v.forEach((Arrow a) => {
+                                      if (a.target == childKey)
+                                        {
+                                          hasArrow = true,
+                                          if (hasArrowToKeyMap[k] == null)
+                                            {hasArrowToKeyMap[k] = []},
+                                          hasArrowToKeyMap[k].add(childKey),
+                                        }
+                                    })
+                              })
+                        });
+                  }
+
                   dataProvider.firstItem = false;
                 }
                 _isPointerMoving();
@@ -139,20 +195,45 @@ class _WindowWidgetState extends State<WindowWidget>
               onPointerCancel: (details) {
                 pointerMoving = false;
                 dataProvider.actualFeedbackKey = null;
+                hasArrowToKeyMap = {};
               },
               onPointerUp: (PointerUpEvent event) {
                 _controller.reverse();
                 pointerUpOffset = event.position;
                 pointerUp = true;
                 pointerMoving = false;
+                hasArrow = false;
                 dataProvider.firstItem = true;
                 offset = Offset(0, 0);
+                hasArrowToKeyMap = {};
                 dataProvider.actualFeedbackKey = null;
               },
               onPointerMove: (PointerMoveEvent event) {
+                Offset centerOfRenderBox;
                 if (_dragStarted && dataProvider.arrowMap[key] != null) {
-                  dataProvider.updateArrowNet(key, feedbackKey);
-                  dataProvider.actualFeedbackKey = feedbackKey;
+                  if (dataProvider.arrowMap[key].length > 0) {
+                    dataProvider.actualFeedbackKey = feedbackKey;
+                    dataProvider.updateArrowNet(
+                        key, pointerDownOffset, event.position);
+                  }
+                }
+                if (hasArrow) {
+                  hasArrowToKeyMap
+                      .forEach((Key origin, List<Key> targetList) => {
+                            targetList.forEach((target) => {
+                                  if (target == key)
+                                    {
+                                      dataProvider.updateArrowNet(target,
+                                          pointerDownOffset, event.position)
+                                    }
+                                  else
+                                    {
+                                    
+                                      dataProvider.updateChildrenArrowNet(key, origin, target,
+                                          pointerDownOffset, event.position)
+                                    }
+                                }),
+                          });
                 }
 
                 offset = Offset(
@@ -177,49 +258,13 @@ class _WindowWidgetState extends State<WindowWidget>
                   dataProvider.onlySelectThis(key);
                 },
                 onLongPressMoveUpdate: (details) {
-                  Map<Key, Offset> renderBoxesOffset = {};
-                  List targetList = [];
-
-                  dataProvider.structureMap.forEach((k, v) => {
-                        //hit Test
-                        renderBoxesOffset[k] =
-                            dataProvider.getPositionOfRenderBox(k),
-                        // print('renderBoxOffset $k ${renderBoxesOffset[k].dy}'),
-                        //print('details global position dy ${details.globalPosition.dy}'),
-                        //print(dataProvider.statusBarHeight),
-                        if (details.globalPosition.dx >
-                                renderBoxesOffset[k].dx &&
-                            details.globalPosition.dx <
-                                renderBoxesOffset[k].dx +
-                                    dataProvider.structureMap[k].size.width *
-                                        dataProvider.structureMap[k].scale &&
-                            (details.globalPosition.dy -
-                                    dataProvider.headerHeight()) >
-                                renderBoxesOffset[k].dy &&
-                            details.globalPosition.dy -
-                                    dataProvider.headerHeight() <
-                                renderBoxesOffset[k].dy +
-                                    dataProvider.structureMap[k].size.height *
-                                        dataProvider.structureMap[k].scale)
-                          {
-                            dataProvider.selectedMap[k] = true,
-                            targetList = dataProvider.getAllTargets(k),
-                            targetList.forEach(
-                                (k) => dataProvider.selectedMap[k] = false)
-                          }
-                        else
-                          {
-                            k != key
-                                ? dataProvider.selectedMap[k] = false
-                                : dataProvider.selectedMap[k] = true
-                          }
-                      });
-
-                  dataProvider.sizeSetter(key, details.globalPosition);
+                  _hitTest(details);
+                  dataProvider.setArrowToPointer(key, details.globalPosition);
                 },
                 onLongPressEnd: (details) {
                   dataProvider.connectAndUnselect(key);
                 },
+                onLongPressUp: () {},
                 onTap: () {
                   FocusScope.of(context).requestFocus(
                     new FocusNode(),
@@ -249,6 +294,7 @@ class _WindowWidgetState extends State<WindowWidget>
                       });
                     },
                     onDraggableCanceled: (vel, Offset off) {
+                      _dragStarted = false;
                       setState(() {
                         dataProvider.structureMap[key].position =
                             dataProvider.itemDropPosition(

@@ -1,3 +1,4 @@
+import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 
 import 'arrow.dart';
@@ -28,7 +29,7 @@ static Map<Key,bool> initializeSelectedMap(Map<Key,bool> selectedMap){
 
   static Map<Key,List<Arrow>> initializeArrowMap(Map<Key,List<Arrow>> arrowMap) {
     return arrowMap = { null: 
-      []
+      [Arrow(angle: Angle.fromDegrees(0) ,arrowed: false,position: Offset(0,0),size: 0,target: null)]
     };
   }
 }

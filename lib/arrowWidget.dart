@@ -2,166 +2,101 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
+import 'package:arrow_path/arrow_path.dart';
+
 import 'arrow.dart';
 import 'data.dart';
 
-class ArrowWidget extends StatefulWidget {
-  final originKey;
-  final targetKey;
+class ArrowWidget extends StatelessWidget {
+  final GlobalKey originKey;
+  final GlobalKey targetKey;
 
   ArrowWidget(this.originKey, this.targetKey);
-  @override
-  _ArrowWidgetState createState() => _ArrowWidgetState();
-}
-
-class _ArrowWidgetState extends State<ArrowWidget> {
-  var width;
-  var top;
-  var left;
-  var size;
-  var sector;
 
   @override
   Widget build(BuildContext context) {
+    var width;
+    var top;
+    var left;
+    var size;
+    var sector;
     Arrow tempArrow;
     var dataProvider = Provider.of<Data>(context);
-    dataProvider.arrowMap[widget.originKey].forEach((Arrow k) => {
-          if (k.target == widget.targetKey) {tempArrow = k}
+    dataProvider.arrowMap[originKey].forEach((Arrow k) => {
+          if (k.target == targetKey) {tempArrow = k}
         });
 
-    var itemScale = dataProvider.structureMap[widget.originKey].scale;
+    var itemScale = dataProvider.structureMap[originKey].scale;
     var stackScale = dataProvider.stackScale;
+    var stackOffset = dataProvider.stackOffset;
     var itemPosition = Offset(
-        (dataProvider.getPositionOfRenderBox(widget.originKey).dx -
+        (dataProvider.getPositionOfRenderBox(originKey).dx -
                 dataProvider.stackOffset.dx) /
             stackScale,
-        (dataProvider.getPositionOfRenderBox(widget.originKey).dy -
+        (dataProvider.getPositionOfRenderBox(originKey).dy -
                 dataProvider.stackOffset.dy) /
             stackScale);
-    var itemSize = dataProvider.structureMap[widget.originKey].size * itemScale;
+    var itemSize = dataProvider.structureMap[originKey].size * itemScale;
 
-    Size connectedSizeCalculator(tempOriginKey, tempTargetKey) {
-      //sets correct Size for arrow Paint canvas xy 2d coordinate system
-      //a)from origin to pointer b)from origin to target c)when moving: from feedback to target
-
-      var centerOfOrigin;
-      RenderBox originBox = originKey.currentContext.findRenderObject();
-      Offset originBoxPosition = originBox.globalToLocal(Offset.zero);
-      Size originBoxSize = originBox.size;
-      //double originBoxScale = dataProvider.structureMap[originKey].scale;
-
-        width = ((originPosition.dx +
-                dataProvider.structureMap[tempOriginKey].size.width / 2) -
-            (targetPosition.dx +
-                dataProvider.structureMap[tempTargetKey].size.width / 2));
-        height = ((originPosition.dy +
-                dataProvider.structureMap[tempOriginKey].size.height) -
-            (targetPosition.dy +
-                dataProvider.structureMap[tempTargetKey].size.height));
-      }
-
+    Size distanceBetweenOriginAndTarget(originKey, targetKey) {
+      Offset originPosition = dataProvider.getPositionOfRenderBox(originKey);
+      Offset targetPosition = dataProvider.getPositionOfRenderBox(targetKey);
       var tempSize;
-
-      //tempArrow.size = Size(width, height);
-      return tempSize = Size(width, height);
+      return tempSize = Size(originPosition.dx - targetPosition.dx,
+          originPosition.dy - targetPosition.dy);
     }
-
-    Offset cartesianPosition(tempOriginKey, tempTargetKey) {
-      //calculate the position of the arrow (top-left) in respective to cartesian system
-
-      var dy;
-      var dx;
-
-      var tempSize;
-      if (tempTargetKey == null) {
-        tempSize = tempArrow.size;
-      } else {
-        tempSize = connectedSizeCalculator(tempOriginKey, tempTargetKey);
-        tempSize = Size(-tempSize.width, -tempSize.height);
-      }
-
-      if (dataProvider.actualFeedbackKey != null) {
-        itemPosition =
-            dataProvider.getPositionOfRenderBox(dataProvider.actualFeedbackKey);
-
-        GlobalKey tempKey = dataProvider.actualFeedbackKey;
-        RenderBox tempBox = tempKey.currentContext.findRenderObject();
-        itemSize = tempBox.size;
-      }
-
-      if (tempSize.height > 0 && tempSize.width > 0) {
-        //X2
-
-        sector = 2;
-        dy = itemPosition.dy + (itemSize.height / 2);
-        dx = itemPosition.dx + (itemSize.width / 2);
-      } else if (tempSize.height < 0 && tempSize.width > 0) {
-        //X1
-
-        sector = 1;
-        dy = (itemPosition.dy + itemSize.height / 2) + tempSize.height;
-        dx = itemPosition.dx + itemSize.width / 2;
-      } else if (tempSize.height > 0 && tempSize.width < 0) {
-        //X3
-
-        sector = 3;
-        dy = itemPosition.dy + itemSize.height / 2;
-        dx = itemPosition.dx + itemSize.width / 2 + tempSize.width;
-      } else {
-        //X4
-
-        sector = 4;
-        dy = (itemPosition.dy + itemSize.height / 2) + tempSize.height;
-        dx = itemPosition.dx + itemSize.width / 2 + tempSize.width;
-      }
-      var tempOffset = Offset(dx, dy);
-      return tempOffset;
-    }
-
-    //dataProvider.arrowMap[originKey].forEach((f)=>{if(f.target == null){nullItemSize = f.size}});
 
     return Positioned(
-      top: cartesianPosition(widget.originKey, widget.targetKey).dy,
-      left: cartesianPosition(widget.originKey, widget.targetKey).dx,
-      child: CustomPaint(
-        size: //Size(tempArrow.size.width.abs(), tempArrow.size.height.abs()),
-            Size(
-                connectedSizeCalculator(widget.originKey, widget.targetKey)
-                    .width
-                    .abs(),
-                connectedSizeCalculator(widget.originKey, widget.targetKey)
-                    .height
-                    .abs()),
-        foregroundPainter: MyPainter(sector),
+      top: (tempArrow
+          .position.dy), //dataProvider.centerOfRenderBox(originKey).dy,
+      left: (tempArrow
+          .position.dx), //dataProvider.centerOfRenderBox(originKey).dx,
+      child: Transform.rotate(
+        alignment: Alignment.centerLeft,
+        angle: tempArrow.angle.radians,
+        child: CustomPaint(
+          size: Size(tempArrow.size, 2),
+          foregroundPainter: ArrowPainter(sector),
+        ),
       ),
     );
   }
 }
 
-class MyPainter extends CustomPainter {
+class ArrowPainter extends CustomPainter {
+  TextSpan textSpan;
+  TextPainter textPainter;
   int sector;
-  MyPainter(this.sector);
+  ArrowPainter(this.sector);
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
       ..strokeWidth = 2.0;
 
     Path path = Path();
     // TODO: do operations here
 
-    if (sector == 1 || sector == 3) {
-      path.moveTo(0, size.height); //.lineTo( 0,size.height);
+    path.moveTo(0, size.height / 2);
+    path.lineTo(size.width, 0); //.lineTo( 0,size.height);
 
-      path.lineTo(size.width, 0);
-    } else {
-      path.lineTo(size.width, size.height);
-    }
+    path = ArrowPath.make(path: path);
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, paint..color = Colors.blue);
+    textSpan =
+        TextSpan(text: 'Single arrow', style: TextStyle(color: Colors.blue));
+    textPainter = TextPainter(
+      text: textSpan,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout(minWidth: size.width);
+    textPainter.paint(canvas, Offset(0, size.height * 0.06));
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(ArrowPainter oldDelegate) => true;
 }

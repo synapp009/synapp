@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
@@ -134,7 +137,6 @@ class Data with ChangeNotifier {
 
   Offset getPositionOfRenderBox(targetKey) {
     //with expensive RenderedBox, --> maybe better options?
-
     Offset tempPosition;
     if (targetKey != null) {
       RenderBox targetRenderObject =
@@ -194,73 +196,137 @@ class Data with ChangeNotifier {
       Arrow(
         arrowed: false,
         target: null,
-        size: Size(0, 0),
+        size: 0.0,
         position: Offset(0, 0),
+        angle: Angle.fromRadians(0),
       ),
     );
-
-    notifyListeners();
-  }
-
-  updateArrowNet(Key originKey, GlobalKey feedbackKey) {
-//web the net of arrows a) origing in and b) targeting originKey
-
-    var originSize = structureMap[originKey].size;
-    var originOffset = getPositionOfRenderBox(originKey);
-    var originScale = structureMap[originKey].scale;
-
-    RenderBox feedbackRenderBox = feedbackKey.currentContext.findRenderObject();
-    var feedbackSize = originSize * 0.1;
-    var feedbackOffset = feedbackRenderBox.globalToLocal(Offset.zero);
-
-    print('feedbackoffset $feedbackOffset');
-    var feedbackScale = originScale;
-    var width;
-    var height;
-    var top;
-    var left;
-
-    //a)origin
-    arrowMap[originKey].forEach((Arrow arrow) => {
-          //print('originoffset $originOffset'),
-          width = (feedbackOffset.dx - originOffset.dx) / stackScale -
-              (originSize.width / 2) * originScale,
-          height = (feedbackOffset.dy - originOffset.dy - headerHeight()) /
-                  stackScale -
-              (originSize.height / 2) * originScale,
-
-          top = (feedbackOffset.dy),
-          left = (feedbackOffset.dx),
-          arrow.size = Size(width, height),
-          arrow.position = Offset(left, top)
-          // print('updateNet ${arrow.size}')
-        });
-
-    //b)targeting the 'originKey'
-    
-
-    notifyListeners();
-  }
-
-  sizeSetter(Key startKey, Offset actualPointer) {
-    //set the size of the Arrow between widget and pointer
-
-    var itemSize = structureMap[startKey].size;
-    var itemOffset = getPositionOfRenderBox(startKey);
-    var itemScale = structureMap[startKey].scale;
-    var width;
-    var height;
-
-    arrowMap[startKey].forEach((Arrow tempArrow) => {
-          width = (actualPointer.dx - itemOffset.dx) / stackScale -
-              (itemSize.width / 2) * itemScale,
-          height =
-              (actualPointer.dy - headerHeight() - itemOffset.dy) / stackScale -
-                  (itemSize.height / 2) * itemScale,
-          tempArrow.size = Size(width, height)
-        });
-
     //notifyListeners();
+  }
+
+  Offset centerOfRenderBox(originKey) {
+    //calculate the Center of a originKey RenderBox
+
+    var centerOfOrigin;
+    var tempStackOffset;
+    RenderBox originBox = originKey.currentContext.findRenderObject();
+    Offset originBoxPosition = originBox.globalToLocal(Offset.zero);
+    originBoxPosition = -Offset(originBoxPosition.dx * stackScale,
+        originBoxPosition.dy * stackScale + headerHeight());
+    Size originBoxSize = originBox.size * stackScale;
+    tempStackOffset = stackOffset * stackScale;
+
+    //var originBoxScale = structureMap[originKey].scale;
+    //double originBoxScale = dataProvider.structureMap[originKey].scale;
+    return centerOfOrigin = Offset(
+        (originBoxPosition.dx + originBoxSize.width / 2),
+        (originBoxPosition.dy + originBoxSize.height / 2));
+  }
+
+  Angle getAngle(Offset pointA, Offset pointB) {
+    double tempAncle =
+        (pointB.dy - pointA.dy - headerHeight()) / (pointB.dx - pointA.dx);
+    var angle;
+
+    var tempSize = Size(pointA.dx - pointB.dx, pointA.dy - pointB.dy);
+
+    int cartesianCoordinateSector(tempSize) {
+      var sector;
+
+      if (tempSize.height > 0 && tempSize.width > 0) {
+        //X2
+
+        return sector = 4;
+      } else if (tempSize.height < 0 && tempSize.width > 0) {
+        //X1
+
+        return sector = 3;
+      } else if (tempSize.height > 0 && tempSize.width < 0) {
+        //X3
+
+        return sector = 1;
+      } else {
+        //X4
+
+        return sector = 2;
+      }
+    }
+
+    if (cartesianCoordinateSector(tempSize) <= 2) {
+      angle = Angle.atan(tempAncle);
+    } else {
+      angle = Angle.atan(tempAncle) + Angle.fromDegrees(180);
+    }
+
+
+    return angle;
+  }
+
+  Angle getChildrenAngle(Offset pointA, Offset pointB) {
+    double tempAncle = (pointB.dy - pointA.dy) / (pointB.dx - pointA.dx);
+    var angle;
+
+    var tempSize = Size(pointA.dx - pointB.dx, pointA.dy - pointB.dy);
+
+    int cartesianCoordinateSector(tempSize) {
+      var sector;
+
+      if (tempSize.height > 0 && tempSize.width > 0) {
+        //X2
+
+        return sector = 2;
+      } else if (tempSize.height < 0 && tempSize.width > 0) {
+        //X1
+
+        return sector = 1;
+      } else if (tempSize.height > 0 && tempSize.width < 0) {
+        //X3
+
+        return sector = 3;
+      } else {
+        //X4
+
+        return sector = 4;
+      }
+    }
+
+    if (cartesianCoordinateSector(tempSize) <= 2) {
+      angle = Angle.atan(tempAncle);
+    } else {
+      angle = Angle.atan(tempAncle) + Angle.fromDegrees(180);
+    }
+
+    return angle;
+  }
+
+  double diagonalLength(Offset pointA, Offset pointB) {
+    var tempSize =
+        Size((pointA.dx - pointB.dx), (pointA.dy - pointB.dy - headerHeight()));
+
+    var length = ((tempSize.width * tempSize.width) +
+        (tempSize.height * tempSize.height));
+    return length = sqrt(length);
+  }
+
+  setArrowToPointer(Key startKey, Offset actualPointer) {
+    //set the size and ancle of the Arrow between widget and pointer
+    //from center of a RenderBox (startKey)
+
+    Arrow arrow;
+    arrowMap[startKey].forEach((k) => k.target == null ? arrow = k : null);
+    var itemScale = structureMap[startKey].scale;
+    var itemOffset = centerOfRenderBox(startKey);
+
+    var length = diagonalLength(
+      actualPointer,
+      itemOffset,
+    );
+
+    arrow.position = (itemOffset - stackOffset) / stackScale;
+    arrow.size = length / stackScale;
+    arrow.angle = getAngle(itemOffset, actualPointer);
+
+    notifyListeners();
   }
 
   Offset itemDropPosition(key, pointerDownOffset, pointerUpOffset) {
@@ -276,12 +342,136 @@ class Data with ChangeNotifier {
             pointerDownOffset.dy));
   }
 
-  connectAndUnselect(Key itemKey) {
-    //connect two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
+  Size sizeOfRenderBox(itemKey) {
+    RenderBox tempBox = itemKey.currentContext.findRenderObject();
 
+    Size tempSize = tempBox.size;
+    return tempSize;
+  }
+
+  updateChildrenArrowNet(
+      draggingKey, originKey, targetKey, pointerDownOffset, pointerPosition) {
+    //update all children on a widget when parent is dragged
+    print('stackscale $stackScale');
+    var draggingScale = structureMap[draggingKey].scale;
+    print(draggingScale);
+    var draggingPosition = Offset(
+        (pointerPosition.dx/stackScale - (pointerDownOffset.dx * draggingScale)),
+        (pointerPosition.dy/stackScale -
+            (pointerDownOffset.dy * draggingScale) -
+            headerHeight()));
+            //draggingPosition = draggingPosition/stackScale;
+            print('draggingPosition $draggingPosition');
+    var targetScale = structureMap[targetKey].scale;
+    var targetSize = sizeOfRenderBox(targetKey);
+    var targetRelativePosition = structureMap[targetKey].position * targetScale;
+    var targetPosition =(draggingPosition + targetRelativePosition); 
+    
+    var targetCenterPosition = Offset(targetPosition.dx + (targetSize.width / 2),
+        targetPosition.dy + (targetSize.height / 2) + headerHeight());
+
+
+    var originFeedback = centerOfRenderBox(originKey);
+    var targetItemScale = structureMap[targetKey].scale;
+    //Arrow tempArrow;
+    //get Arrow with target targetKey
+    arrowMap[originKey].forEach((k) => {
+          if (k.target == targetKey)
+            {
+              //tempArrow = k,
+              k.size = diagonalLength(
+                Offset(targetCenterPosition.dx, targetCenterPosition.dy),
+                (Offset(originFeedback.dx, originFeedback.dy))/stackScale,
+              ),
+
+              k.angle = getAngle(originFeedback, targetCenterPosition),
+              k.position = (originFeedback- stackOffset)/stackScale,
+            }
+        });
+
+    notifyListeners();
+  }
+
+  updateArrowNet(itemKey, pointerDownOffset, pointerPosition) {
+    //update all arrows that a) go to and b) come from the dragging widget (itemKey)
+    //and c) all childs laying on the dragging widged
+
+    var itemScale = structureMap[itemKey].scale;
+    var feedbackPos = Offset(
+        pointerPosition.dx - pointerDownOffset.dx * itemScale,
+        pointerPosition.dy - pointerDownOffset.dy * itemScale);
+    var originFeedback;
+    var targetPosition;
+
+    //a) update  arrows coming from itemKey
+    if (arrowMap[itemKey] != null) {
+      arrowMap[itemKey].forEach((f) => {
+            originFeedback = Offset(
+                (feedbackPos.dx +
+                    (structureMap[itemKey].size.width / 2) * itemScale),
+                (feedbackPos.dy +
+                    (structureMap[itemKey].size.height / 2) * itemScale -
+                    headerHeight())),
+            targetPosition = centerOfRenderBox(f.target),
+            targetPosition =
+                Offset(targetPosition.dx, targetPosition.dy + headerHeight()),
+            //feedbackPos = Offset(feedbackPos.dx, feedbackPos.dy ),
+            f.size =
+                diagonalLength(targetPosition, originFeedback) / stackScale,
+            f.angle = getAngle(originFeedback, targetPosition),
+            
+            f.position = (originFeedback - stackOffset) / stackScale,
+          });
+    }
+
+    //b) update all arrows pointing to the itemKey
+    var originPosition;
+    var originCenterPosition;
+    var originSize;
+    var targetFeedback;
+    arrowMap.forEach((k, v) => {
+          originSize = structureMap[k].size,
+          targetFeedback = Offset(
+              feedbackPos.dx + (originSize.width / 2) * itemScale,
+              feedbackPos.dy + (originSize.height / 2) * itemScale),
+          originPosition = getPositionOfRenderBox(k),
+          originCenterPosition = Offset(
+            originPosition.dx + (originSize.width / 2)*stackScale,
+            originPosition.dy + (originSize.height / 2)*stackScale,
+          ),
+          v.forEach((Arrow a) => {
+                if (a.target == itemKey)
+                  {
+                    a.size = diagonalLength(
+                          targetFeedback,
+                          originCenterPosition,
+                        ) /
+                        stackScale,
+                    a.angle = getAngle(originCenterPosition,
+                        Offset(targetFeedback.dx, targetFeedback.dy)),
+                        
+                    a.position =
+                        (originCenterPosition - stackOffset) / stackScale
+                  }
+              })
+        });
+    notifyListeners();
+  }
+
+  connectAndUnselect(Key itemKey) {
+    //connects two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
+    Offset positionOfTarget;
+    RenderBox targetBox;
+    GlobalKey tempKey;
     selectedMap.forEach((Key k, bool isSelected) => {
           if (k != itemKey && isSelected == true)
             {
+              tempKey = k,
+              targetBox = tempKey.currentContext.findRenderObject(),
+              positionOfTarget = centerOfRenderBox(k),
+              positionOfTarget = Offset(
+                  positionOfTarget.dx, positionOfTarget.dy + headerHeight()),
+              setArrowToPointer(itemKey, positionOfTarget),
               selectedMap[k] = false,
               arrowMap[itemKey].forEach((Arrow l) => {
                     if (l.target == null) {l.target = k}

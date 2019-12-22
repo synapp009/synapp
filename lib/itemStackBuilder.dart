@@ -15,38 +15,50 @@ class ItemStackBuilder extends StatelessWidget {
     var dataProvider = Provider.of<Data>(context);
 
     return Stack(overflow: Overflow.visible, children: [
-        DragTarget(
-    builder: (buildContext, List<dynamic> candidateData, rejectData) {
-      return Container(
-          color: Color.fromARGB(100, 71, 2, 255),
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height);
-    },
-    onWillAccept: (dynamic data) {
-      dataProvider.actualTarget = null;
-      if (dataProvider.structureMap[key].key !=
-              data.key /*&&
+      DragTarget(
+        builder: (buildContext, List<dynamic> candidateData, rejectData) {
+          return Container(
+              color: Color.fromARGB(100, 71, 2, 255),
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height);
+        },
+        onWillAccept: (dynamic data) {
+          dataProvider.actualTarget = null;
+          if (dataProvider.structureMap[key].key !=
+                  data.key /*&&
           !dataProvider.structureMap[data.key].childKeys.contains(key) &&
           !dataProvider.structureMap[key].childKeys.contains(data.key)*/
-          ) {
-        // dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
-        var stackOffset = Offset(dataProvider.notifier.value.row0.a,
-            dataProvider.notifier.value.row1.a);
-        dataProvider.actualTarget = null;
-        dataProvider.structureMap[data.key].scale = 1.0;
-        dataProvider.currentTargetPosition = stackOffset;
-        dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
-        return true;
-      } else {
-        return false;
-      }
-    },
-    onLeave: (dynamic data) {},
-    onAccept: (dynamic data) {},
-        ),
-        ...stackItems(context),
-        ...arrowItems(context)
-      ]);
+              ) {
+            // dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
+            var stackOffset = Offset(dataProvider.notifier.value.row0.a,
+                dataProvider.notifier.value.row1.a);
+            dataProvider.actualTarget = null;
+            dataProvider.structureMap[data.key].scale = 1.0;
+            dataProvider.currentTargetPosition = stackOffset;
+            dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
+            return true;
+          } else {
+            return false;
+          }
+        },
+        onLeave: (dynamic data) {},
+        onAccept: (dynamic data) {},
+      ),
+      ...stackItems(context),
+      ...arrowItems(context),
+      Positioned(
+          top: 100,
+          left: 50,
+          child: Container(color: Colors.green, width: 40, height: 40)),
+      Positioned(
+          top: 200,
+          left: 50,
+          child: Container(color: Colors.green, width: 40, height: 40)),
+      Positioned(
+          top: 300,
+          left: 50,
+          child: Container(color: Colors.green, width: 40, height: 40))
+    ]);
   }
 
   List<Widget> stackItems(BuildContext context) {
@@ -73,6 +85,7 @@ List<Widget> arrowItems(BuildContext context) {
   var dataProvider = Provider.of<Data>(context);
   List<Widget> arrowItemsList = [];
   Map<Key, List<Arrow>> arrowMap = dataProvider.arrowMap;
+
   arrowMap.forEach((Key originKey, List<Arrow> arrowList) => {
         arrowList.forEach((Arrow tempArrow) =>
             arrowItemsList.add(ArrowWidget(originKey, tempArrow.target)))

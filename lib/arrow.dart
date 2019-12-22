@@ -1,3 +1,4 @@
+import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 
 class Arrow {
@@ -5,7 +6,7 @@ class Arrow {
   Key target;
   bool arrowed;
   Offset position;
-  Size size;
-  Color color;
-  Arrow({this.target, this.arrowed, this.position, this.size});
+  double size;
+  Angle angle;
+  Arrow({this.target, this.arrowed, this.position, this.size,this.angle});
 }
