@@ -174,7 +174,11 @@ class _WindowWidgetState extends State<WindowWidget>
                                         {
                                           hasArrow = true,
                                           if (hasArrowToKeyMap[k] == null)
-                                            {hasArrowToKeyMap[k] = []},
+                                            {
+                                              hasArrowToKeyMap[k] = [],
+                                              dataProvider.updateArrowNet(
+                                                  key, key)
+                                            },
                                           hasArrowToKeyMap[k].add(childKey),
                                         }
                                     })
@@ -194,11 +198,51 @@ class _WindowWidgetState extends State<WindowWidget>
               },
               onPointerCancel: (details) {
                 pointerMoving = false;
-                dataProvider.actualFeedbackKey = null;
                 hasArrowToKeyMap = {};
+                dataProvider.updateArrowNet(key, key);
               },
               onPointerUp: (PointerUpEvent event) {
                 _controller.reverse();
+                if (_dragStarted && dataProvider.arrowMap[key] != null) {
+                  if (dataProvider.arrowMap[key].length > 0) {
+                    print('time 1');
+                    _timer = new Timer(Duration(milliseconds: 200), () {
+                      setState(() {
+                        dataProvider.updateArrowNet(key, key);
+                      });
+                    });
+                  }
+                }
+                if (hasArrow && _dragStarted) {
+                  hasArrowToKeyMap
+                      .forEach((Key origin, List<Key> targetList) => {
+                            targetList.forEach((target) => {
+                                  if (target == key)
+                                    {
+                                      print('time 2'),
+                                      _timer = new Timer(
+                                          Duration(milliseconds: 200), () {
+                                        setState(() {
+                                          dataProvider.updateArrowNet(
+                                            target,
+                                            key,
+                                          );
+                                        });
+                                      })
+                                    }
+                                  else
+                                    {
+                                      dataProvider.updateChildrenArrowNet(
+                                          key,
+                                          origin,
+                                          target,
+                                          pointerDownOffset,
+                                          event.position)
+                                    }
+                                }),
+                          });
+                }
+
                 pointerUpOffset = event.position;
                 pointerUp = true;
                 pointerMoving = false;
@@ -206,31 +250,34 @@ class _WindowWidgetState extends State<WindowWidget>
                 dataProvider.firstItem = true;
                 offset = Offset(0, 0);
                 hasArrowToKeyMap = {};
-                dataProvider.actualFeedbackKey = null;
               },
               onPointerMove: (PointerMoveEvent event) {
                 Offset centerOfRenderBox;
                 if (_dragStarted && dataProvider.arrowMap[key] != null) {
                   if (dataProvider.arrowMap[key].length > 0) {
-                    dataProvider.actualFeedbackKey = feedbackKey;
-                    dataProvider.updateArrowNet(
-                        key, pointerDownOffset, event.position);
+                    print('time 1');
+                    dataProvider.updateArrowNet(key, feedbackKey);
                   }
                 }
-                if (hasArrow) {
+                if (hasArrow && _dragStarted) {
                   hasArrowToKeyMap
                       .forEach((Key origin, List<Key> targetList) => {
                             targetList.forEach((target) => {
                                   if (target == key)
                                     {
-                                      dataProvider.updateArrowNet(target,
-                                          pointerDownOffset, event.position)
+                                      print('time 2'),
+                                      dataProvider.updateArrowNet(
+                                        target,
+                                        feedbackKey,
+                                      )
                                     }
                                   else
                                     {
-                                    
-                                      dataProvider.updateChildrenArrowNet(key, origin, target,
-                                          pointerDownOffset, event.position)
+                                      print('time3'),
+                                      print('target $target'),
+                                      print('key $key'),
+                                      print('origin $origin'),
+                                      dataProvider.updateArrowNet(origin,target)
                                     }
                                 }),
                           });
@@ -303,7 +350,7 @@ class _WindowWidgetState extends State<WindowWidget>
                     },
                     dragAnchor: DragAnchor.pointer,
                     childWhenDragging: Container(),
-                    feedback: ListenableProvider<Data>.value(
+                    feedback: ChangeNotifierProvider<Data>.value(
                       value: Provider.of<Data>(context),
                       child: FeedbackWindowWidget(
                           key, pointerDownOffset, feedbackKey),

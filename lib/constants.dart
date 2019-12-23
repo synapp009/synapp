@@ -27,7 +27,7 @@ static Map<Key,bool> initializeSelectedMap(Map<Key,bool> selectedMap){
   return selectedMap = {null:false};
 }
 
-  static Map<Key,List<Arrow>> initializeArrowMap(Map<Key,List<Arrow>> arrowMap) {
+  static Map<GlobalKey,List<Arrow>> initializeArrowMap(Map<GlobalKey,List<Arrow>> arrowMap) {
     return arrowMap = { null: 
       [Arrow(angle: Angle.fromDegrees(0) ,arrowed: false,position: Offset(0,0),size: 0,target: null)]
     };

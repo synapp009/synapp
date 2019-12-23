@@ -14,7 +14,7 @@ class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
 
   Map<Key, dynamic> structureMap;
-  Map<Key, List<Arrow>> arrowMap;
+  Map<GlobalKey, List<Arrow>> arrowMap;
   Map<Key, bool> selectedMap;
 
   Key actualTarget;
@@ -25,7 +25,6 @@ class Data with ChangeNotifier {
   double stackScale = 1.0;
   double statusBarHeight;
 
-  Key actualFeedbackKey;
   Key actualItemKey;
   bool firstItem = true;
 
@@ -38,7 +37,7 @@ class Data with ChangeNotifier {
     selectedMap = Constants.initializeSelectedMap(selectedMap);
   }
 
-  Map<Key, List<Arrow>> get getArrowMap => arrowMap;
+  Map<GlobalKey, List<Arrow>> get getArrowMap => arrowMap;
 
   Map<Key, dynamic> get getStructureMap => structureMap;
 
@@ -258,7 +257,6 @@ class Data with ChangeNotifier {
       angle = Angle.atan(tempAncle) + Angle.fromDegrees(180);
     }
 
-
     return angle;
   }
 
@@ -342,34 +340,36 @@ class Data with ChangeNotifier {
             pointerDownOffset.dy));
   }
 
-  Size sizeOfRenderBox(itemKey) {
-    RenderBox tempBox = itemKey.currentContext.findRenderObject();
-
-    Size tempSize = tempBox.size;
-    return tempSize;
+  Size sizeOfRenderBox(GlobalKey itemKey) {
+    if (itemKey.currentContext != null) {
+      RenderBox tempBox = itemKey.currentContext.findRenderObject();
+      Size tempSize = tempBox.size;
+      return tempSize;
+    } else {
+      return Size(0, 0);
+    }
   }
 
   updateChildrenArrowNet(
       draggingKey, originKey, targetKey, pointerDownOffset, pointerPosition) {
     //update all children on a widget when parent is dragged
-    print('stackscale $stackScale');
     var draggingScale = structureMap[draggingKey].scale;
-    print(draggingScale);
     var draggingPosition = Offset(
-        (pointerPosition.dx/stackScale - (pointerDownOffset.dx * draggingScale)),
-        (pointerPosition.dy/stackScale -
+        (pointerPosition.dx / stackScale -
+            (pointerDownOffset.dx * draggingScale)),
+        (pointerPosition.dy / stackScale -
             (pointerDownOffset.dy * draggingScale) -
             headerHeight()));
-            //draggingPosition = draggingPosition/stackScale;
-            print('draggingPosition $draggingPosition');
+    //draggingPosition = draggingPosition/stackScale;
+    print('draggingPosition $draggingPosition');
     var targetScale = structureMap[targetKey].scale;
     var targetSize = sizeOfRenderBox(targetKey);
     var targetRelativePosition = structureMap[targetKey].position * targetScale;
-    var targetPosition =(draggingPosition + targetRelativePosition); 
-    
-    var targetCenterPosition = Offset(targetPosition.dx + (targetSize.width / 2),
-        targetPosition.dy + (targetSize.height / 2) + headerHeight());
+    var targetPosition = (draggingPosition + targetRelativePosition);
 
+    var targetCenterPosition = Offset(
+        targetPosition.dx + (targetSize.width / 2),
+        targetPosition.dy + (targetSize.height / 2) + headerHeight());
 
     var originFeedback = centerOfRenderBox(originKey);
     var targetItemScale = structureMap[targetKey].scale;
@@ -381,45 +381,45 @@ class Data with ChangeNotifier {
               //tempArrow = k,
               k.size = diagonalLength(
                 Offset(targetCenterPosition.dx, targetCenterPosition.dy),
-                (Offset(originFeedback.dx, originFeedback.dy))/stackScale,
+                (Offset(originFeedback.dx, originFeedback.dy)) / stackScale,
               ),
 
               k.angle = getAngle(originFeedback, targetCenterPosition),
-              k.position = (originFeedback- stackOffset)/stackScale,
+              k.position = (originFeedback - stackOffset) / stackScale,
             }
         });
 
     notifyListeners();
   }
 
-  updateArrowNet(itemKey, pointerDownOffset, pointerPosition) {
+  updateArrowNet(itemKey, feedbackKey) {
     //update all arrows that a) go to and b) come from the dragging widget (itemKey)
     //and c) all childs laying on the dragging widged
 
-    var itemScale = structureMap[itemKey].scale;
-    var feedbackPos = Offset(
-        pointerPosition.dx - pointerDownOffset.dx * itemScale,
-        pointerPosition.dy - pointerDownOffset.dy * itemScale);
     var originFeedback;
+    var originSize;
     var targetPosition;
+    var feedbackSize;
 
     //a) update  arrows coming from itemKey
     if (arrowMap[itemKey] != null) {
       arrowMap[itemKey].forEach((f) => {
+            originFeedback = getPositionOfRenderBox(feedbackKey),
+            feedbackSize = sizeOfRenderBox(feedbackKey),
+
             originFeedback = Offset(
-                (feedbackPos.dx +
-                    (structureMap[itemKey].size.width / 2) * itemScale),
-                (feedbackPos.dy +
-                    (structureMap[itemKey].size.height / 2) * itemScale -
-                    headerHeight())),
+                originFeedback.dx + (feedbackSize.width / 2),
+                originFeedback.dy + (feedbackSize.height / 2)),
+
             targetPosition = centerOfRenderBox(f.target),
             targetPosition =
                 Offset(targetPosition.dx, targetPosition.dy + headerHeight()),
+
             //feedbackPos = Offset(feedbackPos.dx, feedbackPos.dy ),
             f.size =
                 diagonalLength(targetPosition, originFeedback) / stackScale,
             f.angle = getAngle(originFeedback, targetPosition),
-            
+
             f.position = (originFeedback - stackOffset) / stackScale,
           });
     }
@@ -427,33 +427,45 @@ class Data with ChangeNotifier {
     //b) update all arrows pointing to the itemKey
     var originPosition;
     var originCenterPosition;
-    var originSize;
+    //var originSize;
     var targetFeedback;
+    var targetSize;
     arrowMap.forEach((k, v) => {
-          originSize = structureMap[k].size,
-          targetFeedback = Offset(
-              feedbackPos.dx + (originSize.width / 2) * itemScale,
-              feedbackPos.dy + (originSize.height / 2) * itemScale),
-          originPosition = getPositionOfRenderBox(k),
-          originCenterPosition = Offset(
-            originPosition.dx + (originSize.width / 2)*stackScale,
-            originPosition.dy + (originSize.height / 2)*stackScale,
-          ),
-          v.forEach((Arrow a) => {
-                if (a.target == itemKey)
-                  {
-                    a.size = diagonalLength(
-                          targetFeedback,
-                          originCenterPosition,
-                        ) /
-                        stackScale,
-                    a.angle = getAngle(originCenterPosition,
-                        Offset(targetFeedback.dx, targetFeedback.dy)),
+          if (k != null)
+            {
+              v.forEach((Arrow a) => {
+                    if (a.target == itemKey)
+                      {
+                        targetFeedback = getPositionOfRenderBox(feedbackKey),
+                        targetSize = sizeOfRenderBox(feedbackKey),
+                        targetFeedback = Offset(
+                            targetFeedback.dx + ((targetSize.width * 1.1) / 2),
+                            targetFeedback.dy +
+                                headerHeight() +
+                                ((targetSize.height * 1.1) / 2)),
+                        //targetFeedback = getPositionOfRenderBox(targetKey),
+                        originPosition = getPositionOfRenderBox(k),
                         
-                    a.position =
-                        (originCenterPosition - stackOffset) / stackScale
-                  }
-              })
+                        originSize = sizeOfRenderBox(k),
+                        originCenterPosition = Offset(
+                          originPosition.dx +
+                              (originSize.width / 2) * stackScale,
+                          originPosition.dy +
+                              (originSize.height / 2) * stackScale,
+                        ),
+                        a.size = diagonalLength(
+                              targetFeedback,
+                              originCenterPosition,
+                            ) /
+                            stackScale,
+                        a.angle = getAngle(originCenterPosition,
+                            Offset(targetFeedback.dx, targetFeedback.dy)),
+
+                        a.position =
+                            (originCenterPosition - stackOffset) / stackScale
+                      }
+                  })
+            }
         });
     notifyListeners();
   }

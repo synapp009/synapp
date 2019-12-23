@@ -46,18 +46,6 @@ class ItemStackBuilder extends StatelessWidget {
       ),
       ...stackItems(context),
       ...arrowItems(context),
-      Positioned(
-          top: 100,
-          left: 50,
-          child: Container(color: Colors.green, width: 40, height: 40)),
-      Positioned(
-          top: 200,
-          left: 50,
-          child: Container(color: Colors.green, width: 40, height: 40)),
-      Positioned(
-          top: 300,
-          left: 50,
-          child: Container(color: Colors.green, width: 40, height: 40))
     ]);
   }
 

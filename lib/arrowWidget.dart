@@ -47,10 +47,10 @@ class ArrowWidget extends StatelessWidget {
     }
 
     return Positioned(
-      top: (tempArrow
-          .position.dy), //dataProvider.centerOfRenderBox(originKey).dy,
-      left: (tempArrow
-          .position.dx), //dataProvider.centerOfRenderBox(originKey).dx,
+      top: tempArrow.position.dy,
+      //dataProvider.centerOfRenderBox(originKey).dy,
+      left: tempArrow.position.dx,
+      //dataProvider.centerOfRenderBox(originKey).dx,
       child: Transform.rotate(
         alignment: Alignment.centerLeft,
         angle: tempArrow.angle.radians,
