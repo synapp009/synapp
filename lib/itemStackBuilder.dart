@@ -5,13 +5,11 @@ import 'textboxWidget.dart';
 
 import 'windowWidget.dart';
 import 'arrowWidget.dart';
-import 'textboxWidget.dart';
 import 'data.dart';
 
 class ItemStackBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    //print(Provider.of<Data>(context).notifier.value.getRow(0)[0]);
     var dataProvider = Provider.of<Data>(context);
 
     return Stack(overflow: Overflow.visible, children: [
@@ -75,8 +73,11 @@ List<Widget> arrowItems(BuildContext context) {
   Map<Key, List<Arrow>> arrowMap = dataProvider.arrowMap;
 
   arrowMap.forEach((Key originKey, List<Arrow> arrowList) => {
-        arrowList.forEach((Arrow tempArrow) =>
-            arrowItemsList.add(ArrowWidget(originKey, tempArrow.target)))
+        if (originKey != null)
+          {
+            arrowList.forEach((Arrow tempArrow) =>
+                arrowItemsList.add(ArrowWidget(originKey, tempArrow.target)))
+          }
       });
 
   return arrowItemsList;

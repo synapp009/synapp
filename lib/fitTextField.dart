@@ -58,11 +58,7 @@ class FitTextFieldState extends State<FitTextField> {
     } else {
       textWidth = textWidth;
     }
-    //print('tappekkkd $tapped');
-    //print('textwidth $textWidth');
-
-    //widget.myFocusNode.addListener(() { print('hasfocus $widget.myFocusNode.hasFocus'); });
-
+ 
     return GestureDetector(
       child: Padding(
         padding: const EdgeInsets.all(3) * widget.itemScale,

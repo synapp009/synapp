@@ -15,10 +15,7 @@ class ArrowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var width;
-    var top;
-    var left;
-    var size;
+
     var sector;
     Arrow tempArrow;
     var dataProvider = Provider.of<Data>(context);
@@ -26,26 +23,8 @@ class ArrowWidget extends StatelessWidget {
           if (k.target == targetKey) {tempArrow = k}
         });
 
-    var itemScale = dataProvider.structureMap[originKey].scale;
-    var stackScale = dataProvider.stackScale;
-    var stackOffset = dataProvider.stackOffset;
-    var itemPosition = Offset(
-        (dataProvider.getPositionOfRenderBox(originKey).dx -
-                dataProvider.stackOffset.dx) /
-            stackScale,
-        (dataProvider.getPositionOfRenderBox(originKey).dy -
-                dataProvider.stackOffset.dy) /
-            stackScale);
-    var itemSize = dataProvider.structureMap[originKey].size * itemScale;
 
-    Size distanceBetweenOriginAndTarget(originKey, targetKey) {
-      Offset originPosition = dataProvider.getPositionOfRenderBox(originKey);
-      Offset targetPosition = dataProvider.getPositionOfRenderBox(targetKey);
-      var tempSize;
-      return tempSize = Size(originPosition.dx - targetPosition.dx,
-          originPosition.dy - targetPosition.dy);
-    }
-
+   
     return Positioned(
       top: tempArrow.position.dy,
       //dataProvider.centerOfRenderBox(originKey).dy,

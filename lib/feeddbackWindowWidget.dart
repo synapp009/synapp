@@ -13,12 +13,12 @@ class FeedbackWindowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final dataProvider = Provider.of<Data>(context);
 
     var stackScale = dataProvider.notifier.value.row0[0];
 
     var itemScale = dataProvider.structureMap[itemKey].scale;
-
     var childList = dataProvider.getAllChildren(itemKey);
 
     childList.forEach((f) => {
@@ -48,8 +48,9 @@ class FeedbackWindowWidget extends StatelessWidget {
           height: dataProvider.structureMap[itemKey].size.height * (itemScale),
           width: dataProvider.structureMap[itemKey].size.width * (itemScale),
           child: Material(
+            animationDuration: Duration.zero,
             shape: SuperellipseShape(
-                borderRadius: BorderRadius.circular(28 * itemScale)),
+                borderRadius: BorderRadius.circular(28 * itemScale*stackScale)),
             //margin: EdgeInsets.all(0),
             color: dataProvider.structureMap[itemKey].color,
 
