@@ -311,40 +311,101 @@ class Data with ChangeNotifier {
     }
   }
 
+  getEdgeOffset(itemPosition, itemSize, Angle itemAngle) {
+    var adjacent;
+    var opposite;
+    var temp;
+    Angle tempAngle;
+    adjacent = (itemSize.height / 2) * stackScale;
+    if (itemAngle.degrees + 45 < 90 && itemAngle.degrees + 45 > 0) {
+      opposite = adjacent * itemAngle.tan;
+    } else if (itemAngle.degrees + 45 < 180 && itemAngle.degrees + 45 > 90) {
+      tempAngle = itemAngle - Angle.fromDegrees(90);
+
+      opposite = adjacent * tempAngle.tan;
+      temp = opposite;
+      opposite = adjacent;
+      adjacent = -temp;
+    } else if (itemAngle.degrees + 45 < 270 && itemAngle.degrees + 45 > 180) {
+      tempAngle = itemAngle - Angle.fromDegrees(180);
+
+      opposite = adjacent * tempAngle.tan;
+      opposite = -opposite;
+      adjacent = -adjacent;
+    } else {
+      tempAngle = itemAngle + Angle.fromDegrees(270);
+      opposite = adjacent * tempAngle.tan;
+      temp = adjacent;
+      adjacent = opposite;
+      opposite = -temp;
+    }
+    //put some space between arrow and edge
+    adjacent = adjacent * 1.1;
+    opposite = opposite * 1.1;
+    return Offset(adjacent, opposite);
+  }
+
+  bool boxHitTest(
+      {final Offset itemPosition,
+      final Size itemSize,
+      final Offset targetPosition,
+      final Size targetSize}) {
+    if (((itemPosition.dx > targetPosition.dx &&
+                itemPosition.dx < targetPosition.dx + targetSize.width) ||
+            (itemPosition.dx + itemSize.width > targetPosition.dx &&
+                itemPosition.dx + itemSize.width <
+                    targetPosition.dx + targetSize.width)) &&
+        ((itemPosition.dy > targetPosition.dy &&
+                itemPosition.dy < targetPosition.dy + targetSize.height) ||
+            (itemPosition.dy + itemSize.height > targetPosition.dy &&
+                itemPosition.dy + itemSize.height <
+                    targetPosition.dy + targetSize.height))) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   updateArrow(
       {final GlobalKey originKey,
       final GlobalKey feedbackKey,
       final GlobalKey targetKey,
       final GlobalKey draggedKey}) {
     Arrow arrow;
-
-
+//get size and arrow of origin and target
     RenderBox originRenderBox = originKey.currentContext.findRenderObject();
-       var originPosition = getPositionOfRenderBox(originKey);
+    var originPosition = getPositionOfRenderBox(originKey);
     var originSize = originRenderBox.size;
-    originPosition = Offset(originPosition.dx + (originSize.width/2)*stackScale,originPosition.dy+ (originSize.height/2)*stackScale,  );
-
-
-
- 
+    originPosition = Offset(
+      originPosition.dx + (originSize.width / 2) * stackScale,
+      originPosition.dy + (originSize.height / 2) * stackScale,
+    );
 
     RenderBox targetRenderBox = targetKey.currentContext.findRenderObject();
-       var targetPosition = getPositionOfRenderBox(targetKey);
+    var targetPosition = getPositionOfRenderBox(targetKey);
     var targetSize = targetRenderBox.size;
-    targetPosition = Offset(targetPosition.dx + (targetSize.width/2)*stackScale,targetPosition.dy+ (targetSize.height/2)*stackScale,  );
-
+    targetPosition = Offset(
+      targetPosition.dx + (targetSize.width / 2) * stackScale,
+      targetPosition.dy + (targetSize.height / 2) * stackScale,
+    );
 
     var feedbackPosition;
     var feedbackSize;
 
+    var targetEdgeOffset;
+    var feedbackEdgeOffset;
+    var originEdgeOffset;
+
+//get size and position of feedback when it gets dragged (means feedbackKey is not draggedKey)
     if (feedbackKey != null) {
       RenderBox feedbackRenderBox =
           feedbackKey.currentContext.findRenderObject();
       feedbackSize = feedbackRenderBox.size * 1.1;
       feedbackPosition = getPositionOfRenderBox(feedbackKey);
-      feedbackPosition = (Offset(feedbackPosition.dx + (feedbackSize.width / 2)*stackScale,
-          feedbackPosition.dy + (feedbackSize.height / 2)*stackScale));
-    } 
+      feedbackPosition = (Offset(
+          feedbackPosition.dx + (feedbackSize.width / 2) * stackScale,
+          feedbackPosition.dy + (feedbackSize.height / 2) * stackScale));
+    }
 
 //get correct arrow
     arrowMap[originKey].forEach((v) => {
@@ -354,29 +415,55 @@ class Data with ChangeNotifier {
             }
         });
 
-    if (draggedKey == originKey ) {
-      //if origin gets tragged, use feedback as origin
+//check if one (feedback, target or origin) is inside another
 
-      arrow.size = diagonalLength(
-              Offset(targetPosition.dx, targetPosition.dy + headerHeight()),
-              feedbackPosition) /
-          stackScale;
+    if (draggedKey == originKey) {
+      //if origin gets tragged, use feedback as origin
       arrow.angle = getAngle(feedbackPosition,
           Offset(targetPosition.dx, targetPosition.dy + headerHeight()));
-      arrow.position = (feedbackPosition - stackOffset) / stackScale;
-    } else if (draggedKey == targetKey ) {
+      feedbackEdgeOffset =
+          getEdgeOffset(feedbackPosition, feedbackSize, arrow.angle);
+      targetEdgeOffset = getEdgeOffset(targetPosition, targetSize, arrow.angle);
+
+      arrow.size = diagonalLength(
+              Offset(targetPosition.dx - targetEdgeOffset.dx,
+                  targetPosition.dy - targetEdgeOffset.dy + headerHeight()),
+              feedbackPosition + feedbackEdgeOffset) /
+          stackScale;
+      arrow.position =
+          ((feedbackPosition + feedbackEdgeOffset - stackOffset)) / stackScale;
+    } else if (draggedKey == targetKey) {
       //if target gets tragged, use feedback as target
 
-      arrow.size =
-          diagonalLength(Offset(originPosition.dx,originPosition.dy+headerHeight()),feedbackPosition) / stackScale;
-      arrow.angle = getAngle(Offset(originPosition.dx,originPosition.dy-headerHeight()),feedbackPosition);
-      arrow.position = (originPosition - stackOffset) / stackScale;
+      arrow.angle = getAngle(
+          Offset(originPosition.dx, originPosition.dy - headerHeight()),
+          feedbackPosition);
+
+      originEdgeOffset = getEdgeOffset(originPosition, originSize, arrow.angle);
+      feedbackEdgeOffset =
+          getEdgeOffset(feedbackPosition, feedbackSize, arrow.angle);
+      arrow.size = diagonalLength(
+              Offset(originPosition.dx + originEdgeOffset.dx,
+                  originPosition.dy + originEdgeOffset.dy + headerHeight()),
+              feedbackPosition - feedbackEdgeOffset) /
+          stackScale;
+      arrow.position =
+          ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
     } else {
-      arrow.size = diagonalLength(Offset(originPosition.dx,originPosition.dy+headerHeight()), targetPosition) / stackScale;
-      arrow.angle = getAngle(Offset(originPosition.dx,originPosition.dy),Offset(targetPosition.dx, targetPosition.dy + headerHeight()));
-      arrow.position = (originPosition - stackOffset) / stackScale;
+      arrow.angle = getAngle(Offset(originPosition.dx, originPosition.dy),
+          Offset(targetPosition.dx, targetPosition.dy + headerHeight()));
+
+      targetEdgeOffset = getEdgeOffset(targetPosition, targetSize, arrow.angle);
+      originEdgeOffset = getEdgeOffset(originPosition, originSize, arrow.angle);
+      arrow.size = diagonalLength(
+              Offset(originPosition.dx + originEdgeOffset.dx,
+                  originPosition.dy + originEdgeOffset.dy + headerHeight()),
+              targetPosition - targetEdgeOffset) /
+          stackScale;
+      arrow.position =
+          ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
     }
-    notifyListeners();
+   notifyListeners();
   }
 
   connectAndUnselect(Key itemKey) {
@@ -388,8 +475,8 @@ class Data with ChangeNotifier {
             {
               tempKey = k,
               positionOfTarget = centerOfRenderBox(k),
-              positionOfTarget =
-                  Offset(positionOfTarget.dx, positionOfTarget.dy+headerHeight()),
+              positionOfTarget = Offset(
+                  positionOfTarget.dx, positionOfTarget.dy + headerHeight()),
               setArrowToPointer(itemKey, positionOfTarget),
               selectedMap[k] = false,
               arrowMap[itemKey].forEach((Arrow l) => {
@@ -403,7 +490,8 @@ class Data with ChangeNotifier {
       }
     }
 
-    selectedMap[itemKey] = false;
+    //selectedMap[itemKey] = false;
+    updateArrow(originKey: itemKey, targetKey: tempKey);
 
     notifyListeners();
   }

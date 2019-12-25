@@ -50,7 +50,7 @@ class FeedbackWindowWidget extends StatelessWidget {
           child: Material(
             animationDuration: Duration.zero,
             shape: SuperellipseShape(
-                borderRadius: BorderRadius.circular(28 * itemScale*stackScale)),
+                borderRadius: BorderRadius.circular(28 * itemScale)),
             //margin: EdgeInsets.all(0),
             color: dataProvider.structureMap[itemKey].color,
 

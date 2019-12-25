@@ -32,10 +32,10 @@ class _WindowWidgetState extends State<WindowWidget>
   bool _dragStarted = false;
   GlobalKey feedbackKey = GlobalKey();
   var dataProvider;
+
   @override
   void initState() {
     super.initState();
-
     //Animation Widget gets bigger when tapp and dragged and smaller when dropped
     _controller = AnimationController(
       vsync: this,
@@ -61,6 +61,7 @@ class _WindowWidgetState extends State<WindowWidget>
 
   var itemScale;
   double stackScale;
+  Offset stackOffset;
   Offset offset = Offset(0, 0);
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
@@ -79,20 +80,7 @@ class _WindowWidgetState extends State<WindowWidget>
     //bool dataProvider.selectedMap[key] = dataProvider.selectedMap[key];
     stackScale = dataProvider.stackScale;
     itemScale = dataProvider.structureMap[key].scale;
-
-    _isPointerMoving() {
-      _timer = new Timer(const Duration(milliseconds: 200), () {
-        setState(() {
-          if (!pointerMoving && !dataProvider.selectedMap[key]) {
-            _controller.forward();
-            if (pointerUp) {
-              _controller.reverse();
-              pointerUp = false;
-            }
-          }
-        });
-      });
-    }
+    stackOffset = dataProvider.stackOffset;
 
     _animation() {
       _controller.forward();
@@ -100,30 +88,67 @@ class _WindowWidgetState extends State<WindowWidget>
         setState(() {
           dataProvider.selectedMap[key] =
               dataProvider.selectedMap[key] ? false : true;
-
           _controller.reverse();
         });
       });
     }
 
     _hitTest(details) {
+      double displayWidth = MediaQuery.of(context).size.width;
+      double displayHeight = MediaQuery.of(context).size.height;
+      Size displaySize = MediaQuery.of(context).size;
+
       Map<Key, Offset> renderBoxesOffset = {};
       List targetList = [];
 
-      dataProvider.structureMap.forEach((k, v) => {
-            //hit Test
+      //store all widgets in view into the list
+      List widgetsInView = [];
+      Offset itemKeyPosition;
+      Size itemKeySize;
+      dataProvider.structureMap.forEach((Key itemKey, dynamic widget) => {
+            itemKeyPosition = Offset(
+                    dataProvider.structureMap[itemKey].position.dx * stackScale,
+                    dataProvider.structureMap[itemKey].position.dy *
+                            stackScale +
+                        dataProvider.headerHeight()) +
+                stackOffset,
+            itemKeySize = dataProvider.structureMap[itemKey].size / stackScale,
+            displayWidth = displayWidth,
+            if (itemKey != null)
+              {
+                if (dataProvider.boxHitTest(
+                    itemPosition: itemKeyPosition,
+                    itemSize: itemKeySize,
+                    targetPosition: stackOffset,
+                    targetSize: displaySize))
+                  {widgetsInView.add(itemKey)}
+              },
+          });
+
+      //hit Test for items laying in the widgetsInView
+      widgetsInView.forEach((k) => {
+            //dataProvider.hitTest(item: details.globalPosition.dx, target: k),
+
             renderBoxesOffset[k] = dataProvider.getPositionOfRenderBox(k),
+
+            /* dataProvider.boxHitTestWithScaleAndOffset(
+                    itemPosition: details.globalPosition,
+                    itemSize: Size(0,0),
+                    targetPosition: renderBoxesOffset[k],
+                    targetSize: displaySize)*/
 
             if (details.globalPosition.dx > renderBoxesOffset[k].dx &&
                 details.globalPosition.dx <
                     renderBoxesOffset[k].dx +
                         dataProvider.structureMap[k].size.width *
-                            dataProvider.structureMap[k].scale &&
+                            dataProvider.structureMap[k].scale *
+                            stackScale &&
                 (details.globalPosition.dy - dataProvider.headerHeight()) >
                     renderBoxesOffset[k].dy &&
                 details.globalPosition.dy - dataProvider.headerHeight() <
                     renderBoxesOffset[k].dy +
                         dataProvider.structureMap[k].size.height *
+                            stackScale *
                             dataProvider.structureMap[k].scale)
               {
                 dataProvider.selectedMap[k] = true,
@@ -222,10 +247,28 @@ class _WindowWidgetState extends State<WindowWidget>
                   else
                     {
                       dataProvider.updateArrow(
-                          originKey: originKey, targetKey: targetKey)
+                          originKey: originKey,
+                          feedbackKey: feedbackKey,
+                          targetKey: targetKey,
+                          draggedKey: feedbackKey)
                     }
                 })
           });
+    }
+
+    _isPointerMoving() {
+      _timer = new Timer(const Duration(milliseconds: 200), () {
+        setState(() {
+          if (!pointerMoving && !dataProvider.selectedMap[key]) {
+            _controller.forward();
+            updateArrowToKeyMap(feedbackKey);
+            if (pointerUp) {
+              _controller.reverse();
+              pointerUp = false;
+            }
+          }
+        });
+      });
     }
 
     //scale-animation
@@ -238,7 +281,6 @@ class _WindowWidgetState extends State<WindowWidget>
     } else {
       _scale = 1;
     }
-
     return Positioned(
       top: dataProvider.structureMap[key].position.dy * itemScale,
       left: dataProvider.structureMap[key].position.dx * itemScale,
@@ -246,6 +288,7 @@ class _WindowWidgetState extends State<WindowWidget>
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
             return Listener(
               onPointerDown: (PointerDownEvent event) {
+                //print('pointdow');
                 pointerUp = false;
 
                 if (dataProvider.firstItem) {
@@ -264,7 +307,7 @@ class _WindowWidgetState extends State<WindowWidget>
               onPointerCancel: (details) {
                 _timer = new Timer(Duration(milliseconds: 200), () {
                   setState(() {
-                    updateArrowToKeyMap(key);
+                    //updateArrowToKeyMap(key);
                     hasArrowToKeyMap = {};
                   });
                 });
@@ -273,12 +316,6 @@ class _WindowWidgetState extends State<WindowWidget>
               onPointerUp: (PointerUpEvent event) {
                 _controller.reverse();
 
-                _timer = new Timer(Duration(milliseconds: 200), () {
-                  setState(() {
-                    updateArrowToKeyMap(key);
-                    hasArrowToKeyMap = {};
-                  });
-                });
                 pointerUpOffset = event.position;
                 pointerUp = true;
                 pointerMoving = false;
@@ -335,6 +372,13 @@ class _WindowWidgetState extends State<WindowWidget>
                     onDragEnd: (DraggableDetails details) {
                       onDragEndOffset = details.offset;
                       _dragStarted = false;
+
+                      _timer = new Timer(Duration(milliseconds: 200), () {
+                        setState(() {
+                          updateArrowToKeyMap(feedbackKey);
+                          hasArrowToKeyMap = {};
+                        });
+                      });
                     },
                     onDragStarted: () {
                       _dragStarted = true;
