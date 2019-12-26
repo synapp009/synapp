@@ -215,7 +215,7 @@ class Data with ChangeNotifier {
     Size originBoxSize = originBox.size * stackScale;
     tempStackOffset = stackOffset * stackScale;
     //var originBoxScale = structureMap[originKey].scale;
-    //double originBoxScale = dataProvider.structureMap[originKey].scale;
+    //double originBoxScale = structureMap[originKey].scale;
     return centerOfOrigin = Offset(
         (originBoxPosition.dx + (originBoxSize.width / 2)),
         (originBoxPosition.dy + (originBoxSize.height / 2)));
@@ -370,7 +370,9 @@ class Data with ChangeNotifier {
       {final GlobalKey originKey,
       final GlobalKey feedbackKey,
       final GlobalKey targetKey,
-      final GlobalKey draggedKey}) {
+      final GlobalKey draggedKey,
+      final Map<Key, List<Key>> hasArrowToKeyMap}) {
+    if ((feedbackKey == originKey || feedbackKey == targetKey)) {}
     Arrow arrow;
 //get size and arrow of origin and target
     RenderBox originRenderBox = originKey.currentContext.findRenderObject();
@@ -400,7 +402,9 @@ class Data with ChangeNotifier {
     if (feedbackKey != null) {
       RenderBox feedbackRenderBox =
           feedbackKey.currentContext.findRenderObject();
-      feedbackSize = feedbackRenderBox.size * 1.1;
+      feedbackSize = (feedbackKey == originKey || feedbackKey == targetKey)
+          ? feedbackRenderBox.size
+          : feedbackRenderBox.size * 1.1;
       feedbackPosition = getPositionOfRenderBox(feedbackKey);
       feedbackPosition = (Offset(
           feedbackPosition.dx + (feedbackSize.width / 2) * stackScale,
@@ -416,6 +420,8 @@ class Data with ChangeNotifier {
         });
 
 //check if one (feedback, target or origin) is inside another
+//hasArrowToKeyMap.forEach()
+//boxHitTest()
 
     if (draggedKey == originKey) {
       //if origin gets tragged, use feedback as origin
@@ -463,7 +469,7 @@ class Data with ChangeNotifier {
       arrow.position =
           ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
     }
-   notifyListeners();
+    notifyListeners();
   }
 
   connectAndUnselect(Key itemKey) {
@@ -490,9 +496,75 @@ class Data with ChangeNotifier {
       }
     }
 
-    //selectedMap[itemKey] = false;
-    updateArrow(originKey: itemKey, targetKey: tempKey);
+    if (tempKey != null) {
+      updateArrow(originKey: itemKey, targetKey: tempKey);
+    }
 
     notifyListeners();
+  }
+
+  hitTest(key, position, context) {
+    double displayWidth = MediaQuery.of(context).size.width;
+    double displayHeight = MediaQuery.of(context).size.height;
+    Size displaySize = MediaQuery.of(context).size;
+
+    Map<Key, Offset> renderBoxesOffset = {};
+    List targetList = [];
+
+    //store all widgets in view into the list
+    List widgetsInView = [];
+    Offset itemKeyPosition;
+    Size itemKeySize;
+    structureMap.forEach((Key itemKey, dynamic widget) => {
+          itemKeyPosition = Offset(
+                  structureMap[itemKey].position.dx * stackScale,
+                  structureMap[itemKey].position.dy * stackScale +
+                      headerHeight()) +
+              stackOffset,
+          itemKeySize = structureMap[itemKey].size / stackScale,
+          displayWidth = displayWidth,
+          if (itemKey != null)
+            {
+              if (boxHitTest(
+                  itemPosition: itemKeyPosition,
+                  itemSize: itemKeySize,
+                  targetPosition: stackOffset,
+                  targetSize: displaySize))
+                {widgetsInView.add(itemKey)}
+            },
+        });
+
+    //hit Test for items laying in the widgetsInView
+    widgetsInView.forEach((k) => {
+          //hitTest(item: details.globalPosition.dx, target: k),
+
+          renderBoxesOffset[k] = getPositionOfRenderBox(k),
+
+          /* boxHitTestWithScaleAndOffset(
+                    itemPosition: details.globalPosition,
+                    itemSize: Size(0,0),
+                    targetPosition: renderBoxesOffset[k],
+                    targetSize: displaySize)*/
+
+          if (position.dx > renderBoxesOffset[k].dx &&
+              position.dx <
+                  renderBoxesOffset[k].dx +
+                      structureMap[k].size.width *
+                          structureMap[k].scale *
+                          stackScale &&
+              (position.dy - headerHeight()) > renderBoxesOffset[k].dy &&
+              position.dy - headerHeight() <
+                  renderBoxesOffset[k].dy +
+                      structureMap[k].size.height *
+                          stackScale *
+                          structureMap[k].scale)
+            {
+              selectedMap[k] = true,
+              targetList = getAllTargets(k),
+              targetList.forEach((k) => selectedMap[k] = false)
+            }
+          else
+            {k != key ? selectedMap[k] = false : selectedMap[k] = true}
+        });
   }
 }

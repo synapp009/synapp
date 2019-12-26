@@ -9,7 +9,7 @@ import 'windowWidget.dart';
 
 class WindowStackBuilder extends StatelessWidget {
   final Key itemKey;
-
+Key getSomeKey = GlobalKey();
   WindowStackBuilder(this.itemKey);
 
   @override
@@ -21,9 +21,10 @@ class WindowStackBuilder extends StatelessWidget {
         child: Container(
           height: dataProvider.structureMap[itemKey].size.height,
           width: dataProvider.structureMap[itemKey].size.width,
-          //child: Text( '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
+          child: Text( '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
         ),
       ),
+     // TextField(maxLines:40),
       ...stackItems(context)
     ]);
   }

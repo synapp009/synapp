@@ -62,6 +62,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
         onPointerMove: (PointerMoveEvent event) {
           absorbing = true;
           pointerMoving = true;
+          dataProvider.hitTest(key, event.position,context);
         },
         child: LongPressDraggable(
             dragAnchor: DragAnchor.pointer,

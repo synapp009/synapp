@@ -26,12 +26,7 @@ class HomeView extends StatelessWidget {
               },
               icon: Icon(Icons.playlist_add),
             ),
-            IconButton(
-              onPressed: () {
-                Provider.of<Data>(context).createNewTextfield();
-              },
-              icon: Icon(Icons.linear_scale),
-            ),
+
           ],
         ),
         body: StackAnimator(),

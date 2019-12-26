@@ -23,7 +23,6 @@ class ArrowWidget extends StatelessWidget {
     var stackScale = dataProvider.stackScale;
     var actualTargetKey = dataProvider.getActualTargetKey(targetKey);
 
-
     dataProvider.arrowMap[originKey].forEach((Arrow k) => {
           if (k.target == targetKey) {tempArrow = k}
         });
@@ -39,7 +38,8 @@ class ArrowWidget extends StatelessWidget {
           angle: tempArrow.angle.radians,
           child: CustomPaint(
             size: Size(tempArrow.size, 100),
-            foregroundPainter: ArrowPainter(sector, originScale, targetScale,stackScale),
+            foregroundPainter:
+                ArrowPainter(sector, originScale, targetScale, stackScale),
           ),
         ),
       ),
@@ -48,7 +48,8 @@ class ArrowWidget extends StatelessWidget {
 }
 
 class ArrowPainter extends CustomPainter {
-  ArrowPainter(this.sector, this.originScale, this.targetScale,this.stackScale);
+  ArrowPainter(
+      this.sector, this.originScale, this.targetScale, this.stackScale);
   TextSpan textSpan;
   TextPainter textPainter;
   int sector;
@@ -62,35 +63,40 @@ class ArrowPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.0*targetScale;
+      ..strokeWidth = 1.0 * targetScale;
 
     Paint paintArrow = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 1.5*targetScale;
+      ..strokeWidth = 1.5 * targetScale;
 
     Path path = Path();
     Path pathArrow = Path();
 
+    canvas.drawCircle(Offset(0, size.height / 2), 3 * originScale,
+        paint..color = Colors.black);
+    canvas.drawCircle(Offset(size.width, size.height / 2), 3 * targetScale,
+        paint..color = Colors.black);
     path.moveTo(0, (size.height / 2) - (1 * originScale));
-    canvas.drawCircle(Offset(0,size.height/2),4*originScale,paint..color = Colors.black);
     path.lineTo(size.width, (size.height / 2) - (1 * targetScale));
     path.lineTo(size.width, (size.height / 2) + (1 * targetScale));
     path.lineTo(0, (size.height / 2) + (1 * originScale));
     path.lineTo(0, (size.height / 2) - (1 * originScale));
+
     path.close();
     canvas.drawPath(path, paint..color = Colors.black);
 
-    pathArrow.moveTo(size.width-0.1*targetScale, (size.height / 2));
+   /* pathArrow.moveTo(size.width - 0.1 * targetScale, (size.height / 2));
     pathArrow.lineTo(size.width, (size.height / 2));
     pathArrow = ArrowPath.make(tipLength: 7 * targetScale, path: pathArrow);
-    canvas.drawPath(pathArrow, paintArrow..color = Colors.black); 
+    canvas.drawPath(pathArrow, paintArrow..color = Colors.black);*/
 
     //Text of the arrow
-    textSpan =
-        TextSpan(text: '...', style: TextStyle(color: Colors.black,fontSize:16/stackScale));
+    textSpan = TextSpan(
+        text: '...',
+        style: TextStyle(color: Colors.black, fontSize: 16 / stackScale));
     textPainter = TextPainter(
       text: textSpan,
       textAlign: TextAlign.center,

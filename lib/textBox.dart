@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 
 class TextBox {
   final Key key;
-   Size size;
+  Size size;
 
-   Offset position;
-   Color color;
-   String title;
-   String content;
-   //bool expanded;
-   double scale;
-   double textSize;
-
+  Offset position;
+  Color color;
+  String title;
+  String content;
+  //bool expanded;
+  double scale;
+  double textSize;
 
   TextBox(
       {this.key,
@@ -22,6 +21,4 @@ class TextBox {
       this.scale,
       this.textSize,
       this.content});
-
-
 }

@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
+import 'package:synapp/itemStackBuilder.dart';
 
 import 'arrow.dart';
 import 'data.dart';
@@ -93,101 +94,33 @@ class _WindowWidgetState extends State<WindowWidget>
       });
     }
 
-    _hitTest(details) {
-      double displayWidth = MediaQuery.of(context).size.width;
-      double displayHeight = MediaQuery.of(context).size.height;
-      Size displaySize = MediaQuery.of(context).size;
+    bool keyIsTargetOrOrigin(k) {
+      bool tempBool = false;
 
-      Map<Key, Offset> renderBoxesOffset = {};
-      List targetList = [];
+      if (dataProvider.arrowMap[key] != null) {
+        dataProvider.arrowMap[key].forEach((Arrow a) => {
+              if (a.target == k)
+                {
+                  tempBool = true,
+                }
+            });
+      }
 
-      //store all widgets in view into the list
-      List widgetsInView = [];
-      Offset itemKeyPosition;
-      Size itemKeySize;
-      dataProvider.structureMap.forEach((Key itemKey, dynamic widget) => {
-            itemKeyPosition = Offset(
-                    dataProvider.structureMap[itemKey].position.dx * stackScale,
-                    dataProvider.structureMap[itemKey].position.dy *
-                            stackScale +
-                        dataProvider.headerHeight()) +
-                stackOffset,
-            itemKeySize = dataProvider.structureMap[itemKey].size / stackScale,
-            displayWidth = displayWidth,
-            if (itemKey != null)
-              {
-                if (dataProvider.boxHitTest(
-                    itemPosition: itemKeyPosition,
-                    itemSize: itemKeySize,
-                    targetPosition: stackOffset,
-                    targetSize: displaySize))
-                  {widgetsInView.add(itemKey)}
-              },
-          });
-
-      //hit Test for items laying in the widgetsInView
-      widgetsInView.forEach((k) => {
-            //dataProvider.hitTest(item: details.globalPosition.dx, target: k),
-
-            renderBoxesOffset[k] = dataProvider.getPositionOfRenderBox(k),
-
-            /* dataProvider.boxHitTestWithScaleAndOffset(
-                    itemPosition: details.globalPosition,
-                    itemSize: Size(0,0),
-                    targetPosition: renderBoxesOffset[k],
-                    targetSize: displaySize)*/
-
-            if (details.globalPosition.dx > renderBoxesOffset[k].dx &&
-                details.globalPosition.dx <
-                    renderBoxesOffset[k].dx +
-                        dataProvider.structureMap[k].size.width *
-                            dataProvider.structureMap[k].scale *
-                            stackScale &&
-                (details.globalPosition.dy - dataProvider.headerHeight()) >
-                    renderBoxesOffset[k].dy &&
-                details.globalPosition.dy - dataProvider.headerHeight() <
-                    renderBoxesOffset[k].dy +
-                        dataProvider.structureMap[k].size.height *
-                            stackScale *
-                            dataProvider.structureMap[k].scale)
-              {
-                dataProvider.selectedMap[k] = true,
-                targetList = dataProvider.getAllTargets(k),
-                targetList.forEach((k) => dataProvider.selectedMap[k] = false)
-              }
-            else
-              {
-                k != key
-                    ? dataProvider.selectedMap[k] = false
-                    : dataProvider.selectedMap[k] = true
-              }
-          });
+      dataProvider.arrowMap.forEach(
+        ((Key originKey, List<Arrow> listOfArrows) => {
+              listOfArrows.forEach((Arrow a) => {
+                    if (a.target == key)
+                      {
+                        tempBool = true,
+                      }
+                  }),
+            }),
+      );
+      return tempBool;
     }
 
     getAllArrows(key) {
       //get all arrows pointing to or coming from the item and also it's children items
-
-      //all arrows coming from the item (key)
-      if (dataProvider.arrowMap[key] != null) {
-        dataProvider.arrowMap[key].forEach((Arrow arrow) => {
-              if (hasArrowToKeyMap[arrow.target] == null)
-                {hasArrowToKeyMap[arrow.target] = []},
-              [arrow.target].add(key)
-            });
-      }
-
-      //all arrows pointing to the item (key)
-      dataProvider.arrowMap
-          .forEach((Key originKey, List<Arrow> listOfArrows) => {
-                listOfArrows.forEach((Arrow arrow) => {
-                      if (arrow.target == key)
-                        {
-                          if (hasArrowToKeyMap[key] == null)
-                            {hasArrowToKeyMap[key] == []},
-                          [key].add(originKey)
-                        }
-                    })
-              });
 
       //all childItems pointing to or getting targetted
       List childList = dataProvider.getAllChildren(key);
@@ -199,7 +132,8 @@ class _WindowWidgetState extends State<WindowWidget>
                       if (originKey != null)
                         {
                           listOfArrows.forEach((Arrow a) => {
-                                if (a.target == childKey)
+                                if (a.target == childKey &&
+                                    keyIsTargetOrOrigin(childKey))
                                   {
                                     if (hasArrowToKeyMap[originKey] == null)
                                       {
@@ -209,7 +143,8 @@ class _WindowWidgetState extends State<WindowWidget>
                                   }
                                 else
                                   {
-                                    if (a.target != null)
+                                    if (a.target != null &&
+                                        keyIsTargetOrOrigin(a.target))
                                       {
                                         if (hasArrowToKeyMap[originKey] == null)
                                           {
@@ -231,10 +166,12 @@ class _WindowWidgetState extends State<WindowWidget>
                   if (_dragStarted && originKey == key)
                     {
                       dataProvider.updateArrow(
-                          originKey: originKey,
-                          feedbackKey: feedbackKey,
-                          targetKey: targetKey,
-                          draggedKey: originKey)
+                        originKey: originKey,
+                        feedbackKey: feedbackKey,
+                        targetKey: targetKey,
+                        draggedKey: originKey,
+                        hasArrowToKeyMap: hasArrowToKeyMap,
+                      )
                     }
                   else if (_dragStarted && targetKey == key)
                     {
@@ -242,7 +179,8 @@ class _WindowWidgetState extends State<WindowWidget>
                           originKey: originKey,
                           feedbackKey: feedbackKey,
                           targetKey: targetKey,
-                          draggedKey: targetKey)
+                          draggedKey: targetKey,
+                          hasArrowToKeyMap: hasArrowToKeyMap)
                     }
                   else
                     {
@@ -250,7 +188,8 @@ class _WindowWidgetState extends State<WindowWidget>
                           originKey: originKey,
                           feedbackKey: feedbackKey,
                           targetKey: targetKey,
-                          draggedKey: feedbackKey)
+                          draggedKey: feedbackKey,
+                          hasArrowToKeyMap: hasArrowToKeyMap)
                     }
                 })
           });
@@ -261,7 +200,6 @@ class _WindowWidgetState extends State<WindowWidget>
         setState(() {
           if (!pointerMoving && !dataProvider.selectedMap[key]) {
             _controller.forward();
-            updateArrowToKeyMap(feedbackKey);
             if (pointerUp) {
               _controller.reverse();
               pointerUp = false;
@@ -288,9 +226,7 @@ class _WindowWidgetState extends State<WindowWidget>
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
             return Listener(
               onPointerDown: (PointerDownEvent event) {
-                //print('pointdow');
                 pointerUp = false;
-
                 if (dataProvider.firstItem) {
                   dataProvider.actualItemKey = key;
                   getAllArrows(key);
@@ -305,12 +241,8 @@ class _WindowWidgetState extends State<WindowWidget>
                 });
               },
               onPointerCancel: (details) {
-                _timer = new Timer(Duration(milliseconds: 200), () {
-                  setState(() {
-                    //updateArrowToKeyMap(key);
-                    hasArrowToKeyMap = {};
-                  });
-                });
+                // hasArrowToKeyMap = {};
+
                 pointerMoving = false;
               },
               onPointerUp: (PointerUpEvent event) {
@@ -320,6 +252,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 pointerUp = true;
                 pointerMoving = false;
                 dataProvider.firstItem = true;
+
                 offset = Offset(0, 0);
               },
               onPointerMove: (PointerMoveEvent event) {
@@ -341,6 +274,10 @@ class _WindowWidgetState extends State<WindowWidget>
                 }
               },
               child: GestureDetector(
+                onDoubleTap: () {
+                  Provider.of<Data>(context).notifier.value.row0[0] = 2.0;
+                  print(Provider.of<Data>(context).notifier.value.row0[0]);
+                },
                 onLongPressStart: (details) {
                   HapticFeedback.lightImpact();
 
@@ -349,7 +286,7 @@ class _WindowWidgetState extends State<WindowWidget>
                   dataProvider.onlySelectThis(key);
                 },
                 onLongPressMoveUpdate: (details) {
-                  _hitTest(details);
+                  dataProvider.hitTest(key, details.globalPosition, context);
                   dataProvider.setArrowToPointer(key, details.globalPosition);
                 },
                 onLongPressEnd: (details) {
@@ -371,17 +308,23 @@ class _WindowWidgetState extends State<WindowWidget>
                     maxSimultaneousDrags: dataProvider.selectedMap[key] ? 0 : 1,
                     onDragEnd: (DraggableDetails details) {
                       onDragEndOffset = details.offset;
-                      _dragStarted = false;
 
                       _timer = new Timer(Duration(milliseconds: 200), () {
                         setState(() {
-                          updateArrowToKeyMap(feedbackKey);
+                          updateArrowToKeyMap(key);
+                          _dragStarted = false;
                           hasArrowToKeyMap = {};
                         });
                       });
                     },
                     onDragStarted: () {
                       _dragStarted = true;
+
+                      _timer = new Timer(Duration(milliseconds: 200), () {
+                        setState(() {
+                          updateArrowToKeyMap(feedbackKey);
+                        });
+                      });
                     },
                     onDragCompleted: () {
                       setState(() {
@@ -391,7 +334,6 @@ class _WindowWidgetState extends State<WindowWidget>
                       });
                     },
                     onDraggableCanceled: (vel, Offset off) {
-                      _dragStarted = false;
                       setState(() {
                         dataProvider.structureMap[key].position =
                             dataProvider.itemDropPosition(
