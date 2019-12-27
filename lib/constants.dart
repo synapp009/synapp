@@ -32,6 +32,10 @@ static Map<Key,bool> initializeSelectedMap(Map<Key,bool> selectedMap){
       [Arrow(angle: Angle.fromDegrees(0) ,arrowed: false,position: Offset(0,0),size: 0,target: null)]
     };
   }
+
+  static ValueNotifier<Matrix4>  initializeNotifier(ValueNotifier<Matrix4> notifier){
+   return notifier = ValueNotifier(Matrix4.identity());
+  }
 }
 
 

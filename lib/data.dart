@@ -11,7 +11,8 @@ import 'window.dart';
 import 'textBox.dart';
 
 class Data with ChangeNotifier {
-  ValueNotifier<Matrix4> notifier;
+  ValueNotifier<Matrix4> notifier ;
+  Matrix4 matrix = Matrix4.identity();
 
   Map<Key, dynamic> structureMap;
   Map<GlobalKey, List<Arrow>> arrowMap;
@@ -35,6 +36,7 @@ class Data with ChangeNotifier {
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
     selectedMap = Constants.initializeSelectedMap(selectedMap);
+   notifier = Constants.initializeNotifier(notifier);
   }
 
   Map<GlobalKey, List<Arrow>> get getArrowMap => arrowMap;
@@ -503,9 +505,11 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  hitTest(key, position, context) {
-    double displayWidth = MediaQuery.of(context).size.width;
-    double displayHeight = MediaQuery.of(context).size.height;
+  hitTestRaw(position, context) {
+    //checks if position of a context layes in a box and gives out the key of the box
+    Map<Key, bool> selectedMap = {};
+    var selectedKey;
+
     Size displaySize = MediaQuery.of(context).size;
 
     Map<Key, Offset> renderBoxesOffset = {};
@@ -522,7 +526,111 @@ class Data with ChangeNotifier {
                       headerHeight()) +
               stackOffset,
           itemKeySize = structureMap[itemKey].size / stackScale,
-          displayWidth = displayWidth,
+          if (itemKey != null)
+            {
+              if (boxHitTest(
+                  itemPosition: itemKeyPosition,
+                  itemSize: itemKeySize,
+                  targetPosition: stackOffset,
+                  targetSize: displaySize))
+                {widgetsInView.add(itemKey)}
+            },
+        });
+
+    //hit Test for items laying in the widgetsInView
+    widgetsInView.forEach((k) => {
+          //hitTest(item: details.globalPosition.dx, target: k),
+
+          renderBoxesOffset[k] = getPositionOfRenderBox(k),
+
+          /* boxHitTestWithScaleAndOffset(
+                    itemPosition: details.globalPosition,
+                    itemSize: Size(0,0),
+                    targetPosition: renderBoxesOffset[k],
+                    targetSize: displaySize)*/
+
+          if (position.dx > renderBoxesOffset[k].dx &&
+              position.dx <
+                  renderBoxesOffset[k].dx +
+                      structureMap[k].size.width *
+                          structureMap[k].scale *
+                          stackScale &&
+              (position.dy - headerHeight()) > renderBoxesOffset[k].dy &&
+              position.dy - headerHeight() <
+                  renderBoxesOffset[k].dy +
+                      structureMap[k].size.height *
+                          stackScale *
+                          structureMap[k].scale)
+            {
+              selectedMap[k] = true,
+              targetList = getAllTargets(k),
+              targetList.forEach((k) => selectedMap[k] = false)
+            }
+        });
+    selectedMap.forEach((k, v) => {
+          if (v == true)
+            {
+              selectedKey = k,
+            }
+        });
+    return selectedKey;
+  }
+
+  zoomToBox(selectedKey, context) {
+    //zoom display to select doubletap box and offset to left start
+
+    Matrix4 matrix = Matrix4.identity();
+    Size displaySize = MediaQuery.of(context).size;
+    var itemSize = sizeOfRenderBox(selectedKey);
+    var otherPos = itemDropPosition(selectedKey, Offset(0, 0), Offset(0, 0));
+    var mapPosition = structureMap[selectedKey].position;
+    
+    var newScale = displaySize.width / itemSize.width;
+    var itemPosition = getPositionOfRenderBox(selectedKey);
+
+    print('structure mapPosition $mapPosition');
+    print('otherpos $otherPos');
+    print('newScale $newScale');
+    print('displaySize $displaySize');
+    print('stackScale $stackScale');
+    print('stackOffset $stackOffset');
+
+    //update Offset
+    notifier.value.setEntry(0, 0, newScale);
+    notifier.value.setEntry(1, 1, newScale);
+    //notifier.value.scale(newScale);
+    //update scale
+
+    print('renderbox itemPosition $itemPosition');
+
+    itemPosition = (((itemPosition - stackOffset)*newScale)/stackScale);
+   
+    notifier.value.setEntry(
+        0, 3, -itemPosition.dx);
+    notifier.value.setEntry(
+        1, 3, -itemPosition.dy);
+    notifyListeners();
+  }
+
+  hitTest(key, position, context) {
+    //checks if position of a context layes in a box and gives out the key of the box
+
+    Size displaySize = MediaQuery.of(context).size;
+
+    Map<Key, Offset> renderBoxesOffset = {};
+    List targetList = [];
+
+    //store all widgets in view into the list
+    List widgetsInView = [];
+    Offset itemKeyPosition;
+    Size itemKeySize;
+    structureMap.forEach((Key itemKey, dynamic widget) => {
+          itemKeyPosition = Offset(
+                  structureMap[itemKey].position.dx * stackScale,
+                  structureMap[itemKey].position.dy * stackScale +
+                      headerHeight()) +
+              stackOffset,
+          itemKeySize = structureMap[itemKey].size / stackScale,
           if (itemKey != null)
             {
               if (boxHitTest(

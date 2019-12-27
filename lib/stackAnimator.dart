@@ -5,36 +5,37 @@ import 'itemStackBuilder.dart';
 
 import 'data.dart';
 
-class StackAnimator extends StatefulWidget {
-  @override
-  _StackAnimatorState createState() => _StackAnimatorState();
-}
 
-class _StackAnimatorState extends State<StackAnimator> {
- Matrix4 matrix = Matrix4.identity();
-  ValueNotifier<Matrix4> notifier = ValueNotifier(Matrix4.identity());
+
+  class StackAnimator extends StatelessWidget {
+
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<Data>(context).notifier = notifier;
+    var dataProvider = Provider.of<Data>(context);
+    if(dataProvider.notifier == null){
+      print('initialize');
+      dataProvider.notifier = ValueNotifier(Matrix4.identity());
+    }
+    ValueNotifier<Matrix4> notifier = dataProvider.notifier;
     return MatrixGestureDetector(
       onMatrixUpdate: (m, tm, sm, rm) {
         //notifier.value = m;
-        print(notifier.value);
-        Provider.of<Data>(context).notifier.value = m;
-        Provider.of<Data>(context).stackScale = notifier.value.row0[0];
-        Provider.of<Data>(context).stackOffset =
+        dataProvider.notifier.value = m;
+        dataProvider.stackScale = notifier.value.row0[0];
+        dataProvider.stackOffset =
             Offset(notifier.value.row0.a, notifier.value.row1.a);
+         print(dataProvider.stackScale);
       },
       shouldRotate: false,
       child: AnimatedBuilder(
-        animation: Provider.of<Data>(context).notifier,
+        animation: notifier,
         builder: (ctx, child) {
           return Transform(
-            transform: Provider.of<Data>(context).notifier.value,
+            transform: notifier.value,
             child: ItemStackBuilder(),
           );
-        },
+        },child: ItemStackBuilder()
       ),
     );
   }

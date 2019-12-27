@@ -16,8 +16,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-
-      
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
 
@@ -30,9 +28,11 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         routes: <String, WidgetBuilder>{
           Constants.HOME_SCREEN: (BuildContext context) =>
-              ChangeNotifierProvider(
-                create:(_) => Data(),
-                  builder: (context) => Data(), child: HomeView())
+              ChangeNotifierProvider<Data>(
+                lazy:true,
+                create: (_) => Data(),
+                child: HomeView(),
+              )
         },
         initialRoute: Constants.HOME_SCREEN,
       ),

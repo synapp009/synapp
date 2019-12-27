@@ -275,8 +275,8 @@ class _WindowWidgetState extends State<WindowWidget>
               },
               child: GestureDetector(
                 onDoubleTap: () {
-                  Provider.of<Data>(context).notifier.value.row0[0] = 2.0;
-                  print(Provider.of<Data>(context).notifier.value.row0[0]);
+                  print('tab');
+                  dataProvider.zoomToBox(key, context);
                 },
                 onLongPressStart: (details) {
                   HapticFeedback.lightImpact();
