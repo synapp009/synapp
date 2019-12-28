@@ -11,13 +11,13 @@ import 'window.dart';
 import 'textBox.dart';
 
 class Data with ChangeNotifier {
-  ValueNotifier<Matrix4> notifier ;
+  ValueNotifier<Matrix4> notifier;
   Matrix4 matrix = Matrix4.identity();
 
   Map<Key, dynamic> structureMap;
   Map<GlobalKey, List<Arrow>> arrowMap;
   Map<Key, bool> selectedMap;
-
+  Size stackSize = Size(400, 900);
   Key actualTarget;
   Offset positionForDrop;
   Offset currentStackPosition = Offset(0, 100);
@@ -25,6 +25,8 @@ class Data with ChangeNotifier {
   Offset actualItemToPointerOffset = Offset(0, 0);
   double stackScale = 1.0;
   double statusBarHeight;
+  double maxScale;
+  Offset maxOffset;
 
   Key actualItemKey;
   bool firstItem = true;
@@ -36,7 +38,7 @@ class Data with ChangeNotifier {
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
     selectedMap = Constants.initializeSelectedMap(selectedMap);
-   notifier = Constants.initializeNotifier(notifier);
+    notifier = Constants.initializeNotifier(notifier);
   }
 
   Map<GlobalKey, List<Arrow>> get getArrowMap => arrowMap;
@@ -505,7 +507,19 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  hitTestRaw(position, context) {
+  bool stackSizeHitTest(position) {
+    if (position.dx > stackOffset.dx &&
+        position.dx < stackOffset.dx + stackSize.width * stackScale &&
+        (position.dy - headerHeight()) > stackOffset.dy &&
+        position.dy - headerHeight() <
+            stackOffset.dy + stackSize.height * stackScale) {
+    } else {
+      stackSize = stackSize * 1.2;
+    }
+    notifyListeners();
+  }
+
+  Key hitTestRaw(position, context) {
     //checks if position of a context layes in a box and gives out the key of the box
     Map<Key, bool> selectedMap = {};
     var selectedKey;
@@ -584,7 +598,7 @@ class Data with ChangeNotifier {
     var itemSize = sizeOfRenderBox(selectedKey);
     var otherPos = itemDropPosition(selectedKey, Offset(0, 0), Offset(0, 0));
     var mapPosition = structureMap[selectedKey].position;
-    
+
     var newScale = displaySize.width / itemSize.width;
     var itemPosition = getPositionOfRenderBox(selectedKey);
 
@@ -603,13 +617,55 @@ class Data with ChangeNotifier {
 
     print('renderbox itemPosition $itemPosition');
 
-    itemPosition = (((itemPosition - stackOffset)*newScale)/stackScale);
-   
-    notifier.value.setEntry(
-        0, 3, -itemPosition.dx);
-    notifier.value.setEntry(
-        1, 3, -itemPosition.dy);
+    itemPosition = (((itemPosition - stackOffset) * newScale) / stackScale);
+
+    notifier.value.setEntry(0, 3, -itemPosition.dx);
+    
+    notifier.value.setEntry(1, 3, -itemPosition.dy);
     notifyListeners();
+    
+  }
+
+  maxScaleAndOffset(context) {
+    var mostLeftKey;
+    var mostRightKey;
+    var mostTopKey;
+    var mostBottomKey;
+    List keyAtBottomList = structureMap[null].childKeys;
+    Size displaySize = MediaQuery.of(context).size;
+
+
+
+    for ( int i = 0; i < keyAtBottomList.length - 1; i++) {
+      if ((structureMap[keyAtBottomList[i]].position.dx +
+              structureMap[keyAtBottomList[i + 1]].size.width) >
+          (structureMap[keyAtBottomList[i + 1]].position.dx +
+              structureMap[keyAtBottomList[i + 1]].size.width)) {
+        mostLeftKey = keyAtBottomList[i + 1];
+        mostRightKey = keyAtBottomList[i];
+      } else {
+        mostLeftKey = keyAtBottomList[i];
+        mostRightKey = keyAtBottomList[i + 1];
+      }
+      if ((structureMap[keyAtBottomList[i]].position.dy -
+              structureMap[keyAtBottomList[i]].size.height) >
+          (structureMap[keyAtBottomList[i + 1]].position.dy -
+              structureMap[keyAtBottomList[i+1]].size.height)) {
+        mostTopKey = keyAtBottomList[i+1];
+        mostBottomKey = keyAtBottomList[i ];
+      } else {
+        mostBottomKey = keyAtBottomList[i+1];
+        mostTopKey = keyAtBottomList[i ];
+      }
+
+    }
+     /*     print('mostTopKey $mostTopKey');
+      print('mostBottomKey $mostBottomKey');
+      print('mostLeftKey $mostLeftKey');
+      print('mostRightKey $mostRightKey');*/
+      maxScale = 1/((displaySize.width/(structureMap[mostLeftKey].position.dx + structureMap[mostRightKey].position.dx + structureMap[mostRightKey].size.width))*1.5);
+    print('maxscale $maxScale');
+    //mostRightKey
   }
 
   hitTest(key, position, context) {

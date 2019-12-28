@@ -219,6 +219,7 @@ class _WindowWidgetState extends State<WindowWidget>
     } else {
       _scale = 1;
     }
+
     return Positioned(
       top: dataProvider.structureMap[key].position.dy * itemScale,
       left: dataProvider.structureMap[key].position.dx * itemScale,
@@ -256,6 +257,8 @@ class _WindowWidgetState extends State<WindowWidget>
                 offset = Offset(0, 0);
               },
               onPointerMove: (PointerMoveEvent event) {
+                dataProvider.stackSizeHitTest(event.position);
+
                 if (_dragStarted) {
                   updateArrowToKeyMap(feedbackKey);
                 }
@@ -275,8 +278,7 @@ class _WindowWidgetState extends State<WindowWidget>
               },
               child: GestureDetector(
                 onDoubleTap: () {
-                  print('tab');
-                  dataProvider.zoomToBox(key, context);
+                  // dataProvider.zoomToBox(key, context);
                 },
                 onLongPressStart: (details) {
                   HapticFeedback.lightImpact();

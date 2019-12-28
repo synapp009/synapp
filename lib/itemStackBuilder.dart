@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'arrow.dart';
 import 'textboxWidget.dart';
@@ -7,44 +8,51 @@ import 'windowWidget.dart';
 import 'arrowWidget.dart';
 import 'data.dart';
 
-class ItemStackBuilder extends StatelessWidget {
+class ItemStackBuilder extends StatefulWidget {
+  @override
+  _ItemStackBuilderState createState() => _ItemStackBuilderState();
+}
+
+class _ItemStackBuilderState extends State<ItemStackBuilder> {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
+    var stackScale = dataProvider.stackScale;
 
-    return Stack(overflow: Overflow.visible, children: [
-      DragTarget(
-        builder: (buildContext, List<dynamic> candidateData, rejectData) {
-          return Container(
-              color: Color.fromARGB(100, 71, 2, 255),
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height);
-        },
-        onWillAccept: (dynamic data) {
-          dataProvider.actualTarget = null;
-          if (dataProvider.structureMap[key].key !=
-                  data.key /*&&
-          !dataProvider.structureMap[data.key].childKeys.contains(key) &&
-          !dataProvider.structureMap[key].childKeys.contains(data.key)*/
-              ) {
-            // dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
-            var stackOffset = Offset(dataProvider.notifier.value.row0.a,
-                dataProvider.notifier.value.row1.a);
-            dataProvider.actualTarget = null;
-            dataProvider.structureMap[data.key].scale = 1.0;
-            dataProvider.currentTargetPosition = stackOffset;
-            dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
-            return true;
-          } else {
-            return false;
-          }
-        },
-        onLeave: (dynamic data) {},
-        onAccept: (dynamic data) {},
-      ),
-      ...stackItems(context),
-      ...arrowItems(context),
-    ]);
+    return Stack(overflow: Overflow.clip, children: [
+        Container(color: Colors.blue,
+    width: MediaQuery.of(context).size.width,
+    height: MediaQuery.of(context).size.height ,
+  ),
+        DragTarget(
+    builder: (buildContext, List<dynamic> candidateData, rejectData) {
+      return Container(
+        color: Color.fromARGB(100, 71, 2, 255),
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+      );
+    },
+    onWillAccept: (dynamic data) {
+      dataProvider.actualTarget = null;
+      if (dataProvider.structureMap[null].key != data.key) {
+        var stackOffset = Offset(dataProvider.notifier.value.row0.a,
+            dataProvider.notifier.value.row1.a);
+        dataProvider.actualTarget = null;
+        dataProvider.structureMap[data.key].scale = 1.0;
+        dataProvider.currentTargetPosition = stackOffset;
+        dataProvider.changeItemListPosition(
+            itemKey: data.key, newKey: null);
+        return true;
+      } else {
+        return false;
+      }
+    },
+    onLeave: (dynamic data) {},
+    onAccept: (dynamic data) {},
+        ),
+        ...stackItems(context),
+        ...arrowItems(context),
+      ]);
   }
 
   List<Widget> stackItems(BuildContext context) {
