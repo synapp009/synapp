@@ -17,7 +17,7 @@ class Data with ChangeNotifier {
   Map<Key, dynamic> structureMap;
   Map<GlobalKey, List<Arrow>> arrowMap;
   Map<Key, bool> selectedMap;
-  Size stackSize = Size(400, 900);
+  Size stackSize;
   Key actualTarget;
   Offset positionForDrop;
   Offset currentStackPosition = Offset(0, 100);
@@ -32,6 +32,7 @@ class Data with ChangeNotifier {
   bool firstItem = true;
 
   Offset stackOffset = Offset(0, 0);
+  Offset generalStackOffset = Offset(0, 0);
 
   Data() {
     structureMap = Constants.initializeStructure(structureMap);
@@ -507,16 +508,87 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  bool stackSizeHitTest(position) {
+  void stackSizeChange(GlobalKey feedbackKey, position) {
+    Offset offsetChange;
+
+    RenderBox itemBox = feedbackKey.currentContext.findRenderObject();
+    var itemSize = itemBox.size;
+
     if (position.dx > stackOffset.dx &&
-        position.dx < stackOffset.dx + stackSize.width * stackScale &&
-        (position.dy - headerHeight()) > stackOffset.dy &&
-        position.dy - headerHeight() <
-            stackOffset.dy + stackSize.height * stackScale) {
+        position.dx < stackOffset.dx + (stackSize.width * stackScale) &&
+        (position.dy) > (stackOffset.dy + headerHeight()) &&
+        position.dy <
+            stackOffset.dy +
+                ((stackSize.height + headerHeight()) * stackScale)) {
     } else {
-      stackSize = stackSize * 1.2;
+      if (position.dx > stackOffset.dx + stackSize.width * stackScale) {
+        //sector 1
+        offsetChange = Offset(
+            position.dx -
+                stackOffset.dx -
+                (stackSize.width * stackScale) +
+                itemSize.width * stackScale,
+            0);
+        stackSize = Size(
+            stackSize.width + offsetChange.dx / stackScale, stackSize.height);
+      }
+      if ((position.dy >
+          stackOffset.dy + (headerHeight() + stackSize.height) * stackScale)) {
+        //sector 2
+        offsetChange = Offset(
+            0,
+            position.dy -
+                stackOffset.dy -
+                (stackSize.height * stackScale) +
+                itemSize.height * stackScale);
+        stackSize = Size(
+            stackSize.width,
+            stackSize.height +
+                offsetChange.dy / stackScale -
+                headerHeight() / stackScale);
+      }
+      if (position.dx < stackOffset.dx) {
+        //sector 3
+
+        offsetChange = Offset(
+            position.dx - stackOffset.dx - itemSize.width * stackScale, 0);
+        structureMap[null].childKeys.forEach((k) => {
+              structureMap[k].position = Offset(
+                  structureMap[k].position.dx - offsetChange.dx / stackScale,
+                  structureMap[k].position.dy)
+            });
+        notifier.value
+            .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
+        notifier.value
+            .setEntry(1, 3, notifier.value.row1.a + (offsetChange.dy));
+        stackSize = Size(
+            stackSize.width - offsetChange.dx / stackScale, stackSize.height);
+      }
+      if (position.dy - headerHeight() < stackOffset.dy) {
+        //sector 4
+        offsetChange = Offset(
+            0,
+            position.dy -
+                stackOffset.dy -
+                headerHeight() -
+                itemSize.height * stackScale);
+
+        structureMap[null].childKeys.forEach((k) => {
+              structureMap[k].position = Offset(structureMap[k].position.dx,
+                  structureMap[k].position.dy - offsetChange.dy / stackScale)
+            });
+        notifier.value
+            .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
+        notifier.value
+            .setEntry(1, 3, notifier.value.row1.a + (offsetChange.dy));
+        stackSize = Size(
+            stackSize.width, stackSize.height - offsetChange.dy / stackScale);
+      }
+
+      //stackOffset = stackOffset + offsetChange;
+
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Key hitTestRaw(position, context) {
@@ -602,28 +674,17 @@ class Data with ChangeNotifier {
     var newScale = displaySize.width / itemSize.width;
     var itemPosition = getPositionOfRenderBox(selectedKey);
 
-    print('structure mapPosition $mapPosition');
-    print('otherpos $otherPos');
-    print('newScale $newScale');
-    print('displaySize $displaySize');
-    print('stackScale $stackScale');
-    print('stackOffset $stackOffset');
-
-    //update Offset
+    //update Scale
     notifier.value.setEntry(0, 0, newScale);
     notifier.value.setEntry(1, 1, newScale);
     //notifier.value.scale(newScale);
-    //update scale
-
-    print('renderbox itemPosition $itemPosition');
 
     itemPosition = (((itemPosition - stackOffset) * newScale) / stackScale);
 
+    //update Offset
     notifier.value.setEntry(0, 3, -itemPosition.dx);
-    
     notifier.value.setEntry(1, 3, -itemPosition.dy);
     notifyListeners();
-    
   }
 
   maxScaleAndOffset(context) {
@@ -634,9 +695,7 @@ class Data with ChangeNotifier {
     List keyAtBottomList = structureMap[null].childKeys;
     Size displaySize = MediaQuery.of(context).size;
 
-
-
-    for ( int i = 0; i < keyAtBottomList.length - 1; i++) {
+    for (int i = 0; i < keyAtBottomList.length - 1; i++) {
       if ((structureMap[keyAtBottomList[i]].position.dx +
               structureMap[keyAtBottomList[i + 1]].size.width) >
           (structureMap[keyAtBottomList[i + 1]].position.dx +
@@ -650,21 +709,24 @@ class Data with ChangeNotifier {
       if ((structureMap[keyAtBottomList[i]].position.dy -
               structureMap[keyAtBottomList[i]].size.height) >
           (structureMap[keyAtBottomList[i + 1]].position.dy -
-              structureMap[keyAtBottomList[i+1]].size.height)) {
-        mostTopKey = keyAtBottomList[i+1];
-        mostBottomKey = keyAtBottomList[i ];
+              structureMap[keyAtBottomList[i + 1]].size.height)) {
+        mostTopKey = keyAtBottomList[i + 1];
+        mostBottomKey = keyAtBottomList[i];
       } else {
-        mostBottomKey = keyAtBottomList[i+1];
-        mostTopKey = keyAtBottomList[i ];
+        mostBottomKey = keyAtBottomList[i + 1];
+        mostTopKey = keyAtBottomList[i];
       }
-
     }
-     /*     print('mostTopKey $mostTopKey');
+    /*     print('mostTopKey $mostTopKey');
       print('mostBottomKey $mostBottomKey');
       print('mostLeftKey $mostLeftKey');
       print('mostRightKey $mostRightKey');*/
-      maxScale = 1/((displaySize.width/(structureMap[mostLeftKey].position.dx + structureMap[mostRightKey].position.dx + structureMap[mostRightKey].size.width))*1.5);
-    print('maxscale $maxScale');
+    maxScale = 1 /
+        ((displaySize.width /
+                (structureMap[mostLeftKey].position.dx +
+                    structureMap[mostRightKey].position.dx +
+                    structureMap[mostRightKey].size.width)) *
+            1.5);
     //mostRightKey
   }
 

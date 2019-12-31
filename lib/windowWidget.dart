@@ -34,6 +34,8 @@ class _WindowWidgetState extends State<WindowWidget>
   GlobalKey feedbackKey = GlobalKey();
   var dataProvider;
 
+
+
   @override
   void initState() {
     super.initState();
@@ -93,7 +95,6 @@ class _WindowWidgetState extends State<WindowWidget>
         });
       });
     }
-
     bool keyIsTargetOrOrigin(k) {
       bool tempBool = false;
 
@@ -221,8 +222,10 @@ class _WindowWidgetState extends State<WindowWidget>
     }
 
     return Positioned(
-      top: dataProvider.structureMap[key].position.dy * itemScale,
-      left: dataProvider.structureMap[key].position.dx * itemScale,
+      top: dataProvider.structureMap[key].position.dy *
+          itemScale, // - (stackOffset.dy/stackScale),
+      left: dataProvider.structureMap[key].position.dx *
+          itemScale, // - (stackOffset.dx/stackScale),
       child: DragTarget(
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
             return Listener(
@@ -248,7 +251,8 @@ class _WindowWidgetState extends State<WindowWidget>
               },
               onPointerUp: (PointerUpEvent event) {
                 _controller.reverse();
-
+                // print(event.position);
+                // print(dataProvider.stackSizeHitTest(event.localPosition));
                 pointerUpOffset = event.position;
                 pointerUp = true;
                 pointerMoving = false;
@@ -257,8 +261,9 @@ class _WindowWidgetState extends State<WindowWidget>
                 offset = Offset(0, 0);
               },
               onPointerMove: (PointerMoveEvent event) {
-                dataProvider.stackSizeHitTest(event.position);
+                //dataProvider.stackSizeHitTest(event.position);
 
+                //update the position of all the arrows pointing to the window
                 if (_dragStarted) {
                   updateArrowToKeyMap(feedbackKey);
                 }
@@ -281,8 +286,9 @@ class _WindowWidgetState extends State<WindowWidget>
                   // dataProvider.zoomToBox(key, context);
                 },
                 onLongPressStart: (details) {
-                  HapticFeedback.lightImpact();
-
+                  HapticFeedback.vibrate();
+                
+ 
                   dataProvider.addArrow(key);
 
                   dataProvider.onlySelectThis(key);
@@ -320,6 +326,7 @@ class _WindowWidgetState extends State<WindowWidget>
                       });
                     },
                     onDragStarted: () {
+                      HapticFeedback.vibrate();
                       _dragStarted = true;
 
                       _timer = new Timer(Duration(milliseconds: 200), () {
@@ -341,6 +348,8 @@ class _WindowWidgetState extends State<WindowWidget>
                             dataProvider.itemDropPosition(
                                 key, pointerDownOffset, pointerUpOffset);
                       });
+
+                      dataProvider.stackSizeChange(feedbackKey, off);
                     },
                     dragAnchor: DragAnchor.pointer,
                     childWhenDragging: Container(),

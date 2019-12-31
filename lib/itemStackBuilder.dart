@@ -18,41 +18,37 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
     var stackScale = dataProvider.stackScale;
-
-    return Stack(overflow: Overflow.clip, children: [
-        Container(color: Colors.blue,
-    width: MediaQuery.of(context).size.width,
-    height: MediaQuery.of(context).size.height ,
-  ),
-        DragTarget(
-    builder: (buildContext, List<dynamic> candidateData, rejectData) {
-      return Container(
-        color: Color.fromARGB(100, 71, 2, 255),
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-      );
-    },
-    onWillAccept: (dynamic data) {
-      dataProvider.actualTarget = null;
-      if (dataProvider.structureMap[null].key != data.key) {
-        var stackOffset = Offset(dataProvider.notifier.value.row0.a,
-            dataProvider.notifier.value.row1.a);
-        dataProvider.actualTarget = null;
-        dataProvider.structureMap[data.key].scale = 1.0;
-        dataProvider.currentTargetPosition = stackOffset;
-        dataProvider.changeItemListPosition(
-            itemKey: data.key, newKey: null);
-        return true;
-      } else {
-        return false;
-      }
-    },
-    onLeave: (dynamic data) {},
-    onAccept: (dynamic data) {},
-        ),
-        ...stackItems(context),
-        ...arrowItems(context),
-      ]);
+    var stackSize = dataProvider.stackSize;
+    return Stack(overflow: Overflow.visible, children: [
+      DragTarget(
+        builder: (buildContext, List<dynamic> candidateData, rejectData) {
+          return Container(
+            
+            width: stackSize.width,
+            height: stackSize.height,
+          );
+        },
+        onWillAccept: (dynamic data) {
+          dataProvider.actualTarget = null;
+          if (dataProvider.structureMap[null].key != data.key) {
+            var stackOffset = Offset(dataProvider.notifier.value.row0.a,
+                dataProvider.notifier.value.row1.a);
+            dataProvider.actualTarget = null;
+            dataProvider.structureMap[data.key].scale = 1.0;
+            dataProvider.currentTargetPosition = stackOffset;
+            dataProvider.changeItemListPosition(
+                itemKey: data.key, newKey: null);
+            return true;
+          } else {
+            return false;
+          }
+        },
+        onLeave: (dynamic data) {},
+        onAccept: (dynamic data) {},
+      ),
+      ...stackItems(context),
+      ...arrowItems(context),
+    ]);
   }
 
   List<Widget> stackItems(BuildContext context) {

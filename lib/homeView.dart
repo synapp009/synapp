@@ -13,11 +13,15 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
+    var dataProvider = Provider.of<Data>(context);
+
+    //set stackSize & headerHeight
     Provider.of<Data>(context).statusBarHeight =
         MediaQuery.of(context).padding.top;
-    var _tempOffset = Offset(0, 0);
-    var dataProvider = Provider.of<Data>(context);
-    GlobalKey _containerKey = GlobalKey();
+    if (dataProvider.stackSize == null) {
+      dataProvider.stackSize = MediaQuery.of(context).size;
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromARGB(100, 71, 2, 255),
@@ -25,33 +29,19 @@ class _HomeViewState extends State<HomeView> {
         actions: <Widget>[
           IconButton(
             onPressed: () {
-              Provider.of<Data>(context).createNewWindow();
+              dataProvider.createNewWindow();
             },
             icon: Icon(Icons.library_add),
           ),
           IconButton(
             onPressed: () {
-              setState(() {
-                RenderBox _containerBox =
-                    _containerKey.currentContext.findRenderObject();
-                _tempOffset = _containerBox.globalToLocal(Offset.zero);
-                dataProvider.notifier.value.setEntry(0, 3, 0);
-                dataProvider.notifier.value.setEntry(1, 3, 0);
-              });
-              Provider.of<Data>(context).createNewTextfield();
+              dataProvider.createNewTextfield();
             },
             icon: Icon(Icons.playlist_add),
           ),
         ],
       ),
-      body: Stack(children: [
-        Container(key: _containerKey, color: Colors.green),
-        Positioned(
-          top: _tempOffset.dy,
-          left: _tempOffset.dx,
-          child: StackAnimator(),
-        ),
-      ]),
+      body: StackAnimator(),
     );
   }
 }
