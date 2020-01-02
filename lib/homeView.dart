@@ -37,7 +37,7 @@ class _HomeViewState extends State<HomeView> {
             onPressed: () {
               dataProvider.createNewTextfield();
             },
-            icon: Icon(Icons.playlist_add),
+            icon: Icon(Icons.text_fields),
           ),
         ],
       ),

@@ -21,10 +21,12 @@ class FeedbackTextboxWidget extends StatelessWidget {
     return Transform.translate(
       offset: Offset((-pointerDownOffset.dx * stackScale * itemScale),
           -pointerDownOffset.dy * stackScale * itemScale),
-      child: FitTextField(
-        itemKey: itemKey,
-        initialValue: initialValue,
-        itemScale: itemScale * stackScale + 0.1,
+      child: Transform.scale(scale: 1.1,
+              child: FitTextField(
+          itemKey: itemKey,
+          initialValue: initialValue,
+          itemScale: itemScale * stackScale,
+        ),
       ),
     );
   }

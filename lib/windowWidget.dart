@@ -286,7 +286,7 @@ class _WindowWidgetState extends State<WindowWidget>
                   // dataProvider.zoomToBox(key, context);
                 },
                 onLongPressStart: (details) {
-                  HapticFeedback.vibrate();
+                  HapticFeedback.mediumImpact();
                 
  
                   dataProvider.addArrow(key);
@@ -312,7 +312,7 @@ class _WindowWidgetState extends State<WindowWidget>
                   _isTapped = false;
                 },
                 child: LongPressDraggable(
-                    hapticFeedbackOnStart: true,
+                    //hapticFeedbackOnStart: true,
                     maxSimultaneousDrags: dataProvider.selectedMap[key] ? 0 : 1,
                     onDragEnd: (DraggableDetails details) {
                       onDragEndOffset = details.offset;
@@ -326,7 +326,7 @@ class _WindowWidgetState extends State<WindowWidget>
                       });
                     },
                     onDragStarted: () {
-                      HapticFeedback.vibrate();
+                      HapticFeedback.mediumImpact();
                       _dragStarted = true;
 
                       _timer = new Timer(Duration(milliseconds: 200), () {

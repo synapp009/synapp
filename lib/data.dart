@@ -196,12 +196,14 @@ class Data with ChangeNotifier {
     if (arrowMap[key] == null) {
       arrowMap[key] = [];
     }
+    var getPosition = (centerOfRenderBox(key) + stackOffset)/stackScale;
+ 
     arrowMap[key].add(
       Arrow(
         arrowed: false,
         target: null,
         size: 0.0,
-        position: centerOfRenderBox(key),
+        position: getPosition,
         angle: Angle.fromRadians(0),
       ),
     );
@@ -741,11 +743,12 @@ class Data with ChangeNotifier {
     //store all widgets in view into the list
     List widgetsInView = [];
     Offset itemKeyPosition;
+    Offset tempPosition = position;
     Size itemKeySize;
     structureMap.forEach((Key itemKey, dynamic widget) => {
           itemKeyPosition = Offset(
-                  structureMap[itemKey].position.dx * stackScale,
-                  structureMap[itemKey].position.dy * stackScale +
+                  structureMap[itemKey].position.dx / stackScale,
+                  structureMap[itemKey].position.dy / stackScale +
                       headerHeight()) +
               stackOffset,
           itemKeySize = structureMap[itemKey].size / stackScale,
@@ -772,14 +775,14 @@ class Data with ChangeNotifier {
                     targetPosition: renderBoxesOffset[k],
                     targetSize: displaySize)*/
 
-          if (position.dx > renderBoxesOffset[k].dx &&
-              position.dx <
+          if (tempPosition.dx > renderBoxesOffset[k].dx &&
+              tempPosition.dx <
                   renderBoxesOffset[k].dx +
                       structureMap[k].size.width *
                           structureMap[k].scale *
                           stackScale &&
-              (position.dy - headerHeight()) > renderBoxesOffset[k].dy &&
-              position.dy - headerHeight() <
+              (tempPosition.dy - headerHeight()) > renderBoxesOffset[k].dy &&
+              tempPosition.dy - headerHeight() <
                   renderBoxesOffset[k].dy +
                       structureMap[k].size.height *
                           stackScale *

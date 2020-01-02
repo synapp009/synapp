@@ -32,7 +32,6 @@ dependencies:
   angles: ^1.2.1
   arrow_path: ^1.0.0
   js: ^0.6.0
-  testfairy: any
 
 dev_dependencies:
   flutter_test:

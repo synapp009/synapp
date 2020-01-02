@@ -1,11 +1,11 @@
-import 'dart:io' show Platform;
+//import 'dart:io' show Platform;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
-import 'dart:io';
-import 'package:testfairy/testfairy.dart';
+// import 'dart:async';
+// import 'dart:io';
+//import 'package:testfairy/testfairy.dart';
 
 
 
@@ -15,7 +15,8 @@ import 'homeView.dart';
 import 'data.dart';
 
 void main() {
-    HttpOverrides.runWithHttpOverrides(
+    runApp(MyApp());
+   /* HttpOverrides.runWithHttpOverrides(
          () async {
            try {
              // Enables widget error logging
@@ -47,7 +48,7 @@ void main() {
              TestFairy.log(message);
            },
          )
-     );
+     );*/
 }
 
 class MyApp extends StatelessWidget {

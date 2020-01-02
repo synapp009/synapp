@@ -42,6 +42,7 @@ class FitTextFieldState extends State<FitTextField> {
 
   @override
   Widget build(BuildContext context) {
+    var dataProvider = Provider.of<Data>(context);
     // Use TextPainter to calculate the width of our text
     TextSpan ts = new TextSpan(style: textStyle, text: txt.text);
     // List<LineMetrics> lines = tp.computeLineMetrics();
@@ -63,7 +64,7 @@ class FitTextFieldState extends State<FitTextField> {
       child: Padding(
         padding: const EdgeInsets.all(3) * widget.itemScale,
         child: Container(
-          width: textWidth * widget.itemScale,
+          width: textWidth,
           child: FittedBox(
             child: Container(
               width: textWidth, //TODO: autosize width still not perfect
@@ -90,8 +91,8 @@ class FitTextFieldState extends State<FitTextField> {
                 style: textStyle,
                 controller: txt,
                 onChanged: (text) {
-                  Provider.of<Data>(context)
-                      .structureMap[widget.itemKey]
+                  
+                      dataProvider.structureMap[widget.itemKey]
                       .content = txt.text;
 
                   // Tells the framework to redraw the widget

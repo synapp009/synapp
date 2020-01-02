@@ -24,7 +24,7 @@ Key getSomeKey = GlobalKey();
          // child: Text( '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
         ),
       ),
-     // TextField(maxLines:40),
+      //TextField(maxLines:40),
       ...stackItems(context)
     ]);
   }
