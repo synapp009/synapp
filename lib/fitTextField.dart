@@ -13,6 +13,7 @@ class FitTextField extends StatefulWidget {
   final tapped;
   final itemScale;
   final itemKey;
+  final feedbackKey;
   const FitTextField(
       {this.itemKey,
       this.initialValue,
@@ -20,7 +21,8 @@ class FitTextField extends StatefulWidget {
       this.myFocusNode,
       this.enabled,
       this.tapped,
-      this.itemScale});
+      this.itemScale,
+      this.feedbackKey});
 
   @override
   State<StatefulWidget> createState() => new FitTextFieldState();
@@ -64,6 +66,7 @@ class FitTextFieldState extends State<FitTextField> {
       child: Padding(
         padding: const EdgeInsets.all(3) * widget.itemScale,
         child: Container(
+          key:widget.feedbackKey,
           width: textWidth,
           child: FittedBox(
             child: Container(

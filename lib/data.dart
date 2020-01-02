@@ -689,48 +689,6 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  maxScaleAndOffset(context) {
-    var mostLeftKey;
-    var mostRightKey;
-    var mostTopKey;
-    var mostBottomKey;
-    List keyAtBottomList = structureMap[null].childKeys;
-    Size displaySize = MediaQuery.of(context).size;
-
-    for (int i = 0; i < keyAtBottomList.length - 1; i++) {
-      if ((structureMap[keyAtBottomList[i]].position.dx +
-              structureMap[keyAtBottomList[i + 1]].size.width) >
-          (structureMap[keyAtBottomList[i + 1]].position.dx +
-              structureMap[keyAtBottomList[i + 1]].size.width)) {
-        mostLeftKey = keyAtBottomList[i + 1];
-        mostRightKey = keyAtBottomList[i];
-      } else {
-        mostLeftKey = keyAtBottomList[i];
-        mostRightKey = keyAtBottomList[i + 1];
-      }
-      if ((structureMap[keyAtBottomList[i]].position.dy -
-              structureMap[keyAtBottomList[i]].size.height) >
-          (structureMap[keyAtBottomList[i + 1]].position.dy -
-              structureMap[keyAtBottomList[i + 1]].size.height)) {
-        mostTopKey = keyAtBottomList[i + 1];
-        mostBottomKey = keyAtBottomList[i];
-      } else {
-        mostBottomKey = keyAtBottomList[i + 1];
-        mostTopKey = keyAtBottomList[i];
-      }
-    }
-    /*     print('mostTopKey $mostTopKey');
-      print('mostBottomKey $mostBottomKey');
-      print('mostLeftKey $mostLeftKey');
-      print('mostRightKey $mostRightKey');*/
-    maxScale = 1 /
-        ((displaySize.width /
-                (structureMap[mostLeftKey].position.dx +
-                    structureMap[mostRightKey].position.dx +
-                    structureMap[mostRightKey].size.width)) *
-            1.5);
-    //mostRightKey
-  }
 
   hitTest(key, position, context) {
     //checks if position of a context layes in a box and gives out the key of the box

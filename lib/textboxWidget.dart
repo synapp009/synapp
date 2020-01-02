@@ -21,6 +21,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   var onDragEndOffset;
   var pointerMoving = false;
   var absorbing = true;
+  GlobalKey feedbackKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
@@ -62,7 +63,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
         onPointerMove: (PointerMoveEvent event) {
           absorbing = true;
           pointerMoving = true;
-          dataProvider.hitTest(key, event.position,context);
+          dataProvider.hitTest(key, event.position, context);
         },
         child: LongPressDraggable(
             dragAnchor: DragAnchor.pointer,
@@ -77,13 +78,14 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                 dataProvider.structureMap[widget.key].position = dataProvider
                     .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
               });
+              dataProvider.stackSizeChange(feedbackKey, off);
             },
             childWhenDragging: Container(),
             feedback: ListenableProvider<Data>.value(
               value: Provider.of<Data>(context),
               child: Material(
                 color: Colors.transparent,
-                child: FeedbackTextboxWidget(key, pointerDownOffset),
+                child: FeedbackTextboxWidget(key,feedbackKey, pointerDownOffset),
               ),
             ),
             child: AbsorbPointer(

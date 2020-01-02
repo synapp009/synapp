@@ -7,7 +7,8 @@ import 'fitTextField.dart';
 class FeedbackTextboxWidget extends StatelessWidget {
   final Key itemKey;
   final Offset pointerDownOffset;
-  FeedbackTextboxWidget(this.itemKey, this.pointerDownOffset);
+  final GlobalKey feedbackKey;
+  FeedbackTextboxWidget(this.itemKey, this.feedbackKey, this.pointerDownOffset);
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +22,10 @@ class FeedbackTextboxWidget extends StatelessWidget {
     return Transform.translate(
       offset: Offset((-pointerDownOffset.dx * stackScale * itemScale),
           -pointerDownOffset.dy * stackScale * itemScale),
-      child: Transform.scale(scale: 1.1,
-              child: FitTextField(
+      child: Transform.scale(
+        scale: 1.1,
+        child: FitTextField(
+          feedbackKey:feedbackKey,
           itemKey: itemKey,
           initialValue: initialValue,
           itemScale: itemScale * stackScale,
