@@ -12,6 +12,9 @@ class TextBox {
   double scale;
   double textSize;
 
+  static final IconData iconData = Icons.text_fields;
+  static final String label = 'Text';
+
   TextBox(
       {this.key,
       this.size,

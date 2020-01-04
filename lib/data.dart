@@ -1,12 +1,10 @@
 import 'dart:math';
-
 import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
 import 'arrow.dart';
 import 'constants.dart';
-import 'fitTextField.dart';
 import 'window.dart';
 import 'textBox.dart';
 
@@ -42,6 +40,8 @@ class Data with ChangeNotifier {
     notifier = Constants.initializeNotifier(notifier);
   }
 
+  
+
   Map<GlobalKey, List<Arrow>> get getArrowMap => arrowMap;
 
   Map<Key, dynamic> get getStructureMap => structureMap;
@@ -67,7 +67,15 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  void createNewWindow() {
+  createNewApp(type) {
+    if (type.toString().contains('Window')) {
+      createNewWindow();
+    } else if (type.toString().contains('TextBox')) {
+      createNewTextBox();
+    }
+  }
+
+  createNewWindow() {
     Key windowKey = GlobalKey();
     Color color = RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
@@ -90,7 +98,7 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  void createNewTextfield() {
+  createNewTextBox() {
     Key textboxKey = GlobalKey();
 
     if (structureMap[null] == null) {
@@ -196,8 +204,10 @@ class Data with ChangeNotifier {
     if (arrowMap[key] == null) {
       arrowMap[key] = [];
     }
-    var getPosition = (centerOfRenderBox(key) + stackOffset)/stackScale;
- 
+    var getPosition = (centerOfRenderBox(key) + stackOffset) / stackScale;
+    getPosition =
+        Offset(getPosition.dx, getPosition.dy - headerHeight() * stackScale);
+
     arrowMap[key].add(
       Arrow(
         arrowed: false,
@@ -275,7 +285,7 @@ class Data with ChangeNotifier {
     return length = sqrt(length);
   }
 
-  setArrowToPointer(Key startKey, Offset actualPointer) {
+  void setArrowToPointer(Key startKey, Offset actualPointer) {
     //set the size and ancle of the Arrow between widget and pointer
     //from center of a RenderBox (startKey)
     Arrow arrow;
@@ -627,8 +637,6 @@ class Data with ChangeNotifier {
 
     //hit Test for items laying in the widgetsInView
     widgetsInView.forEach((k) => {
-          //hitTest(item: details.globalPosition.dx, target: k),
-
           renderBoxesOffset[k] = getPositionOfRenderBox(k),
 
           /* boxHitTestWithScaleAndOffset(
@@ -689,7 +697,6 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-
   hitTest(key, position, context) {
     //checks if position of a context layes in a box and gives out the key of the box
 
@@ -704,12 +711,10 @@ class Data with ChangeNotifier {
     Offset tempPosition = position;
     Size itemKeySize;
     structureMap.forEach((Key itemKey, dynamic widget) => {
-          itemKeyPosition = Offset(
-                  structureMap[itemKey].position.dx / stackScale,
-                  structureMap[itemKey].position.dy / stackScale +
-                      headerHeight()) +
+          itemKeyPosition = Offset(structureMap[itemKey].position.dx,
+                  structureMap[itemKey].position.dy + headerHeight()) +
               stackOffset,
-          itemKeySize = structureMap[itemKey].size / stackScale,
+          itemKeySize = structureMap[itemKey].size,
           if (itemKey != null)
             {
               if (boxHitTest(

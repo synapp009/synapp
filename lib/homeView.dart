@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/myHome.dart';
 import 'stackAnimator.dart';
 import 'data.dart';
 
@@ -23,11 +24,12 @@ class _HomeViewState extends State<HomeView> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(153, 56, 255, 1),
         title: Text('Synapp'),
-        actions: <Widget>[
+       /* actions: <Widget>[
           IconButton(
             onPressed: () {
               dataProvider.createNewWindow();
@@ -36,37 +38,14 @@ class _HomeViewState extends State<HomeView> {
           ),
           IconButton(
             onPressed: () {
-              dataProvider.createNewTextfield();
+              dataProvider.createNewTextBox();
             },
             icon: Icon(Icons.text_fields),
           ),
-        ],
+        ],*/
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {},
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color:Color.fromRGBO(153, 56, 255, 1) ,
-        shape: CircularNotchedRectangle(),
-        notchMargin: 4.0,
-        child: new Row(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.menu),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {},
-            ),
-          ],
-        ),
-      ),
-      body: StackAnimator(),
+      
+      body: MyHome(),
     );
   }
 }

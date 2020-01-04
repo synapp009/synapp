@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +11,7 @@ class StackAnimator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
+    var stackScale = dataProvider.stackScale;
     var maxScale;
     var maxLeftOffset;
     var maxRightOffset;
@@ -16,64 +19,53 @@ class StackAnimator extends StatelessWidget {
     var mostLeftKey;
     var mostRightKey;
     var mostTopKey;
-    Size displaySize = MediaQuery.of(context).size;
-    setMaxScaleAndOffset(context) {
-      var mostBottomKey;
+    var mostBottomKey;
 
+    Size displaySize = MediaQuery.of(context).size;
+
+    setMaxScaleAndOffset(context) {
       List keyAtBottomList = dataProvider.structureMap[null].childKeys;
 
-      for (int i = 0; i < keyAtBottomList.length - 1; i++) {
+      mostBottomKey = keyAtBottomList[0];
+      mostLeftKey = keyAtBottomList[0];
+      mostRightKey = keyAtBottomList[0];
+      mostTopKey = keyAtBottomList[0];
+      for (int i = 0; i < keyAtBottomList.length; i++) {
         if ((dataProvider.structureMap[keyAtBottomList[i]].position.dx +
-                dataProvider.structureMap[keyAtBottomList[i + 1]].size.width) >
-            (dataProvider.structureMap[keyAtBottomList[i + 1]].position.dx +
-                dataProvider.structureMap[keyAtBottomList[i + 1]].size.width)) {
-          mostLeftKey = keyAtBottomList[i + 1];
+                dataProvider.structureMap[keyAtBottomList[i]].size.width) >
+            (dataProvider.structureMap[mostRightKey].position.dx +
+                dataProvider.structureMap[mostRightKey].size.width)) {
           mostRightKey = keyAtBottomList[i];
-        } else {
-          mostLeftKey = keyAtBottomList[i];
-          mostRightKey = keyAtBottomList[i + 1];
         }
-        if ((dataProvider.structureMap[keyAtBottomList[i]].position.dy -
-                dataProvider.structureMap[keyAtBottomList[i]].size.height) >
-            (dataProvider.structureMap[keyAtBottomList[i + 1]].position.dy -
-                dataProvider
-                    .structureMap[keyAtBottomList[i + 1]].size.height)) {
-          mostTopKey = keyAtBottomList[i + 1];
-          mostBottomKey = keyAtBottomList[i];
-        } else {
-          mostBottomKey = keyAtBottomList[i + 1];
+        if (dataProvider.structureMap[keyAtBottomList[i]].position.dx <
+            dataProvider.structureMap[mostLeftKey].position.dx) {
+          mostLeftKey = keyAtBottomList[i];
+        }
+
+        if ((dataProvider.structureMap[keyAtBottomList[i]].position.dy) <
+            dataProvider.structureMap[mostTopKey].position.dy) {
           mostTopKey = keyAtBottomList[i];
         }
+        if ((dataProvider.structureMap[keyAtBottomList[i]].position.dy +
+                dataProvider.structureMap[keyAtBottomList[i]].size.height) >
+            dataProvider.structureMap[mostTopKey].position.dy +
+                dataProvider.structureMap[mostTopKey].size.height) {
+          mostBottomKey = keyAtBottomList[i];
+        }
       }
-      /*     print('mostTopKey $mostTopKey');
-      print('mostBottomKey $mostBottomKey');
-      print('mostLeftKey $mostLeftKey');
-      print('mostRightKey $mostRightKey');*/
 
-      maxLeftOffset = ((dataProvider.getPositionOfRenderBox(mostLeftKey)) +
-              Offset(0, 100) +
-              dataProvider.stackOffset) *
+      maxLeftOffset = dataProvider.structureMap[mostLeftKey].position.dx *
           dataProvider.stackScale;
 
-      maxRightOffset = (Offset(
-                  dataProvider.getPositionOfRenderBox(mostRightKey).dx +
-                      dataProvider.sizeOfRenderBox(mostRightKey).width,
-                  dataProvider.getPositionOfRenderBox(mostRightKey).dy) +
-              dataProvider.stackOffset) /
-          dataProvider.stackScale *
-          1.25;
+      maxRightOffset = dataProvider.structureMap[mostRightKey].position.dx;
 
-      maxTopOffset = (dataProvider.getPositionOfRenderBox(mostTopKey) +
-              dataProvider.stackOffset) *
-          dataProvider.stackScale *
-          1.25;
+      maxTopOffset = dataProvider.structureMap[mostTopKey].position.dy *
+          dataProvider.stackScale;
 
-      maxScale = 1 /
-          (displaySize.width /
-              (dataProvider.structureMap[mostLeftKey].position.dx +
-                  dataProvider.structureMap[mostRightKey].position.dx +
-                  dataProvider.structureMap[mostRightKey].size.width) *
-              1.25);
+      maxScale = (displaySize.width /
+          (dataProvider.structureMap[mostLeftKey].position.dx +
+              dataProvider.structureMap[mostRightKey].position.dx +
+              dataProvider.structureMap[mostRightKey].size.width));
     }
 
     ValueNotifier<Matrix4> notifier = dataProvider.notifier;
@@ -87,43 +79,39 @@ class StackAnimator extends StatelessWidget {
         dataProvider.stackOffset =
             Offset(notifier.value.row0.a, notifier.value.row1.a);
 
-        // print('maxscale ${m.row0.a}');
-
         notifier.value = m;
 
-        if (dataProvider.stackScale < maxScale) {
-          notifier.value.setEntry(0, 0, maxScale);
-          notifier.value.setEntry(1, 1, maxScale);
-        }
+        if (dataProvider.structureMap[null].childKeys.length > 1) {
+          if (dataProvider.stackScale < maxScale / 2) {
+            notifier.value.setEntry(0, 0, maxScale / 2);
+            notifier.value.setEntry(1, 1, maxScale / 2);
 
-        if (dataProvider.stackOffset.dx + displaySize.width * 0.1 <
-            maxLeftOffset.dx) {
-              print('left max');
-          var tempOffsetLeftDx =
-              (0 - dataProvider.structureMap[mostLeftKey].position.dx);
-          print(tempOffsetLeftDx);
-          tempOffsetLeftDx = tempOffsetLeftDx + displaySize.width * 0.1;
-          notifier.value.setEntry(
-            0,
-            3,
-            tempOffsetLeftDx,
-          );
-        }
-        if (dataProvider.stackOffset.dx +
-                (dataProvider.stackSize.width / dataProvider.stackScale) >
-            maxRightOffset.dx - displaySize.width * 0.1) {
-              print('rght max');
-          /*var tempOffsetRightDx =
-              (dataProvider.structureMap[mostRightKey].position.dx);
-          notifier.value.setEntry(
-            0,
-            3,
-            tempOffsetRightDx,
-          );*/
-        }
 
-        if (dataProvider.stackOffset.dy < maxTopOffset.dy) {
-          print('top max');
+          }
+
+          if (dataProvider.stackOffset.dx >
+              -maxLeftOffset + displaySize.width / 2) {
+            notifier.value
+                .setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
+          }
+
+          if ((dataProvider.stackSize.width - dataProvider.stackOffset.dx) /
+                      dataProvider.stackScale -
+                  dataProvider.structureMap[mostRightKey].size.width >
+              maxRightOffset +
+                  displaySize.width / 2 / dataProvider.stackScale) {
+            var tempOffsetRightDx = (dataProvider.stackSize.width -
+                    displaySize.width / 2 -
+                    dataProvider.structureMap[mostRightKey].position.dx *
+                        dataProvider.stackScale) -
+                dataProvider.structureMap[mostRightKey].size.width *
+                    dataProvider.stackScale;
+            notifier.value.setEntry(0, 3, tempOffsetRightDx);
+          }
+
+          if (dataProvider.stackOffset.dy > -maxTopOffset + displaySize.height / 2) {
+             notifier.value.setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
+          }
         }
       },
       shouldRotate: false,

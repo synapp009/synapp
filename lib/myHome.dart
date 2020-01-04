@@ -1,0 +1,150 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:random_color/random_color.dart';
+import 'package:synapp/stackAnimator.dart';
+import 'package:synapp/textBox.dart';
+
+import 'data.dart';
+import 'window.dart';
+
+class MyHome extends StatefulWidget {
+  @override
+  _MyHomeState createState() => _MyHomeState();
+}
+
+class AppBuilder {
+  dynamic type;
+  String label;
+  IconData iconData;
+  Color color;
+  AppBuilder({this.label, this.iconData, this.type, this.color});
+}
+
+class _MyHomeState extends State<MyHome> {
+  List<AppBuilder> _apps = [
+    AppBuilder(
+      type: Window(),
+      label: Window.label,
+      iconData: Window.iconData,
+      color: Colors.yellow,
+    ),
+    AppBuilder(
+      type: TextBox(),
+      label: TextBox.label,
+      iconData: TextBox.iconData,
+      color: Colors.yellowAccent,
+    ),
+  ];
+  @override
+  Widget build(BuildContext context) {
+    var dataProvider = Provider.of<Data>(context);
+
+    BottomSheetApp modal = new BottomSheetApp(_apps, dataProvider);
+
+    return Scaffold(
+      body: StackAnimator(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => modal.mainBottomSheet(context),
+        child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        color: Color.fromRGBO(153, 56, 255, 1),
+        shape: CircularNotchedRectangle(),
+        notchMargin: 4.0,
+        child: new Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            IconButton(
+              color: Colors.white,
+              icon: Icon(Icons.chat),
+              onPressed: () {},
+            ),
+            IconButton(
+              color: Colors.white,
+              icon: Icon(Icons.search),
+              onPressed: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BottomSheetApp {
+  final _apps;
+  final dataProvider;
+  BottomSheetApp(this._apps, this.dataProvider);
+  mainBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+        isScrollControlled:
+            true, //bottomsheet goes full screen, if bottomsheet has a scrollable widget such as a listview as a child.
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
+        context: context,
+        builder: (BuildContext context) {
+          return FractionallySizedBox(
+            heightFactor: 0.2,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
+              child: Container(
+                //scrollDirection: Axis.vertical,
+                child: GridView.builder(
+                  physics: new NeverScrollableScrollPhysics(),
+                  itemCount: _apps.length,
+                  //scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          RawMaterialButton(
+                            
+                            onPressed: () {
+                              Navigator.pop(context);
+
+                              dataProvider.createNewApp(_apps[index].type);
+                            },
+                            child: new Icon(
+                              _apps[index].iconData,
+                              color: Colors.black,
+                              size: 35.0,
+                            ),
+                            shape: new CircleBorder(),
+                            elevation: 0.0,
+                            fillColor: _apps[index].color,
+                            padding: const EdgeInsets.all(15.0),
+                          ),
+                          Text(_apps[index].label),
+                        ]);
+                  },
+                  //padding,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                  ),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+}
+
+ListTile _createTile(BuildContext context, String name, IconData icon,
+    Function action, dataProvider) {
+  return ListTile(
+    leading: Icon(icon),
+    title: Text(name),
+    onTap: () {
+      dataProvider.createNewWindow();
+      action();
+    },
+  );
+}
+
+_action1() {
+  print('action 1');
+}

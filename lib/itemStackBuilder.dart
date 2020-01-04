@@ -23,7 +23,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
-            
+            color:Colors.green,
             width: stackSize.width,
             height: stackSize.height,
           );
