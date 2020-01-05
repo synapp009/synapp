@@ -25,10 +25,11 @@ class _HomeViewState extends State<HomeView> {
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey,
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(153, 56, 255, 1),
-        title: Text('Synapp'),
+        backgroundColor: Colors.white,//Color.fromRGBO(153, 56, 255, 1),
+        title: Text('Synapp',style: TextStyle(color: Colors.black)),
+        
        /* actions: <Widget>[
           IconButton(
             onPressed: () {

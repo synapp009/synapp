@@ -28,18 +28,17 @@ class _WindowWidgetState extends State<WindowWidget>
   AnimationController _controller;
   Timer _timer;
 
-  int maxSimultaneousDrags = 1;
+  int _maxSimultaneousDrags = 1;
   bool _isTapped = false;
   bool _dragStarted = false;
   GlobalKey feedbackKey = GlobalKey();
-  var dataProvider;
-
-
+  var _dataProvider;
 
   @override
   void initState() {
     super.initState();
-    //Animation Widget gets bigger when tapp and dragged and smaller when dropped
+
+    //Animation Widget  controller gets bigger when tapp and dragged and smaller when dropped
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: _isTapped ? 100 : 200),
@@ -56,19 +55,21 @@ class _WindowWidgetState extends State<WindowWidget>
     super.dispose();
   }
 
-  var pointerDownOffset = Offset(0, 0);
-  var pointerUpOffset = Offset(0, 0);
-  var onDragEndOffset;
-  var pointerMoving = false;
-  var pointerUp = false;
+  var _pointerDownOffset = Offset(0, 0);
+  var _pointerUpOffset = Offset(0, 0);
+  var _onDragEndOffset;
+  var _pointerMoving = false;
+  var _pointerUp = false;
 
-  var itemScale;
-  double stackScale;
-  Offset stackOffset;
+  var _itemScale;
+
+  double _stackScale;
+  Offset _stackOffset;
   Offset offset = Offset(0, 0);
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
-  tonedColor(Color color) {
+//Calculate color when clicked on a window()
+  _tonedColor(Color color) {
     Color tempColor;
     var newR = color.red * (1 / 1.2);
     var newG = color.green * (1 / 1.2);
@@ -79,193 +80,88 @@ class _WindowWidgetState extends State<WindowWidget>
 
   @override
   Widget build(BuildContext context) {
-    dataProvider = Provider.of<Data>(context);
-    //bool dataProvider.selectedMap[key] = dataProvider.selectedMap[key];
-    stackScale = dataProvider.stackScale;
-    itemScale = dataProvider.structureMap[key].scale;
-    stackOffset = dataProvider.stackOffset;
+    _dataProvider = Provider.of<Data>(context);
 
+    _stackScale = _dataProvider.stackScale;
+    _itemScale = _dataProvider.structureMap[key].scale;
+    _stackOffset = _dataProvider.stackOffset;
+
+//animation
     _animation() {
       _controller.forward();
       _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
         setState(() {
-          dataProvider.selectedMap[key] =
-              dataProvider.selectedMap[key] ? false : true;
+          _dataProvider.selectedMap[key] =
+              _dataProvider.selectedMap[key] ? false : true;
           _controller.reverse();
         });
       });
     }
-    bool keyIsTargetOrOrigin(k) {
-      bool tempBool = false;
 
-      if (dataProvider.arrowMap[key] != null) {
-        dataProvider.arrowMap[key].forEach((Arrow a) => {
-              if (a.target == k)
-                {
-                  tempBool = true,
-                }
-            });
-      }
-
-      dataProvider.arrowMap.forEach(
-        ((Key originKey, List<Arrow> listOfArrows) => {
-              listOfArrows.forEach((Arrow a) => {
-                    if (a.target == key)
-                      {
-                        tempBool = true,
-                      }
-                  }),
-            }),
-      );
-      return tempBool;
-    }
-
-    getAllArrows(key) {
-      //get all arrows pointing to or coming from the item and also it's children items
-
-      //all childItems pointing to or getting targetted
-      List childList = dataProvider.getAllChildren(key);
-      childList.add(key);
-
-      childList.forEach((childKey) => {
-            dataProvider.arrowMap
-                .forEach((Key originKey, List<Arrow> listOfArrows) => {
-                      if (originKey != null)
-                        {
-                          listOfArrows.forEach((Arrow a) => {
-                                if (a.target == childKey &&
-                                    keyIsTargetOrOrigin(childKey))
-                                  {
-                                    if (hasArrowToKeyMap[originKey] == null)
-                                      {
-                                        hasArrowToKeyMap[originKey] = [],
-                                      },
-                                    hasArrowToKeyMap[originKey].add(childKey),
-                                  }
-                                else
-                                  {
-                                    if (a.target != null &&
-                                        keyIsTargetOrOrigin(a.target))
-                                      {
-                                        if (hasArrowToKeyMap[originKey] == null)
-                                          {
-                                            hasArrowToKeyMap[originKey] = [],
-                                          },
-                                        hasArrowToKeyMap[originKey]
-                                            .add(a.target),
-                                      },
-                                  },
-                              }),
-                        }
-                    })
-          });
-    }
-
-    updateArrowToKeyMap(feedbackKey) {
-      hasArrowToKeyMap.forEach((Key originKey, List<Key> listOfTargets) => {
-            listOfTargets.forEach((Key targetKey) => {
-                  if (_dragStarted && originKey == key)
-                    {
-                      dataProvider.updateArrow(
-                        originKey: originKey,
-                        feedbackKey: feedbackKey,
-                        targetKey: targetKey,
-                        draggedKey: originKey,
-                        hasArrowToKeyMap: hasArrowToKeyMap,
-                      )
-                    }
-                  else if (_dragStarted && targetKey == key)
-                    {
-                      dataProvider.updateArrow(
-                          originKey: originKey,
-                          feedbackKey: feedbackKey,
-                          targetKey: targetKey,
-                          draggedKey: targetKey,
-                          hasArrowToKeyMap: hasArrowToKeyMap)
-                    }
-                  else
-                    {
-                      dataProvider.updateArrow(
-                          originKey: originKey,
-                          feedbackKey: feedbackKey,
-                          targetKey: targetKey,
-                          draggedKey: feedbackKey,
-                          hasArrowToKeyMap: hasArrowToKeyMap)
-                    }
-                })
-          });
-    }
-
-    _isPointerMoving() {
-      _timer = new Timer(const Duration(milliseconds: 200), () {
-        setState(() {
-          if (!pointerMoving && !dataProvider.selectedMap[key]) {
-            _controller.forward();
-            if (pointerUp) {
-              _controller.reverse();
-              pointerUp = false;
-            }
-          }
-        });
-      });
-    }
-
-    //scale-animation
-    if (key == dataProvider.actualItemKey && !pointerMoving && !_isTapped) {
+    if (key == _dataProvider.actualItemKey && !_pointerMoving && !_isTapped) {
       _scale = 1 + _controller.value;
-    } else if (key == dataProvider.actualItemKey &&
-        !pointerMoving &&
+    } else if (key == _dataProvider.actualItemKey &&
+        !_pointerMoving &&
         _isTapped) {
       _scale = 1 - _controller.value;
     } else {
       _scale = 1;
     }
 
+    //threshold
+    _isPointerMoving() {
+      _timer = new Timer(const Duration(milliseconds: 200), () {
+        setState(() {
+          if (!_pointerMoving && !_dataProvider.selectedMap[key]) {
+            _controller.forward();
+            if (_pointerUp) {
+              _controller.reverse();
+              _pointerUp = false;
+            }
+          }
+        });
+      });
+    }
+
     return Positioned(
-      top: dataProvider.structureMap[key].position.dy *
-          itemScale, // - (stackOffset.dy/stackScale),
-      left: dataProvider.structureMap[key].position.dx *
-          itemScale, // - (stackOffset.dx/stackScale),
+      top: _dataProvider.structureMap[key].position.dy * _itemScale,
+      left: _dataProvider.structureMap[key].position.dx * _itemScale,
       child: DragTarget(
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
             return Listener(
               onPointerDown: (PointerDownEvent event) {
-                pointerUp = false;
-                if (dataProvider.firstItem) {
-                  dataProvider.actualItemKey = key;
-                  getAllArrows(key);
-                  dataProvider.firstItem = false;
+                _pointerUp = false;
+                if (_dataProvider.firstItem) {
+                  _dataProvider.actualItemKey = key;
+                  _dataProvider.getAllArrows(key);
+                  _dataProvider.firstItem = false;
                 }
 
                 //threshold
                 _isPointerMoving();
 
                 setState(() {
-                  pointerDownOffset = event.localPosition / itemScale;
+                  _pointerDownOffset = event.localPosition / _itemScale;
                 });
               },
               onPointerCancel: (details) {
-                // hasArrowToKeyMap = {};
-
-                pointerMoving = false;
+                _pointerMoving = false;
               },
               onPointerUp: (PointerUpEvent event) {
                 _controller.reverse();
-                // print(event.position);
-                // print(dataProvider.stackSizeHitTest(event.localPosition));
-                pointerUpOffset = event.position;
-                pointerUp = true;
-                pointerMoving = false;
-                dataProvider.firstItem = true;
+                _pointerUpOffset = event.position;
+                _pointerUp = true;
+                _pointerMoving = false;
+                _dataProvider.firstItem = true;
 
                 offset = Offset(0, 0);
               },
               onPointerMove: (PointerMoveEvent event) {
-                //dataProvider.stackSizeHitTest(event.position);
+                //_dataProvider.stackSizeHitTest(event.position);
 
                 //update the position of all the arrows pointing to the window
                 if (_dragStarted) {
-                  updateArrowToKeyMap(feedbackKey);
+                   _dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
                 }
 
                 offset = Offset(
@@ -274,117 +170,120 @@ class _WindowWidgetState extends State<WindowWidget>
                 _controller.reverse();
 
                 //set if Pointer is Moving with threshold
-                if ((event.localPosition.dx - pointerDownOffset.dx).abs() >
-                        30 / itemScale ||
-                    (event.localPosition.dy - pointerDownOffset.dy).abs() >
-                        30 / itemScale) {
-                  pointerMoving = true;
+                if ((event.localPosition.dx - _pointerDownOffset.dx).abs() >
+                        30 / _itemScale ||
+                    (event.localPosition.dy - _pointerDownOffset.dy).abs() >
+                        30 / _itemScale) {
+                  _pointerMoving = true;
                 }
               },
               child: GestureDetector(
                 onDoubleTap: () {
-                  // dataProvider.zoomToBox(key, context);
+                  // _dataProvider.zoomToBox(key, context);
                 },
                 onLongPressStart: (details) {
                   HapticFeedback.mediumImpact();
-                
- 
-                  dataProvider.addArrow(key);
 
-                  dataProvider.onlySelectThis(key);
+                  _dataProvider.addArrow(key);
+
+                  //only select the creating window
+                  _dataProvider.onlySelectThis(key);
                 },
                 onLongPressMoveUpdate: (details) {
-                  dataProvider.hitTest(key, details.globalPosition, context);
-                  dataProvider.setArrowToPointer(key, details.globalPosition);
+                  _dataProvider.hitTest(key, details.globalPosition, context);
+                  _dataProvider.setArrowToPointer(key, details.globalPosition);
                 },
                 onLongPressEnd: (details) {
-                  dataProvider.connectAndUnselect(key);
+                  _dataProvider.connectAndUnselect(key);
                 },
                 onLongPressUp: () {},
                 onTap: () {
                   FocusScope.of(context).requestFocus(
                     new FocusNode(),
                   );
+
                   _isTapped = true;
-                  //dataProvider.selectedMap[key] = !dataProvider.selectedMap[key];
                   _animation();
-                  maxSimultaneousDrags = dataProvider.selectedMap[key] ? 0 : 1;
+                  _maxSimultaneousDrags =
+                      _dataProvider.selectedMap[key] ? 0 : 1;
                   _isTapped = false;
                 },
                 child: LongPressDraggable(
                     //hapticFeedbackOnStart: true,
-                    maxSimultaneousDrags: dataProvider.selectedMap[key] ? 0 : 1,
+                    maxSimultaneousDrags:
+                        _dataProvider.selectedMap[key] ? 0 : 1,
                     onDragEnd: (DraggableDetails details) {
-                      onDragEndOffset = details.offset;
-
                       _timer = new Timer(Duration(milliseconds: 200), () {
                         setState(() {
-                          updateArrowToKeyMap(key);
                           _dragStarted = false;
-                          hasArrowToKeyMap = {};
+                          _dataProvider.updateArrowToKeyMap(
+                              key, _dragStarted, key);
+
+                          _dataProvider.hasArrowToKeyMap.clear();
                         });
                       });
                     },
                     onDragStarted: () {
                       HapticFeedback.mediumImpact();
-                      _dragStarted = true;
 
                       _timer = new Timer(Duration(milliseconds: 200), () {
+                        _dragStarted = true;
                         setState(() {
-                          updateArrowToKeyMap(feedbackKey);
+                           _dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
                         });
                       });
                     },
                     onDragCompleted: () {
                       setState(() {
-                        dataProvider.structureMap[key].position =
-                            dataProvider.itemDropPosition(
-                                key, pointerDownOffset, pointerUpOffset);
+                        _dataProvider.structureMap[key].position =
+                            _dataProvider.itemDropPosition(
+                                key, _pointerDownOffset, _pointerUpOffset);
                       });
                     },
                     onDraggableCanceled: (vel, Offset off) {
                       setState(() {
-                        dataProvider.structureMap[key].position =
-                            dataProvider.itemDropPosition(
-                                key, pointerDownOffset, pointerUpOffset);
+                        _dataProvider.structureMap[key].position =
+                            _dataProvider.itemDropPosition(
+                                key, _pointerDownOffset, _pointerUpOffset);
                       });
 
-                      dataProvider.stackSizeChange(feedbackKey, off);
+                      _dataProvider.stackSizeChange(feedbackKey, off);
                     },
                     dragAnchor: DragAnchor.pointer,
                     childWhenDragging: Container(),
                     feedback: ChangeNotifierProvider<Data>.value(
                       value: Provider.of<Data>(context),
                       child: FeedbackWindowWidget(
-                          key, pointerDownOffset, feedbackKey),
+                          key, _pointerDownOffset, feedbackKey),
                     ),
                     child: _animatedButtonUI,
-                    data: dataProvider.structureMap[key]),
+                    data: _dataProvider.structureMap[key]),
               ),
             );
           },
           onWillAccept: (dynamic data) {
+            //true if window changes target
             if (data.toString().contains('Window')) {
-              if (dataProvider.structureMap[key].key != data.key &&
-                  !dataProvider.structureMap[data.key].childKeys
+              if (_dataProvider.structureMap[key].key != data.key &&
+                  !_dataProvider.structureMap[data.key].childKeys
                       .contains(key)) {
-                dataProvider.changeItemListPosition(
+                _dataProvider.changeItemListPosition(
                     itemKey: data.key, newKey: key);
-                var targetKey = dataProvider.getActualTargetKey(data.key);
-                var targetScale = dataProvider.structureMap[targetKey].scale;
+                var targetKey = _dataProvider.getActualTargetKey(data.key);
+                var targetScale = _dataProvider.structureMap[targetKey].scale;
 
-                dataProvider.structureMap[data.key].scale = targetScale * 0.3;
+                _dataProvider.structureMap[data.key].scale = targetScale * 0.3;
 
                 return true;
               } else {
                 return false;
               }
             } else {
-              dataProvider.changeItemListPosition(
+              _dataProvider.changeItemListPosition(
                   itemKey: data.key, newKey: key);
-              var targetKey = dataProvider.getActualTargetKey(data.key);
-              var targetScale = dataProvider.structureMap[targetKey].scale;
-              dataProvider.structureMap[data.key].scale = targetScale * 0.3;
+              var targetKey = _dataProvider.getActualTargetKey(data.key);
+              var targetScale = _dataProvider.structureMap[targetKey].scale;
+              _dataProvider.structureMap[data.key].scale = targetScale * 0.3;
 
               return true;
             }
@@ -400,9 +299,9 @@ class _WindowWidgetState extends State<WindowWidget>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /*  SizedBox(
-                  width: dataProvider.structureMap[key].size.width *
-                      itemScale,
-                  height: 20 * itemScale,
+                  width: _dataProvider.structureMap[key].size.width *
+                      _itemScale,
+                  height: 20 * _itemScale,
                   child: FittedBox(
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 2),
@@ -417,20 +316,20 @@ class _WindowWidgetState extends State<WindowWidget>
                   ),
                 ),*/
             SizedBox(
-              height: dataProvider.structureMap[key].size.height * itemScale,
-              width: dataProvider.structureMap[key].size.width * itemScale,
+              height: _dataProvider.structureMap[key].size.height * _itemScale,
+              width: _dataProvider.structureMap[key].size.width * _itemScale,
               child: Material(
                 shape: SuperellipseShape(
                     side: BorderSide(
-                        color: dataProvider.selectedMap[key]
+                        color: _dataProvider.selectedMap[key]
                             ? Colors.black
                             : Colors.transparent,
-                        width: 1 * itemScale),
-                    borderRadius: BorderRadius.circular(28 * itemScale)),
+                        width: 1 * _itemScale),
+                    borderRadius: BorderRadius.circular(28 * _itemScale)),
                 //margin: EdgeInsets.all(0),
-                color: dataProvider.selectedMap[key]
-                    ? tonedColor(dataProvider.structureMap[key].color)
-                    : dataProvider.structureMap[key].color,
+                color: _dataProvider.selectedMap[key]
+                    ? _tonedColor(_dataProvider.structureMap[key].color)
+                    : _dataProvider.structureMap[key].color,
                 child: WindowStackBuilder(key),
               ),
             ),

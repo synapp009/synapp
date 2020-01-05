@@ -61,13 +61,13 @@ class FitTextFieldState extends State<FitTextField> {
     } else {
       textWidth = textWidth;
     }
- 
+
     return GestureDetector(
       child: Padding(
         padding: const EdgeInsets.all(3) * widget.itemScale,
         child: Container(
-          key:widget.feedbackKey,
-          width: textWidth,
+          key: widget.feedbackKey,
+          width: textWidth * widget.itemScale,
           child: FittedBox(
             child: Container(
               width: textWidth, //TODO: autosize width still not perfect
@@ -94,9 +94,7 @@ class FitTextFieldState extends State<FitTextField> {
                 style: textStyle,
                 controller: txt,
                 onChanged: (text) {
-                  
-                      dataProvider.structureMap[widget.itemKey]
-                      .content = txt.text;
+                  dataProvider.structureMap[widget.itemKey].content = txt.text;
 
                   // Tells the framework to redraw the widget
                   // The widget will redraw with a new width

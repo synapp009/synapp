@@ -31,6 +31,7 @@ class StackAnimator extends StatelessWidget {
       mostRightKey = keyAtBottomList[0];
       mostTopKey = keyAtBottomList[0];
       for (int i = 0; i < keyAtBottomList.length; i++) {
+        
         if ((dataProvider.structureMap[keyAtBottomList[i]].position.dx +
                 dataProvider.structureMap[keyAtBottomList[i]].size.width) >
             (dataProvider.structureMap[mostRightKey].position.dx +
@@ -85,8 +86,6 @@ class StackAnimator extends StatelessWidget {
           if (dataProvider.stackScale < maxScale / 2) {
             notifier.value.setEntry(0, 0, maxScale / 2);
             notifier.value.setEntry(1, 1, maxScale / 2);
-
-
           }
 
           if (dataProvider.stackOffset.dx >
@@ -109,8 +108,10 @@ class StackAnimator extends StatelessWidget {
             notifier.value.setEntry(0, 3, tempOffsetRightDx);
           }
 
-          if (dataProvider.stackOffset.dy > -maxTopOffset + displaySize.height / 2) {
-             notifier.value.setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
+          if (dataProvider.stackOffset.dy >
+              -maxTopOffset + displaySize.height / 2) {
+            notifier.value
+                .setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
           }
         }
       },

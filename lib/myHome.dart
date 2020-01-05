@@ -17,19 +17,22 @@ class AppBuilder {
   String label;
   IconData iconData;
   Color color;
-  AppBuilder({this.label, this.iconData, this.type, this.color});
+  GlobalKey itemKey;
+  AppBuilder({this.label, this.iconData, this.type, this.color,this.itemKey});
 }
 
 class _MyHomeState extends State<MyHome> {
   List<AppBuilder> _apps = [
     AppBuilder(
-      type: Window(),
+      itemKey: new GlobalKey(),
+      type: new Window(),
       label: Window.label,
       iconData: Window.iconData,
       color: Colors.yellow,
     ),
     AppBuilder(
-      type: TextBox(),
+      itemKey: new GlobalKey(),
+      type: new TextBox(),
       label: TextBox.label,
       iconData: TextBox.iconData,
       color: Colors.yellowAccent,
@@ -45,11 +48,12 @@ class _MyHomeState extends State<MyHome> {
       body: StackAnimator(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.black87,
         onPressed: () => modal.mainBottomSheet(context),
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomAppBar(
-        color: Color.fromRGBO(153, 56, 255, 1),
+        color: Color.fromRGBO(244, 245, 248,1),
         shape: CircularNotchedRectangle(),
         notchMargin: 4.0,
         child: new Row(
@@ -57,12 +61,12 @@ class _MyHomeState extends State<MyHome> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             IconButton(
-              color: Colors.white,
+              color: Colors.black87,
               icon: Icon(Icons.chat),
               onPressed: () {},
             ),
             IconButton(
-              color: Colors.white,
+              color: Colors.black87,
               icon: Icon(Icons.search),
               onPressed: () {},
             ),
@@ -79,6 +83,7 @@ class BottomSheetApp {
   BottomSheetApp(this._apps, this.dataProvider);
   mainBottomSheet(BuildContext context) {
     showModalBottomSheet(
+      backgroundColor: Color.fromRGBO(244, 245, 248,1),
         isScrollControlled:
             true, //bottomsheet goes full screen, if bottomsheet has a scrollable widget such as a listview as a child.
         shape: RoundedRectangleBorder(
@@ -102,15 +107,14 @@ class BottomSheetApp {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           RawMaterialButton(
-                            
+                            key: _apps[index].itemKey ,
                             onPressed: () {
                               Navigator.pop(context);
-
-                              dataProvider.createNewApp(_apps[index].type);
+                              dataProvider.createNewApp(_apps[index].type,_apps[index].itemKey );
                             },
                             child: new Icon(
                               _apps[index].iconData,
-                              color: Colors.black,
+                              color: Colors.black87,
                               size: 35.0,
                             ),
                             shape: new CircleBorder(),

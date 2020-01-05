@@ -26,6 +26,8 @@ class Data with ChangeNotifier {
   double maxScale;
   Offset maxOffset;
 
+  Map<Key, List<Key>> hasArrowToKeyMap = {};
+
   Key actualItemKey;
   bool firstItem = true;
 
@@ -39,8 +41,6 @@ class Data with ChangeNotifier {
     selectedMap = Constants.initializeSelectedMap(selectedMap);
     notifier = Constants.initializeNotifier(notifier);
   }
-
-  
 
   Map<GlobalKey, List<Arrow>> get getArrowMap => arrowMap;
 
@@ -67,15 +67,17 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  createNewApp(type) {
+  createNewApp(type, GlobalKey itemKey) {
+    RenderBox itemBox = itemKey.currentContext.findRenderObject();
+    Offset appPosition = itemBox.globalToLocal(Offset.zero);
     if (type.toString().contains('Window')) {
-      createNewWindow();
+      createNewWindow(appPosition);
     } else if (type.toString().contains('TextBox')) {
-      createNewTextBox();
+      createNewTextBox(appPosition);
     }
   }
 
-  createNewWindow() {
+  createNewWindow(appPosition) {
     Key windowKey = GlobalKey();
     Color color = RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
@@ -98,7 +100,7 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  createNewTextBox() {
+  createNewTextBox(appPosition) {
     Key textboxKey = GlobalKey();
 
     if (structureMap[null] == null) {
@@ -599,8 +601,8 @@ class Data with ChangeNotifier {
 
       //stackOffset = stackOffset + offsetChange;
 
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   Key hitTestRaw(position, context) {
@@ -670,6 +672,109 @@ class Data with ChangeNotifier {
             }
         });
     return selectedKey;
+  }
+
+  getAllArrows(key) {
+    //get all arrows pointing to or coming from the item and also it's children items
+    bool keyIsTargetOrOrigin(k) {
+      bool _tempBool = false;
+      
+      if (arrowMap[k] != null) {
+        arrowMap[k].forEach((Arrow a) => {
+          
+              if (a.target == k)
+                {
+                  _tempBool = true,
+                }
+            });
+      }
+
+      arrowMap.forEach(
+        ((Key originKey, List<Arrow> listOfArrows) => {
+              listOfArrows.forEach((Arrow a) => {
+                    if (a.target == k)
+                      {
+                        _tempBool = true,
+                      }
+                  }),
+            }),
+      );
+      return _tempBool;
+    }
+
+    //all childItems pointing to or getting targetted
+    List childList = getAllChildren(key);
+    childList.add(key);
+
+    childList.forEach((childKey) => {
+          arrowMap.forEach((Key originKey, List<Arrow> listOfArrows) => {
+            
+                if (originKey != null)
+                  {
+                    listOfArrows.forEach((Arrow a) => {
+
+                          if (a.target == childKey &&
+                              keyIsTargetOrOrigin(childKey))
+                            {
+                              if (hasArrowToKeyMap[originKey] == null)
+                                {
+                                  hasArrowToKeyMap[originKey] = [],
+                                },
+                                
+                              hasArrowToKeyMap[originKey].add(childKey),
+                            }
+                          else
+                            {
+                              if (a.target != null &&
+                                  keyIsTargetOrOrigin(a.target))
+                                {
+                                  if (hasArrowToKeyMap[originKey] == null)
+                                    {
+                                      hasArrowToKeyMap[originKey] = [],
+                                    },
+                                  hasArrowToKeyMap[originKey].add(a.target),
+                                },
+                            },
+                        }),
+                  }
+              })
+        });
+  }
+
+  updateArrowToKeyMap(key, dragStarted, feedbackKey) {
+    hasArrowToKeyMap.forEach((Key originKey, List<Key> listOfTargets) => {
+          listOfTargets.forEach((Key targetKey) => {
+                if (dragStarted && originKey == key)
+                  {
+                    updateArrow(
+                      originKey: originKey,
+                      feedbackKey: feedbackKey,
+                      targetKey: targetKey,
+                      draggedKey: originKey,
+                      hasArrowToKeyMap: hasArrowToKeyMap,
+                    )
+                  }
+                else if (dragStarted && targetKey == key)
+                  {
+                    updateArrow(
+                        originKey: originKey,
+                        feedbackKey: feedbackKey,
+                        targetKey: targetKey,
+                        draggedKey: targetKey,
+                        hasArrowToKeyMap: hasArrowToKeyMap)
+                  }
+                else
+                  {
+                    
+                    updateArrow(
+                        originKey: originKey,
+                        feedbackKey: feedbackKey,
+                        targetKey: targetKey,
+                        draggedKey: feedbackKey,
+                        hasArrowToKeyMap: hasArrowToKeyMap)
+                  }
+              })
+        });
   }
 
   zoomToBox(selectedKey, context) {
