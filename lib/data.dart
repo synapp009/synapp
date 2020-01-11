@@ -8,6 +8,7 @@ import 'constants.dart';
 import 'window.dart';
 import 'textBox.dart';
 
+
 class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
   Matrix4 matrix = Matrix4.identity();
@@ -322,8 +323,7 @@ class Data with ChangeNotifier {
             pointerDownOffset.dx),
         ((pointerUpOffset.dy -
                     targetOffset.dy -
-                    headerHeight() -
-                    itemHeaderOffset) /
+                    headerHeight() ) /
                 itemScale /
                 stackScale -
             pointerDownOffset.dy));
