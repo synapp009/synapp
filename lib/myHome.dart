@@ -18,7 +18,7 @@ class AppBuilder {
   IconData iconData;
   Color color;
   GlobalKey itemKey;
-  AppBuilder({this.label, this.iconData, this.type, this.color,this.itemKey});
+  AppBuilder({this.label, this.iconData, this.type, this.color, this.itemKey});
 }
 
 class _MyHomeState extends State<MyHome> {
@@ -53,7 +53,7 @@ class _MyHomeState extends State<MyHome> {
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomAppBar(
-        color: Color.fromRGBO(244, 245, 248,1),
+        color: Color.fromRGBO(244, 245, 248, 1),
         shape: CircularNotchedRectangle(),
         notchMargin: 4.0,
         child: new Row(
@@ -83,7 +83,7 @@ class BottomSheetApp {
   BottomSheetApp(this._apps, this.dataProvider);
   mainBottomSheet(BuildContext context) {
     showModalBottomSheet(
-      backgroundColor: Color.fromRGBO(244, 245, 248,1),
+        backgroundColor: Color.fromRGBO(244, 245, 248, 1),
         isScrollControlled:
             true, //bottomsheet goes full screen, if bottomsheet has a scrollable widget such as a listview as a child.
         shape: RoundedRectangleBorder(
@@ -107,10 +107,11 @@ class BottomSheetApp {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           RawMaterialButton(
-                            key: _apps[index].itemKey ,
+                            key: _apps[index].itemKey,
                             onPressed: () {
-                              Navigator.pop(context);
-                              dataProvider.createNewApp(_apps[index].type,_apps[index].itemKey );
+                              //Navigator.pop(context);
+                              dataProvider.createNewApp(
+                                  _apps[index].type, _apps[index].itemKey);
                             },
                             child: new Icon(
                               _apps[index].iconData,

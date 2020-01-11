@@ -32,6 +32,7 @@ class _WindowWidgetState extends State<WindowWidget>
   bool _isTapped = false;
   bool _dragStarted = false;
   GlobalKey feedbackKey = GlobalKey();
+  GlobalKey sizedBoxKey = GlobalKey();
   var _dataProvider;
 
   @override
@@ -128,168 +129,187 @@ class _WindowWidgetState extends State<WindowWidget>
       left: _dataProvider.structureMap[key].position.dx * _itemScale,
       child: DragTarget(
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
-            return Listener(
-              onPointerDown: (PointerDownEvent event) {
-                _pointerUp = false;
-                if (_dataProvider.firstItem) {
-                  _dataProvider.actualItemKey = key;
-                  _dataProvider.getAllArrows(key);
-                  _dataProvider.firstItem = false;
-                }
+        return Listener(
+          onPointerDown: (PointerDownEvent event) {
+            _pointerUp = false;
+            if (_dataProvider.firstItem) {
+              _dataProvider.actualItemKey = key;
+              _dataProvider.getAllArrows(key);
+              _dataProvider.firstItem = false;
+            }
 
-                //threshold
-                _isPointerMoving();
+            //threshold
+            _isPointerMoving();
 
-                setState(() {
-                  _pointerDownOffset = event.localPosition / _itemScale;
-                });
-              },
-              onPointerCancel: (details) {
-                _pointerMoving = false;
-              },
-              onPointerUp: (PointerUpEvent event) {
-                _controller.reverse();
-                _pointerUpOffset = event.position;
-                _pointerUp = true;
-                _pointerMoving = false;
-                _dataProvider.firstItem = true;
-
-                offset = Offset(0, 0);
-              },
-              onPointerMove: (PointerMoveEvent event) {
-                //_dataProvider.stackSizeHitTest(event.position);
-
-                //update the position of all the arrows pointing to the window
-                if (_dragStarted) {
-                   _dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
-                }
-
-                offset = Offset(
-                    offset.dx + event.delta.dx, offset.dy + event.delta.dy);
-
-                _controller.reverse();
-
-                //set if Pointer is Moving with threshold
-                if ((event.localPosition.dx - _pointerDownOffset.dx).abs() >
-                        30 / _itemScale ||
-                    (event.localPosition.dy - _pointerDownOffset.dy).abs() >
-                        30 / _itemScale) {
-                  _pointerMoving = true;
-                }
-              },
-              child: GestureDetector(
-                onDoubleTap: () {
-                  // _dataProvider.zoomToBox(key, context);
-                },
-                onLongPressStart: (details) {
-                  HapticFeedback.mediumImpact();
-
-                  _dataProvider.addArrow(key);
-
-                  //only select the creating window
-                  _dataProvider.onlySelectThis(key);
-                },
-                onLongPressMoveUpdate: (details) {
-                  _dataProvider.hitTest(key, details.globalPosition, context);
-                  _dataProvider.setArrowToPointer(key, details.globalPosition);
-                },
-                onLongPressEnd: (details) {
-                  _dataProvider.connectAndUnselect(key);
-                },
-                onLongPressUp: () {},
-                onTap: () {
-                  FocusScope.of(context).requestFocus(
-                    new FocusNode(),
-                  );
-
-                  _isTapped = true;
-                  _animation();
-                  _maxSimultaneousDrags =
-                      _dataProvider.selectedMap[key] ? 0 : 1;
-                  _isTapped = false;
-                },
-                child: LongPressDraggable(
-                    //hapticFeedbackOnStart: true,
-                    maxSimultaneousDrags:
-                        _dataProvider.selectedMap[key] ? 0 : 1,
-                    onDragEnd: (DraggableDetails details) {
-                      _timer = new Timer(Duration(milliseconds: 200), () {
-                        setState(() {
-                          _dragStarted = false;
-                          _dataProvider.updateArrowToKeyMap(
-                              key, _dragStarted, key);
-
-                          _dataProvider.hasArrowToKeyMap.clear();
-                        });
-                      });
-                    },
-                    onDragStarted: () {
-                      HapticFeedback.mediumImpact();
-
-                      _timer = new Timer(Duration(milliseconds: 200), () {
-                        _dragStarted = true;
-                        setState(() {
-                           _dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
-                        });
-                      });
-                    },
-                    onDragCompleted: () {
-                      setState(() {
-                        _dataProvider.structureMap[key].position =
-                            _dataProvider.itemDropPosition(
-                                key, _pointerDownOffset, _pointerUpOffset);
-                      });
-                    },
-                    onDraggableCanceled: (vel, Offset off) {
-                      setState(() {
-                        _dataProvider.structureMap[key].position =
-                            _dataProvider.itemDropPosition(
-                                key, _pointerDownOffset, _pointerUpOffset);
-                      });
-
-                      _dataProvider.stackSizeChange(feedbackKey, off);
-                    },
-                    dragAnchor: DragAnchor.pointer,
-                    childWhenDragging: Container(),
-                    feedback: ChangeNotifierProvider<Data>.value(
-                      value: Provider.of<Data>(context),
-                      child: FeedbackWindowWidget(
-                          key, _pointerDownOffset, feedbackKey),
-                    ),
-                    child: _animatedButtonUI,
-                    data: _dataProvider.structureMap[key]),
-              ),
-            );
+            setState(() {
+              _pointerDownOffset = event.localPosition / _itemScale;
+            });
           },
-          onWillAccept: (dynamic data) {
-            //true if window changes target
-            if (data.toString().contains('Window')) {
-              if (_dataProvider.structureMap[key].key != data.key &&
-                  !_dataProvider.structureMap[data.key].childKeys
-                      .contains(key)) {
-                _dataProvider.changeItemListPosition(
-                    itemKey: data.key, newKey: key);
-                var targetKey = _dataProvider.getActualTargetKey(data.key);
-                var targetScale = _dataProvider.structureMap[targetKey].scale;
+          onPointerCancel: (details) {
+            _pointerMoving = false;
+          },
+          onPointerUp: (PointerUpEvent event) {
+            _controller.reverse();
+            _pointerUpOffset = event.position;
+            _pointerUp = true;
+            _pointerMoving = false;
+            _dataProvider.firstItem = true;
 
-                _dataProvider.structureMap[data.key].scale = targetScale * 0.3;
+            offset = Offset(0, 0);
+          },
+          onPointerMove: (PointerMoveEvent event) {
+            //_dataProvider.stackSizeHitTest(event.position);
 
-                return true;
-              } else {
-                return false;
-              }
-            } else {
-              _dataProvider.changeItemListPosition(
-                  itemKey: data.key, newKey: key);
-              var targetKey = _dataProvider.getActualTargetKey(data.key);
-              var targetScale = _dataProvider.structureMap[targetKey].scale;
-              _dataProvider.structureMap[data.key].scale = targetScale * 0.3;
+            //update the position of all the arrows pointing to the window
+            if (_dragStarted) {
+              
+              _dataProvider.updateArrowToKeyMap(
+                  key, _dragStarted, feedbackKey);
+            }
 
-              return true;
+            offset =
+                Offset(offset.dx + event.delta.dx, offset.dy + event.delta.dy);
+
+            _controller.reverse();
+
+            //set if Pointer is Moving with threshold
+            if ((event.localPosition.dx - _pointerDownOffset.dx).abs() >
+                    100 / _itemScale ||
+                (event.localPosition.dy - _pointerDownOffset.dy).abs() >
+                    100 / _itemScale) {
+              _pointerMoving = true;
             }
           },
-          onLeave: (dynamic data) {},
-          onAccept: (dynamic data) {}),
+          child: GestureDetector(
+            onDoubleTap: () {
+              // _dataProvider.zoomToBox(key, context);
+            },
+            onLongPressStart: (details) {
+              HapticFeedback.mediumImpact();
+
+              _dataProvider.addArrow(key);
+
+              //only select the creating window
+              _dataProvider.onlySelectThis(key);
+            },
+            onLongPressMoveUpdate: (details) {
+              _dataProvider.hitTest(key, details.globalPosition, context);
+              _dataProvider.setArrowToPointer(key, details.globalPosition);
+            },
+            onLongPressEnd: (details) {
+              _dataProvider.connectAndUnselect(key);
+            },
+            onLongPressUp: () {},
+            onTap: () {
+              FocusScope.of(context).requestFocus(
+                new FocusNode(),
+              );
+
+              _isTapped = true;
+              _animation();
+              _maxSimultaneousDrags = _dataProvider.selectedMap[key] ? 0 : 1;
+              _isTapped = false;
+            },
+            child: LongPressDraggable(
+                //hapticFeedbackOnStart: true,
+
+                maxSimultaneousDrags: _dataProvider.selectedMap[key] ? 0 : 1,
+                onDragEnd: (DraggableDetails details) {
+                  //_dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
+                  _timer = new Timer(Duration(milliseconds: 200), () {
+                    setState(() {
+                      _dragStarted = false;
+                      _dataProvider.updateArrowToKeyMap(key, _dragStarted, key);
+
+                      _dataProvider.hasArrowToKeyMap.clear();
+                    });
+                  });
+                },
+                onDragStarted: () {
+                  HapticFeedback.mediumImpact();
+
+                  _timer = new Timer(Duration(milliseconds: 200), () {
+                    _dragStarted = true;
+                    setState(() {
+                      _dataProvider.updateArrowToKeyMap(
+                          key, _dragStarted, feedbackKey);
+                    });
+                  });
+                },
+                onDragCompleted: () {
+                  setState(() {
+                    _dataProvider.structureMap[key].position =
+                        _dataProvider.itemDropPosition(
+                            key, _pointerDownOffset, _pointerUpOffset);
+                  });
+                },
+                onDraggableCanceled: (vel, Offset off) {
+                  setState(() {
+                    _dataProvider.structureMap[key].position =
+                        _dataProvider.itemDropPosition(
+                            key, _pointerDownOffset, _pointerUpOffset);
+                  });
+
+                  _dataProvider.stackSizeChange(key, feedbackKey, off);
+                },
+                dragAnchor: DragAnchor.pointer,
+                childWhenDragging: Container(),
+                feedback: ChangeNotifierProvider<Data>.value(
+                  value: Provider.of<Data>(context),
+                  child: FeedbackWindowWidget(
+                      key, _pointerDownOffset, feedbackKey),
+                ),
+                child: _animatedButtonUI,
+                data: _dataProvider.structureMap[key]),
+          ),
+        );
+      }, onWillAccept: (dynamic data) {
+        //true if window changes target
+        if (data.toString().contains('Window')) {
+          if (_dataProvider.structureMap[key].key != data.key &&
+              !_dataProvider.structureMap[data.key].childKeys.contains(key)) {
+            _dataProvider.changeItemListPosition(
+                itemKey: data.key, newKey: key);
+            Key _targetKey = _dataProvider.getActualTargetKey(data.key);
+            double _targetScale = _dataProvider.structureMap[_targetKey].scale;
+
+            _dataProvider.structureMap[data.key].scale = _targetScale * 0.3;
+
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          _dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
+          Key _targetKey = _dataProvider.getActualTargetKey(data.key);
+          double _targetScale = _dataProvider.structureMap[_targetKey].scale;
+          _dataProvider.structureMap[data.key].scale = _targetScale;
+
+          _timer = new Timer(Duration(milliseconds: 1000), () {
+            _dataProvider.selectedMap[key] = true;
+            setState(() {
+              _timer = new Timer(Duration(milliseconds: 2000), () {
+                setState(() {
+                  _dataProvider.selectedMap[key] = false;
+                });
+              });
+            });
+          });
+          return true;
+        }
+      }, onLeave: (dynamic data) {
+        _dataProvider.selectedMap[key] = false;
+      }, onAccept: (dynamic data) {
+        if (data.toString().contains('TextBox')) {
+          if (_dataProvider.selectedMap[key] == true) {
+            _dataProvider.structureMap[data.key].fixed = true;
+            _dataProvider.structureMap[data.key].position = Offset(10, 10);
+          } else {
+            _dataProvider.structureMap[data.key].fixed = false;
+          }
+          _dataProvider.selectedMap[key] = false;
+        }
+      }),
     );
   }
 
@@ -315,7 +335,9 @@ class _WindowWidgetState extends State<WindowWidget>
                     ),
                   ),
                 ),*/
+
             SizedBox(
+              key: sizedBoxKey,
               height: _dataProvider.structureMap[key].size.height * _itemScale,
               width: _dataProvider.structureMap[key].size.width * _itemScale,
               child: Material(

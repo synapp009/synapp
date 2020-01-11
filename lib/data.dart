@@ -16,7 +16,6 @@ class Data with ChangeNotifier {
   Map<GlobalKey, List<Arrow>> arrowMap;
   Map<Key, bool> selectedMap;
   Size stackSize;
-  Key actualTarget;
   Offset positionForDrop;
   Offset currentStackPosition = Offset(0, 100);
   Offset currentTargetPosition = Offset(0, 0);
@@ -90,7 +89,7 @@ class Data with ChangeNotifier {
     structureMap[null].childKeys.add(windowKey);
     structureMap[windowKey] = Window(
         key: windowKey,
-        size: Size(100, 100),
+        size: Size(130, 130),
         position: Offset(200, 100),
         color: color,
         title: windowKey.toString(),
@@ -311,10 +310,20 @@ class Data with ChangeNotifier {
     var itemScale = structureMap[key].scale;
     var targetKey = getActualTargetKey(key);
     var targetOffset = getPositionOfRenderBox(targetKey);
+    var itemHeaderOffset = 0;
+
+    //checks if there is some relevance of additional offset caused by trag helper offset
+    if (targetKey != null && structureMap[key].toString().contains('Window')) {
+      itemHeaderOffset = 20;
+    }
+
     return Offset(
         ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
             pointerDownOffset.dx),
-        ((pointerUpOffset.dy - targetOffset.dy - headerHeight()) /
+        ((pointerUpOffset.dy -
+                    targetOffset.dy -
+                    headerHeight() -
+                    itemHeaderOffset) /
                 itemScale /
                 stackScale -
             pointerDownOffset.dy));
@@ -391,12 +400,14 @@ class Data with ChangeNotifier {
       final GlobalKey targetKey,
       final GlobalKey draggedKey,
       final Map<Key, List<Key>> hasArrowToKeyMap}) {
-    if ((feedbackKey == originKey || feedbackKey == targetKey)) {}
     Arrow arrow;
+
 //get size and arrow of origin and target
     RenderBox originRenderBox = originKey.currentContext.findRenderObject();
     var originPosition = getPositionOfRenderBox(originKey);
-    var originSize = originRenderBox.size;
+    originPosition = Offset(originPosition.dx, originPosition.dy);
+    var originSize =
+        Size(originRenderBox.size.width, originRenderBox.size.height);
     originPosition = Offset(
       originPosition.dx + (originSize.width / 2) * stackScale,
       originPosition.dy + (originSize.height / 2) * stackScale,
@@ -404,7 +415,9 @@ class Data with ChangeNotifier {
 
     RenderBox targetRenderBox = targetKey.currentContext.findRenderObject();
     var targetPosition = getPositionOfRenderBox(targetKey);
-    var targetSize = targetRenderBox.size;
+    targetPosition = Offset(targetPosition.dx, targetPosition.dy);
+    var targetSize =
+        Size(targetRenderBox.size.width, targetRenderBox.size.height);
     targetPosition = Offset(
       targetPosition.dx + (targetSize.width / 2) * stackScale,
       targetPosition.dy + (targetSize.height / 2) * stackScale,
@@ -456,7 +469,7 @@ class Data with ChangeNotifier {
               feedbackPosition + feedbackEdgeOffset) /
           stackScale;
       arrow.position =
-          ((feedbackPosition + feedbackEdgeOffset - stackOffset)) / stackScale;
+          (feedbackPosition + feedbackEdgeOffset - stackOffset) / stackScale;
     } else if (draggedKey == targetKey) {
       //if target gets tragged, use feedback as target
 
@@ -504,6 +517,7 @@ class Data with ChangeNotifier {
                   positionOfTarget.dx, positionOfTarget.dy + headerHeight()),
               setArrowToPointer(itemKey, positionOfTarget),
               selectedMap[k] = false,
+              selectedMap[itemKey] = false,
               arrowMap[itemKey].forEach((Arrow l) => {
                     if (l.target == null) {l.target = k}
                   })
@@ -522,11 +536,12 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
-  void stackSizeChange(GlobalKey feedbackKey, position) {
+  void stackSizeChange(key, GlobalKey feedbackKey, position) {
     Offset offsetChange;
 
     RenderBox itemBox = feedbackKey.currentContext.findRenderObject();
     var itemSize = itemBox.size;
+    var stackChange = Offset(0, 0);
 
     if (position.dx > stackOffset.dx &&
         position.dx < stackOffset.dx + (stackSize.width * stackScale) &&
@@ -543,6 +558,8 @@ class Data with ChangeNotifier {
                 (stackSize.width * stackScale) +
                 itemSize.width * stackScale,
             0);
+        stackChange = Offset(
+            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
         stackSize = Size(
             stackSize.width + offsetChange.dx / stackScale, stackSize.height);
       }
@@ -555,6 +572,8 @@ class Data with ChangeNotifier {
                 stackOffset.dy -
                 (stackSize.height * stackScale) +
                 itemSize.height * stackScale);
+        stackChange = Offset(
+            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
         stackSize = Size(
             stackSize.width,
             stackSize.height +
@@ -566,6 +585,8 @@ class Data with ChangeNotifier {
 
         offsetChange = Offset(
             position.dx - stackOffset.dx - itemSize.width * stackScale, 0);
+        stackChange = Offset(
+            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
         structureMap[null].childKeys.forEach((k) => {
               structureMap[k].position = Offset(
                   structureMap[k].position.dx - offsetChange.dx / stackScale,
@@ -586,7 +607,8 @@ class Data with ChangeNotifier {
                 stackOffset.dy -
                 headerHeight() -
                 itemSize.height * stackScale);
-
+        stackChange = Offset(
+            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
         structureMap[null].childKeys.forEach((k) => {
               structureMap[k].position = Offset(structureMap[k].position.dx,
                   structureMap[k].position.dy - offsetChange.dy / stackScale)
@@ -598,11 +620,21 @@ class Data with ChangeNotifier {
         stackSize = Size(
             stackSize.width, stackSize.height - offsetChange.dy / stackScale);
       }
-
-      //stackOffset = stackOffset + offsetChange;
-
     }
-    notifyListeners();
+    //update arrows position to the new stack offset
+    if (stackChange.dx < 0 || stackChange.dy < 0) {
+      stackOffset = stackOffset + stackChange;
+    }
+
+    stackChange = -stackChange / stackScale;
+
+    arrowMap.forEach((k, List<Arrow> arrowList) => {
+          arrowList.forEach((Arrow arrow) => arrow.position = Offset(
+              arrow.position.dx + stackChange.dx,
+              arrow.position.dy + stackChange.dy)),
+        });
+
+    notifier.notifyListeners();
   }
 
   Key hitTestRaw(position, context) {
@@ -678,10 +710,9 @@ class Data with ChangeNotifier {
     //get all arrows pointing to or coming from the item and also it's children items
     bool keyIsTargetOrOrigin(k) {
       bool _tempBool = false;
-      
+
       if (arrowMap[k] != null) {
         arrowMap[k].forEach((Arrow a) => {
-          
               if (a.target == k)
                 {
                   _tempBool = true,
@@ -708,11 +739,9 @@ class Data with ChangeNotifier {
 
     childList.forEach((childKey) => {
           arrowMap.forEach((Key originKey, List<Arrow> listOfArrows) => {
-            
                 if (originKey != null)
                   {
                     listOfArrows.forEach((Arrow a) => {
-
                           if (a.target == childKey &&
                               keyIsTargetOrOrigin(childKey))
                             {
@@ -720,7 +749,6 @@ class Data with ChangeNotifier {
                                 {
                                   hasArrowToKeyMap[originKey] = [],
                                 },
-                                
                               hasArrowToKeyMap[originKey].add(childKey),
                             }
                           else
@@ -756,6 +784,7 @@ class Data with ChangeNotifier {
                   }
                 else if (dragStarted && targetKey == key)
                   {
+                    print('dsc'),
                     updateArrow(
                         originKey: originKey,
                         feedbackKey: feedbackKey,
@@ -765,7 +794,6 @@ class Data with ChangeNotifier {
                   }
                 else
                   {
-                    
                     updateArrow(
                         originKey: originKey,
                         feedbackKey: feedbackKey,

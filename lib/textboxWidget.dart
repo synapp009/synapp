@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'feedbackTextboxWidget.dart';
@@ -21,6 +23,8 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   var onDragEndOffset;
   var pointerMoving = false;
   var absorbing = true;
+
+  Timer _timer;
   GlobalKey feedbackKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
@@ -29,7 +33,6 @@ class _TextboxWidgetState extends State<TextboxWidget> {
     var initialValue = dataProvider.structureMap[key].content;
 
     double itemScale = dataProvider.structureMap[key].scale;
-    double stackScale = dataProvider.notifier.value.row0[0];
     Offset boxPosition = dataProvider.structureMap[widget.key].position;
     return Positioned(
       top: boxPosition.dy * itemScale,
@@ -63,38 +66,50 @@ class _TextboxWidgetState extends State<TextboxWidget> {
         onPointerMove: (PointerMoveEvent event) {
           absorbing = true;
           pointerMoving = true;
-          dataProvider.hitTest(key, event.position, context);
         },
         child: LongPressDraggable(
             dragAnchor: DragAnchor.pointer,
             onDragCompleted: () {
-              setState(() {
-                dataProvider.structureMap[widget.key].position = dataProvider
-                    .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
-              });
+
+              //position if textbox gets conected to a window
+              if (dataProvider.structureMap[key].fixed == true &&
+                  dataProvider.getActualTargetKey(key) != null) {
+                boxPosition = dataProvider
+                    .structureMap[dataProvider.getActualTargetKey(key)]
+                    .position ;
+
+              } else {
+                setState(() {
+                  dataProvider.structureMap[widget.key].position =
+                      dataProvider.itemDropPosition(
+                          key, pointerDownOffset, pointerUpOffset);
+                });
+              }
             },
             onDraggableCanceled: (vel, off) {
               setState(() {
                 dataProvider.structureMap[widget.key].position = dataProvider
                     .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
               });
-              dataProvider.stackSizeChange(feedbackKey, off);
+              dataProvider.stackSizeChange(key, feedbackKey, off);
             },
             childWhenDragging: Container(),
             feedback: ListenableProvider<Data>.value(
               value: Provider.of<Data>(context),
               child: Material(
                 color: Colors.transparent,
-                child: FeedbackTextboxWidget(key,feedbackKey, pointerDownOffset),
+                child:
+                    FeedbackTextboxWidget(key, feedbackKey, pointerDownOffset),
               ),
             ),
             child: AbsorbPointer(
-                absorbing: absorbing,
-                child: FitTextField(
-                  initialValue: initialValue,
-                  itemKey: key,
-                  itemScale: itemScale,
-                )),
+              absorbing: absorbing,
+              child: FitTextField(
+                initialValue: initialValue,
+                itemKey: key,
+                itemScale: itemScale,
+              ),
+            ),
             data: dataProvider.structureMap[key]),
       ),
     );

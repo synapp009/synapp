@@ -8,6 +8,7 @@ class TextBox {
   Color color;
   String title;
   String content;
+  bool fixed;
   //bool expanded;
   double scale;
   double textSize;
@@ -23,5 +24,6 @@ class TextBox {
       this.title,
       this.scale,
       this.textSize,
-      this.content});
+      this.content,
+      this.fixed});
 }

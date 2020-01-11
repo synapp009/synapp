@@ -35,7 +35,6 @@ class FitTextFieldState extends State<FitTextField> {
   // and for the TextField so that we calculate the correct size for the text
   // we are actually displaying
   TextStyle textStyle = TextStyle(fontSize: 16);
-
   initState() {
     super.initState();
     // Set the text in the TextField to our initialValue
@@ -45,6 +44,9 @@ class FitTextFieldState extends State<FitTextField> {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
+    Key actualTargetKey = dataProvider.getActualTargetKey(widget.itemKey);
+
+    bool isFixed = dataProvider.structureMap[widget.itemKey].fixed;
     // Use TextPainter to calculate the width of our text
     TextSpan ts = new TextSpan(style: textStyle, text: txt.text);
     // List<LineMetrics> lines = tp.computeLineMetrics();
@@ -63,44 +65,45 @@ class FitTextFieldState extends State<FitTextField> {
     }
 
     return GestureDetector(
-      child: Padding(
-        padding: const EdgeInsets.all(3) * widget.itemScale,
-        child: Container(
-          key: widget.feedbackKey,
-          width: textWidth * widget.itemScale,
-          child: FittedBox(
-            child: Container(
-              width: textWidth, //TODO: autosize width still not perfect
-              //decoration: new BoxDecoration(color: color),
+      child: Container(
+        key: widget.feedbackKey,
+        width: actualTargetKey == null
+            ? textWidth * widget.itemScale
+            : dataProvider.structureMap[actualTargetKey].size
+                .width -20 , // textWidth * widget.itemScale
+        child: FittedBox(
+          child: Container(
+            width: actualTargetKey == null ? textWidth : dataProvider.structureMap[actualTargetKey].size.width -20, //dataProvider.structureMap[dataProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
+            //decoration: new BoxDecoration(color: color),
 
-              child: TextField(
-                enabled: widget.enabled,
-                //readOnly: true,
-                keyboardType: TextInputType.multiline,
-                autofocus: false,
-                //focusNode: widget.myFocusNode,
-                maxLines: null,
-                decoration: InputDecoration(
-                  contentPadding: EdgeInsets.only(left: 0, right: -5),
-                  hintText: 'Text',
-                  border: InputBorder.none,
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(width: 1),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(3),
-                    ),
+            child: TextField(
+              enabled: widget.enabled,
+              //readOnly: true,
+
+              keyboardType: TextInputType.multiline,
+              autofocus: false,
+              //focusNode: widget.myFocusNode,
+              maxLines: 6,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.only(left: 1, right: -5),
+                hintText: 'Text',
+                border: InputBorder.none,
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(width: 1),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(3),
                   ),
                 ),
-                style: textStyle,
-                controller: txt,
-                onChanged: (text) {
-                  dataProvider.structureMap[widget.itemKey].content = txt.text;
-
-                  // Tells the framework to redraw the widget
-                  // The widget will redraw with a new width
-                  setState(() {});
-                },
               ),
+              style: textStyle,
+              controller: txt,
+              onChanged: (text) {
+                dataProvider.structureMap[widget.itemKey].content = txt.text;
+
+                // Tells the framework to redraw the widget
+                // The widget will redraw with a new width
+                setState(() {});
+              },
             ),
           ),
         ),

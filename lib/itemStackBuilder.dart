@@ -23,17 +23,16 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
-            //color:Colors.white,
+           
             width: stackSize.width,
             height: stackSize.height,
           );
         },
         onWillAccept: (dynamic data) {
-          dataProvider.actualTarget = null;
+          
           if (dataProvider.structureMap[null].key != data.key) {
             var stackOffset = Offset(dataProvider.notifier.value.row0.a,
                 dataProvider.notifier.value.row1.a);
-            dataProvider.actualTarget = null;
             dataProvider.structureMap[data.key].scale = 1.0;
             dataProvider.currentTargetPosition = stackOffset;
             dataProvider.changeItemListPosition(

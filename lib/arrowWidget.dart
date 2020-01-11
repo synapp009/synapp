@@ -17,7 +17,6 @@ class ArrowWidget extends StatelessWidget {
     var sector;
     Arrow tempArrow;
     var dataProvider = Provider.of<Data>(context);
-
     double originScale = dataProvider.structureMap[originKey].scale;
     double targetScale = dataProvider.structureMap[targetKey].scale;
     var stackScale = dataProvider.stackScale;

@@ -11,19 +11,24 @@ class StackAnimator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-    var stackScale = dataProvider.stackScale;
-    var maxScale;
-    var maxLeftOffset;
-    var maxRightOffset;
-    var maxTopOffset;
-    var mostLeftKey;
-    var mostRightKey;
-    var mostTopKey;
-    var mostBottomKey;
 
     Size displaySize = MediaQuery.of(context).size;
+    ValueNotifier<Matrix4> notifier = dataProvider.notifier;
 
     setMaxScaleAndOffset(context) {
+      //sets the boundaries of the visable part of the screen
+      // and the maximum scale to zoom out
+
+      var maxScale;
+      var maxScaleWidth;
+      var maxScaleHeight;
+      var maxLeftOffset;
+      var maxRightOffset;
+      var maxTopOffset;
+      var mostLeftKey;
+      var mostRightKey;
+      var mostTopKey;
+      var mostBottomKey;
       List keyAtBottomList = dataProvider.structureMap[null].childKeys;
 
       mostBottomKey = keyAtBottomList[0];
@@ -31,7 +36,6 @@ class StackAnimator extends StatelessWidget {
       mostRightKey = keyAtBottomList[0];
       mostTopKey = keyAtBottomList[0];
       for (int i = 0; i < keyAtBottomList.length; i++) {
-        
         if ((dataProvider.structureMap[keyAtBottomList[i]].position.dx +
                 dataProvider.structureMap[keyAtBottomList[i]].size.width) >
             (dataProvider.structureMap[mostRightKey].position.dx +
@@ -63,17 +67,59 @@ class StackAnimator extends StatelessWidget {
       maxTopOffset = dataProvider.structureMap[mostTopKey].position.dy *
           dataProvider.stackScale;
 
-      maxScale = (displaySize.width /
+//set max scale
+      maxScaleWidth = (displaySize.width / 
           (dataProvider.structureMap[mostLeftKey].position.dx +
               dataProvider.structureMap[mostRightKey].position.dx +
               dataProvider.structureMap[mostRightKey].size.width));
+
+      maxScaleHeight = (displaySize.height /
+          (dataProvider.structureMap[mostLeftKey].position.dy +
+              dataProvider.structureMap[mostRightKey].position.dy +
+              dataProvider.structureMap[mostRightKey].size.height +
+              dataProvider.headerHeight()));
+
+      maxScale =
+          maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth;
+
+      if (dataProvider.structureMap[null].childKeys.length > 1) {
+        if (dataProvider.stackScale < maxScale) {
+          notifier.value.setEntry(0, 0, maxScale);
+          notifier.value.setEntry(1, 1, maxScale);
+        }
+
+        if (dataProvider.stackOffset.dx >
+            -maxLeftOffset + displaySize.width / 2) {
+          //left offset barrier
+
+          notifier.value.setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
+        }
+        if ((dataProvider.stackOffset.dx +
+                dataProvider.structureMap[mostRightKey].position.dx *
+                    dataProvider.stackScale +
+                dataProvider.structureMap[mostRightKey].size.width *
+                    dataProvider.stackScale) <
+            displaySize.width / 2) {
+          var tempOffsetRightDx =
+              -(dataProvider.structureMap[mostRightKey].position.dx *
+                      dataProvider.stackScale +
+                  dataProvider.structureMap[mostRightKey].size.width *
+                      dataProvider.stackScale -
+                  displaySize.width / (1.99));
+          notifier.value.setEntry(0, 3, tempOffsetRightDx);
+        }
+
+        if (dataProvider.stackOffset.dy >
+            -maxTopOffset + displaySize.height / 2) {
+          //top offset barrier
+          notifier.value.setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
+        }
+      }
     }
 
-    ValueNotifier<Matrix4> notifier = dataProvider.notifier;
     return MatrixGestureDetector(
       onMatrixUpdate: (m, tm, sm, rm) {
         //notifier.value = m;
-        setMaxScaleAndOffset(context);
 
         dataProvider.stackScale = notifier.value.row0[0];
 
@@ -81,39 +127,7 @@ class StackAnimator extends StatelessWidget {
             Offset(notifier.value.row0.a, notifier.value.row1.a);
 
         notifier.value = m;
-
-        if (dataProvider.structureMap[null].childKeys.length > 1) {
-          if (dataProvider.stackScale < maxScale / 2) {
-            notifier.value.setEntry(0, 0, maxScale / 2);
-            notifier.value.setEntry(1, 1, maxScale / 2);
-          }
-
-          if (dataProvider.stackOffset.dx >
-              -maxLeftOffset + displaySize.width / 2) {
-            notifier.value
-                .setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
-          }
-
-          if ((dataProvider.stackSize.width - dataProvider.stackOffset.dx) /
-                      dataProvider.stackScale -
-                  dataProvider.structureMap[mostRightKey].size.width >
-              maxRightOffset +
-                  displaySize.width / 2 / dataProvider.stackScale) {
-            var tempOffsetRightDx = (dataProvider.stackSize.width -
-                    displaySize.width / 2 -
-                    dataProvider.structureMap[mostRightKey].position.dx *
-                        dataProvider.stackScale) -
-                dataProvider.structureMap[mostRightKey].size.width *
-                    dataProvider.stackScale;
-            notifier.value.setEntry(0, 3, tempOffsetRightDx);
-          }
-
-          if (dataProvider.stackOffset.dy >
-              -maxTopOffset + displaySize.height / 2) {
-            notifier.value
-                .setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
-          }
-        }
+        setMaxScaleAndOffset(context);
       },
       shouldRotate: false,
       child: Stack(children: [
@@ -122,10 +136,10 @@ class StackAnimator extends StatelessWidget {
           top: dataProvider.generalStackOffset.dy,
           left: dataProvider.generalStackOffset.dx,
           child: AnimatedBuilder(
-              animation: notifier,
+              animation: Provider.of<Data>(context).notifier,
               builder: (ctx, child) {
                 return Transform(
-                  transform: notifier.value,
+                  transform: Provider.of<Data>(context).notifier.value,
                   child: ItemStackBuilder(),
                 );
               }),
