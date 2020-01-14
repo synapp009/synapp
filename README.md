@@ -1,16 +1,18 @@
 # synapp
 
-A new Flutter project.
+Give people the perfect tool for organizing projects, collaborative thinking and acting.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+1. [Setup flutter](https://flutter.io/setup/)
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+2. Clone the repo
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+$ git clone https://github.com/synapp009/synapp.git
+$ cd synapp/
+
+3. Run it on your simulator or the device (iOS, Android)
+
+
+
