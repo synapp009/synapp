@@ -162,9 +162,7 @@ class _WindowWidgetState extends State<WindowWidget>
 
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
-              
-              _dataProvider.updateArrowToKeyMap(
-                  key, _dragStarted, feedbackKey);
+              _dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
             }
 
             offset =
@@ -280,11 +278,13 @@ class _WindowWidgetState extends State<WindowWidget>
             return false;
           }
         } else {
+          //if for example textboxWidget
           _dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
           Key _targetKey = _dataProvider.getActualTargetKey(data.key);
           double _targetScale = _dataProvider.structureMap[_targetKey].scale;
           _dataProvider.structureMap[data.key].scale = _targetScale;
 
+          _dataProvider.structureMap[data.key].scale = _itemScale;
           _timer = new Timer(Duration(milliseconds: 1000), () {
             _dataProvider.selectedMap[key] = true;
             setState(() {
@@ -301,6 +301,7 @@ class _WindowWidgetState extends State<WindowWidget>
         _dataProvider.selectedMap[key] = false;
       }, onAccept: (dynamic data) {
         if (data.toString().contains('TextBox')) {
+          _dataProvider.structureMap[data.key].scale = _itemScale;
           if (_dataProvider.selectedMap[key] == true) {
             _dataProvider.structureMap[data.key].fixed = true;
             _dataProvider.structureMap[data.key].position = Offset(10, 10);
@@ -309,6 +310,7 @@ class _WindowWidgetState extends State<WindowWidget>
           }
           _dataProvider.selectedMap[key] = false;
         }
+        print(_dataProvider.structureMap[data.key].scale);
       }),
     );
   }

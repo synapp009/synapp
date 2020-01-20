@@ -18,14 +18,16 @@ class FeedbackTextboxWidget extends StatelessWidget {
 
     var itemScale = dataProvider.structureMap[itemKey].scale;
     var initialValue = dataProvider.structureMap[itemKey].content;
-
+    var targetScale = dataProvider.getTargetScale(itemKey);
+    print('itemscale $itemScale');
     return Transform.translate(
       offset: Offset((-pointerDownOffset.dx * stackScale * itemScale),
           -pointerDownOffset.dy * stackScale * itemScale),
       child: Transform.scale(
-        scale: 1.1,
+        scale: itemScale,
+        alignment: Alignment.topLeft,
         child: FitTextField(
-          feedbackKey:feedbackKey,
+          feedbackKey: feedbackKey,
           itemKey: itemKey,
           initialValue: initialValue,
           itemScale: itemScale * stackScale,

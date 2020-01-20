@@ -104,10 +104,14 @@ class _TextboxWidgetState extends State<TextboxWidget> {
             ),
             child: AbsorbPointer(
               absorbing: absorbing,
-              child: FitTextField(
-                initialValue: initialValue,
-                itemKey: key,
-                itemScale: itemScale,
+              child: Transform.scale(
+                alignment: Alignment.topLeft,
+                scale: dataProvider.getTargetScale(key),
+                              child: FitTextField(
+                  initialValue: initialValue,
+                  itemKey: key,
+                  itemScale: itemScale,
+                ),
               ),
             ),
             data: dataProvider.structureMap[key]),
