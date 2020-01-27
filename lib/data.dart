@@ -1,20 +1,20 @@
 import 'dart:math';
 import 'package:angles/angles.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
-import 'arrow.dart';
 import 'constants.dart';
-import 'window.dart';
-import 'textBox.dart';
-
+import 'core/models/appletModel.dart';
+import 'core/models/arrowModel.dart';
 
 class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
   Matrix4 matrix = Matrix4.identity();
 
-  Map<Key, dynamic> structureMap;
+  Map<Key, Applet> structureMap;
   Map<GlobalKey, List<Arrow>> arrowMap;
+
   Map<Key, bool> selectedMap;
   Size stackSize;
   Offset positionForDrop;
@@ -47,12 +47,16 @@ class Data with ChangeNotifier {
   Map<Key, dynamic> get getStructureMap => structureMap;
 
   void changeItemListPosition({Key itemKey, Key newKey}) {
-    structureMap.forEach((Key k, dynamic v) => {
-          if (v.toString().contains('Window') &&
-              v.childKeys != null &&
-              v.childKeys.contains(itemKey))
-            {v.childKeys.remove(itemKey)}
-        });
+    structureMap.forEach((Key k, Applet v) => {
+          if (
+            //v.toString().contains('WindowApplet') &&
+              v.childKeys != null 
+            //&& v.childKeys.contains(itemKey)
+              )
+            {
+              v.childKeys.remove(itemKey)
+              //}
+        }});
 
     if (structureMap[newKey].childKeys == null) {
       structureMap[newKey].childKeys = [];
@@ -70,30 +74,30 @@ class Data with ChangeNotifier {
   createNewApp(type, GlobalKey itemKey) {
     RenderBox itemBox = itemKey.currentContext.findRenderObject();
     Offset appPosition = itemBox.globalToLocal(Offset.zero);
-    if (type.toString().contains('Window')) {
+    if (type.toString().contains('WindowApplet')) {
       createNewWindow(appPosition);
-    } else if (type.toString().contains('TextBox')) {
+    } else if (type.toString().contains('TextApplet')) {
       createNewTextBox(appPosition);
     }
   }
 
   createNewWindow(appPosition) {
-    Key windowKey = GlobalKey();
-    Color color = RandomColor().randomColor(
+    Key windowKey = new GlobalKey();
+    Color color = new RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
 
     if (structureMap[null] == null) {
-      structureMap[null] = Window(
+      structureMap[null] = WindowApplet(
         childKeys: [],
       );
     }
     structureMap[null].childKeys.add(windowKey);
-    structureMap[windowKey] = Window(
+    structureMap[windowKey] = WindowApplet(
         key: windowKey,
         size: Size(130, 130),
         position: Offset(200, 100),
         color: color,
-        title: windowKey.toString(),
+        title: 'Title',
         childKeys: [],
         scale: 1.0);
     selectedMap[windowKey] = false;
@@ -104,10 +108,10 @@ class Data with ChangeNotifier {
     Key textboxKey = GlobalKey();
 
     if (structureMap[null] == null) {
-      structureMap[null] = TextBox();
+      structureMap[null] = TextApplet();
     }
     structureMap[null].childKeys.add(textboxKey);
-    structureMap[textboxKey] = TextBox(
+    structureMap[textboxKey] = TextApplet(
         key: textboxKey,
         size: Size(100, 40),
         position: Offset(200, 100),
@@ -131,7 +135,8 @@ class Data with ChangeNotifier {
   Key getActualTargetKey(key) {
     var tempKey;
     structureMap.forEach((k, dynamic v) => {
-          if (v.toString().contains('Window') && v.childKeys.contains(key))
+          if (v.toString().contains('WindowApplet') &&
+              v.childKeys.contains(key))
             {tempKey = k}
         });
     return tempKey;
@@ -179,7 +184,7 @@ class Data with ChangeNotifier {
       todoList.forEach((f) => {
             if (!childList.contains(f)) {childList.add(f)},
             doneList.add(f),
-            if (structureMap[f].toString().contains('Window'))
+            if (structureMap[f].toString().contains('WindowApplet'))
               {tempList.addAll(structureMap[f].childKeys)}
           });
 
@@ -314,16 +319,15 @@ class Data with ChangeNotifier {
     var itemHeaderOffset = 0;
 
     //checks if there is some relevance of additional offset caused by trag helper offset
-    if (targetKey != null && structureMap[key].toString().contains('Window')) {
+    if (targetKey != null &&
+        structureMap[key].toString().contains('WindowApplet')) {
       itemHeaderOffset = 20;
     }
 
     return Offset(
         ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
             pointerDownOffset.dx),
-        ((pointerUpOffset.dy -
-                    targetOffset.dy -
-                    headerHeight() ) /
+        ((pointerUpOffset.dy - targetOffset.dy - headerHeight()) /
                 itemScale /
                 stackScale -
             pointerDownOffset.dy));
@@ -784,7 +788,6 @@ class Data with ChangeNotifier {
                   }
                 else if (dragStarted && targetKey == key)
                   {
-                    print('dsc'),
                     updateArrow(
                         originKey: originKey,
                         feedbackKey: feedbackKey,

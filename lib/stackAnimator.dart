@@ -8,6 +8,8 @@ import 'itemStackBuilder.dart';
 import 'data.dart';
 
 class StackAnimator extends StatelessWidget {
+final id;
+  StackAnimator(this.id);
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
@@ -140,7 +142,7 @@ class StackAnimator extends StatelessWidget {
               builder: (ctx, child) {
                 return Transform(
                   transform: Provider.of<Data>(context).notifier.value,
-                  child: ItemStackBuilder(),
+                  child: ItemStackBuilder(id),
                 );
               }),
         ),

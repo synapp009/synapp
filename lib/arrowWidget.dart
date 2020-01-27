@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:arrow_path/arrow_path.dart';
 
-import 'arrow.dart';
+import 'core/models/arrowModel.dart';
 import 'data.dart';
 
 class ArrowWidget extends StatelessWidget {

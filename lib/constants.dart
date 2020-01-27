@@ -1,21 +1,24 @@
 import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 
-import 'arrow.dart';
-import 'window.dart';
+import 'core/models/appletModel.dart';
+import 'core/models/arrowModel.dart';
 
 class Constants {
-  static String HOME_SCREEN = 'HOME_SCREEN';
+  static const String homeRoute = '/';
+  static const String loginRoute = '/login';
+  static const String taskRoute = '/task';
+  static const String registerRoute = '/register';
 
-  static Map<Key, dynamic> initializeStructure(Map<Key, dynamic> structureMap) {
+  static Map<Key, Applet> initializeStructure(Map<Key, Applet> structureMap) {
     return structureMap = {
-      null: Window(
+      null: Applet(
           key: null,
           size: Size(0, 0),
           position: Offset(0, 0),
-          color: null,
           scale: 1,
-          childKeys: [])
+          childKeys: []
+          )
     };
   }
 
@@ -23,21 +26,26 @@ class Constants {
     return positionForDrop = Offset(null, null);
   }
 
-static Map<Key,bool> initializeSelectedMap(Map<Key,bool> selectedMap){
-  return selectedMap = {null:false};
-}
+  static Map<Key, bool> initializeSelectedMap(Map<Key, bool> selectedMap) {
+    return selectedMap = {null: false};
+  }
 
-  static Map<GlobalKey,List<Arrow>> initializeArrowMap(Map<GlobalKey,List<Arrow>> arrowMap) {
-    return arrowMap = { null: 
-      [Arrow(angle: Angle.fromDegrees(0) ,arrowed: false,position: Offset(0,0),size: 0,target: null)]
+  static Map<GlobalKey, List<Arrow>> initializeArrowMap(
+      Map<GlobalKey, List<Arrow>> arrowMap) {
+    return arrowMap = {
+      null: [
+        Arrow(
+            angle: Angle.fromDegrees(0),
+            arrowed: false,
+            position: Offset(0, 0),
+            size: 0,
+            target: null)
+      ]
     };
   }
 
-  static ValueNotifier<Matrix4>  initializeNotifier(ValueNotifier<Matrix4> notifier){
-   return notifier = ValueNotifier(Matrix4.identity());
+  static ValueNotifier<Matrix4> initializeNotifier(
+      ValueNotifier<Matrix4> notifier) {
+    return notifier = ValueNotifier(Matrix4.identity());
   }
-
-  
 }
-
-

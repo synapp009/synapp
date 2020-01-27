@@ -1,44 +1,32 @@
-//import 'dart:io' show Platform;
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/locator.dart';
+import 'package:synapp/ui/router.dart';
 
-import 'constants.dart';
-import 'homeView.dart';
+import 'core/viewmodels/CRUDModel.dart';
 import 'data.dart';
 
-
-
-
 void main() {
-    runApp(MyApp());
+  setupLocator();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
-        }
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => locator<CRUDModel>()),
+        ListenableProvider(create: (_) => Data(),)
+      ],
       child: MaterialApp(
-        title: 'Synapp',
-        debugShowCheckedModeBanner: false,
-        routes: <String, WidgetBuilder>{
-          Constants.HOME_SCREEN: (BuildContext context) =>
-              ChangeNotifierProvider<Data>(
-                lazy: true,
-                create: (_) => Data(),
-                child: HomeView(),
-              )
-        },
-        initialRoute: Constants.HOME_SCREEN,
-      ),
+          debugShowCheckedModeBanner: false,
+          title: 'Synapp',
+          theme: ThemeData(
+            primarySwatch: Colors.green,
+          ),
+          onGenerateRoute: Router.generateRoute),
     );
   }
 }

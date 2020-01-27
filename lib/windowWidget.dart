@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
 import 'package:synapp/itemStackBuilder.dart';
 
-import 'arrow.dart';
+import 'core/models/appletModel.dart';
 import 'data.dart';
 
 import 'windowStackBuilder.dart';
@@ -21,8 +21,8 @@ class WindowWidget extends StatefulWidget {
 
 class _WindowWidgetState extends State<WindowWidget>
     with SingleTickerProviderStateMixin {
-  final GlobalKey key;
-  _WindowWidgetState(this.key);
+  final GlobalKey windowKey;
+  _WindowWidgetState(this.windowKey);
 
   double _scale;
   AnimationController _controller;
@@ -84,7 +84,7 @@ class _WindowWidgetState extends State<WindowWidget>
     _dataProvider = Provider.of<Data>(context);
 
     _stackScale = _dataProvider.stackScale;
-    _itemScale = _dataProvider.structureMap[key].scale;
+    _itemScale = _dataProvider.structureMap[windowKey].scale;
     _stackOffset = _dataProvider.stackOffset;
 
 //animation
@@ -92,16 +92,18 @@ class _WindowWidgetState extends State<WindowWidget>
       _controller.forward();
       _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
         setState(() {
-          _dataProvider.selectedMap[key] =
-              _dataProvider.selectedMap[key] ? false : true;
+          _dataProvider.selectedMap[windowKey] =
+              _dataProvider.selectedMap[windowKey] ? false : true;
           _controller.reverse();
         });
       });
     }
 
-    if (key == _dataProvider.actualItemKey && !_pointerMoving && !_isTapped) {
+    if (windowKey == _dataProvider.actualItemKey &&
+        !_pointerMoving &&
+        !_isTapped) {
       _scale = 1 + _controller.value;
-    } else if (key == _dataProvider.actualItemKey &&
+    } else if (windowKey == _dataProvider.actualItemKey &&
         !_pointerMoving &&
         _isTapped) {
       _scale = 1 - _controller.value;
@@ -113,7 +115,7 @@ class _WindowWidgetState extends State<WindowWidget>
     _isPointerMoving() {
       _timer = new Timer(const Duration(milliseconds: 200), () {
         setState(() {
-          if (!_pointerMoving && !_dataProvider.selectedMap[key]) {
+          if (!_pointerMoving && !_dataProvider.selectedMap[windowKey]) {
             _controller.forward();
             if (_pointerUp) {
               _controller.reverse();
@@ -125,16 +127,16 @@ class _WindowWidgetState extends State<WindowWidget>
     }
 
     return Positioned(
-      top: _dataProvider.structureMap[key].position.dy * _itemScale,
-      left: _dataProvider.structureMap[key].position.dx * _itemScale,
+      top: _dataProvider.structureMap[windowKey].position.dy * _itemScale,
+      left: _dataProvider.structureMap[windowKey].position.dx * _itemScale,
       child: DragTarget(
-          builder: (buildContext, List<dynamic> candidateData, rejectData) {
+          builder: (buildContext, List<dynamic>  candidateData, rejectData) {
         return Listener(
           onPointerDown: (PointerDownEvent event) {
             _pointerUp = false;
             if (_dataProvider.firstItem) {
-              _dataProvider.actualItemKey = key;
-              _dataProvider.getAllArrows(key);
+              _dataProvider.actualItemKey = windowKey;
+              _dataProvider.getAllArrows(windowKey);
               _dataProvider.firstItem = false;
             }
 
@@ -162,7 +164,8 @@ class _WindowWidgetState extends State<WindowWidget>
 
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
-              _dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
+              _dataProvider.updateArrowToKeyMap(
+                  windowKey, _dragStarted, feedbackKey);
             }
 
             offset =
@@ -180,22 +183,23 @@ class _WindowWidgetState extends State<WindowWidget>
           },
           child: GestureDetector(
             onDoubleTap: () {
-              // _dataProvider.zoomToBox(key, context);
+              // _dataProvider.zoomToBox(windowKey, context);
             },
             onLongPressStart: (details) {
               HapticFeedback.mediumImpact();
 
-              _dataProvider.addArrow(key);
+              _dataProvider.addArrow(windowKey);
 
               //only select the creating window
-              _dataProvider.onlySelectThis(key);
+              _dataProvider.onlySelectThis(windowKey);
             },
             onLongPressMoveUpdate: (details) {
-              _dataProvider.hitTest(key, details.globalPosition, context);
-              _dataProvider.setArrowToPointer(key, details.globalPosition);
+              _dataProvider.hitTest(windowKey, details.globalPosition, context);
+              _dataProvider.setArrowToPointer(
+                  windowKey, details.globalPosition);
             },
             onLongPressEnd: (details) {
-              _dataProvider.connectAndUnselect(key);
+              _dataProvider.connectAndUnselect(windowKey);
             },
             onLongPressUp: () {},
             onTap: () {
@@ -205,19 +209,22 @@ class _WindowWidgetState extends State<WindowWidget>
 
               _isTapped = true;
               _animation();
-              _maxSimultaneousDrags = _dataProvider.selectedMap[key] ? 0 : 1;
+              _maxSimultaneousDrags =
+                  _dataProvider.selectedMap[windowKey] ? 0 : 1;
               _isTapped = false;
             },
             child: LongPressDraggable(
                 //hapticFeedbackOnStart: true,
 
-                maxSimultaneousDrags: _dataProvider.selectedMap[key] ? 0 : 1,
+                maxSimultaneousDrags:
+                    _dataProvider.selectedMap[windowKey] ? 0 : 1,
                 onDragEnd: (DraggableDetails details) {
-                  //_dataProvider.updateArrowToKeyMap(key, _dragStarted, feedbackKey);
+                  //_dataProvider.updateArrowToKeyMap(windowKey, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
                     setState(() {
                       _dragStarted = false;
-                      _dataProvider.updateArrowToKeyMap(key, _dragStarted, key);
+                      _dataProvider.updateArrowToKeyMap(
+                          windowKey, _dragStarted, windowKey);
 
                       _dataProvider.hasArrowToKeyMap.clear();
                     });
@@ -230,44 +237,46 @@ class _WindowWidgetState extends State<WindowWidget>
                     _dragStarted = true;
                     setState(() {
                       _dataProvider.updateArrowToKeyMap(
-                          key, _dragStarted, feedbackKey);
+                          windowKey, _dragStarted, feedbackKey);
                     });
                   });
                 },
                 onDragCompleted: () {
                   setState(() {
-                    _dataProvider.structureMap[key].position =
+                    _dataProvider.structureMap[windowKey].position =
                         _dataProvider.itemDropPosition(
-                            key, _pointerDownOffset, _pointerUpOffset);
+                            windowKey, _pointerDownOffset, _pointerUpOffset);
                   });
                 },
                 onDraggableCanceled: (vel, Offset off) {
                   setState(() {
-                    _dataProvider.structureMap[key].position =
+                    _dataProvider.structureMap[windowKey].position =
                         _dataProvider.itemDropPosition(
-                            key, _pointerDownOffset, _pointerUpOffset);
+                            windowKey, _pointerDownOffset, _pointerUpOffset);
                   });
 
-                  _dataProvider.stackSizeChange(key, feedbackKey, off);
+                  _dataProvider.stackSizeChange(windowKey, feedbackKey, off);
                 },
                 dragAnchor: DragAnchor.pointer,
                 childWhenDragging: Container(),
                 feedback: ChangeNotifierProvider<Data>.value(
                   value: Provider.of<Data>(context),
                   child: FeedbackWindowWidget(
-                      key, _pointerDownOffset, feedbackKey),
+                      windowKey, _pointerDownOffset, feedbackKey),
                 ),
                 child: _animatedButtonUI,
-                data: _dataProvider.structureMap[key]),
+                data: _dataProvider.structureMap[windowKey]
+                ),
           ),
         );
       }, onWillAccept: (dynamic data) {
         //true if window changes target
-        if (data.toString().contains('Window')) {
-          if (_dataProvider.structureMap[key].key != data.key &&
-              !_dataProvider.structureMap[data.key].childKeys.contains(key)) {
+        if (data.toString().contains('WindowApplet')) {
+          if (_dataProvider.structureMap[windowKey].key != data.key &&
+              !_dataProvider.structureMap[data.key].childKeys
+                  .contains(windowKey)) {
             _dataProvider.changeItemListPosition(
-                itemKey: data.key, newKey: key);
+                itemKey: data.key, newKey: windowKey);
             Key _targetKey = _dataProvider.getActualTargetKey(data.key);
             double _targetScale = _dataProvider.structureMap[_targetKey].scale;
 
@@ -279,18 +288,20 @@ class _WindowWidgetState extends State<WindowWidget>
           }
         } else {
           //if for example textboxWidget
-          _dataProvider.changeItemListPosition(itemKey: data.key, newKey: key);
+
+          _dataProvider.changeItemListPosition(
+              itemKey: data.key, newKey: windowKey);
           Key _targetKey = _dataProvider.getActualTargetKey(data.key);
           double _targetScale = _dataProvider.structureMap[_targetKey].scale;
           _dataProvider.structureMap[data.key].scale = _targetScale;
 
           _dataProvider.structureMap[data.key].scale = _itemScale;
           _timer = new Timer(Duration(milliseconds: 1000), () {
-            _dataProvider.selectedMap[key] = true;
+            _dataProvider.selectedMap[windowKey] = true;
             setState(() {
               _timer = new Timer(Duration(milliseconds: 2000), () {
                 setState(() {
-                  _dataProvider.selectedMap[key] = false;
+                  _dataProvider.selectedMap[windowKey] = false;
                 });
               });
             });
@@ -298,19 +309,18 @@ class _WindowWidgetState extends State<WindowWidget>
           return true;
         }
       }, onLeave: (dynamic data) {
-        _dataProvider.selectedMap[key] = false;
+        _dataProvider.selectedMap[windowKey] = false;
       }, onAccept: (dynamic data) {
-        if (data.toString().contains('TextBox')) {
+        if (data.toString().contains('TextApplet')) {
           _dataProvider.structureMap[data.key].scale = _itemScale;
-          if (_dataProvider.selectedMap[key] == true) {
+          if (_dataProvider.selectedMap[windowKey] == true) {
             _dataProvider.structureMap[data.key].fixed = true;
             _dataProvider.structureMap[data.key].position = Offset(10, 10);
           } else {
             _dataProvider.structureMap[data.key].fixed = false;
           }
-          _dataProvider.selectedMap[key] = false;
+          _dataProvider.selectedMap[windowKey] = false;
         }
-        print(_dataProvider.structureMap[data.key].scale);
       }),
     );
   }
@@ -321,7 +331,7 @@ class _WindowWidgetState extends State<WindowWidget>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /*  SizedBox(
-                  width: _dataProvider.structureMap[key].size.width *
+                  width: _dataProvider.structureMap[windowKey].size.width *
                       _itemScale,
                   height: 20 * _itemScale,
                   child: FittedBox(
@@ -340,21 +350,23 @@ class _WindowWidgetState extends State<WindowWidget>
 
             SizedBox(
               key: sizedBoxKey,
-              height: _dataProvider.structureMap[key].size.height * _itemScale,
-              width: _dataProvider.structureMap[key].size.width * _itemScale,
+              height: _dataProvider.structureMap[windowKey].size.height *
+                  _itemScale,
+              width:
+                  _dataProvider.structureMap[windowKey].size.width * _itemScale,
               child: Material(
                 shape: SuperellipseShape(
                     side: BorderSide(
-                        color: _dataProvider.selectedMap[key]
+                        color: _dataProvider.selectedMap[windowKey]
                             ? Colors.black
                             : Colors.transparent,
                         width: 1 * _itemScale),
                     borderRadius: BorderRadius.circular(28 * _itemScale)),
                 //margin: EdgeInsets.all(0),
-                color: _dataProvider.selectedMap[key]
-                    ? _tonedColor(_dataProvider.structureMap[key].color)
-                    : _dataProvider.structureMap[key].color,
-                child: WindowStackBuilder(key),
+                color: _dataProvider.selectedMap[windowKey]
+                    ? _tonedColor(_dataProvider.structureMap[windowKey].color)
+                    : _dataProvider.structureMap[windowKey].color,
+                child: WindowStackBuilder(windowKey),
               ),
             ),
           ],

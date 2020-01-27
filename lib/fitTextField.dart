@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/models/appletModel.dart';
 
 import 'data.dart';
 
@@ -46,7 +47,9 @@ class FitTextFieldState extends State<FitTextField> {
     var dataProvider = Provider.of<Data>(context);
     Key actualTargetKey = dataProvider.getActualTargetKey(widget.itemKey);
 
-    bool isFixed = dataProvider.structureMap[widget.itemKey].fixed;
+    var textBox = dataProvider.structureMap[widget.itemKey] as TextApplet;
+    bool isFixed = textBox.fixed;
+
     // Use TextPainter to calculate the width of our text
     TextSpan ts = new TextSpan(style: textStyle, text: txt.text);
     // List<LineMetrics> lines = tp.computeLineMetrics();
@@ -98,7 +101,7 @@ class FitTextFieldState extends State<FitTextField> {
               style: textStyle,
               controller: txt,
               onChanged: (text) {
-                dataProvider.structureMap[widget.itemKey].content = txt.text;
+                textBox.content = txt.text;
 
                 // Tells the framework to redraw the widget
                 // The widget will redraw with a new width

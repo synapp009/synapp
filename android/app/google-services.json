@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "607325652217",
+    "firebase_url": "https://synapp-a9a3e.firebaseio.com",
+    "project_id": "synapp-a9a3e",
+    "storage_bucket": "synapp-a9a3e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607325652217:android:ba8198d0719dee45f84e28",
+        "android_client_info": {
+          "package_name": "com.example.synapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "607325652217-td5tc839h20dg2n6qqiff5bhnmu5a7g1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtZXQkp4lctHAxTzjB0w-3KOenMSJ-8Tw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "607325652217-td5tc839h20dg2n6qqiff5bhnmu5a7g1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "607325652217-em5o2l8755gsp249k65o1p3ru48ctujj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.synapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

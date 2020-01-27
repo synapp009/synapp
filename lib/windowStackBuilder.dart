@@ -9,7 +9,7 @@ import 'windowWidget.dart';
 
 class WindowStackBuilder extends StatelessWidget {
   final Key itemKey;
-Key getSomeKey = GlobalKey();
+
   WindowStackBuilder(this.itemKey);
 
   @override
@@ -21,7 +21,7 @@ Key getSomeKey = GlobalKey();
         child: Container(
           height: dataProvider.structureMap[itemKey].size.height,
           width: dataProvider.structureMap[itemKey].size.width,
-          //child: Text( '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
+          child: Text( '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
         ),
       ),
       //TextField(maxLines:40),
@@ -40,7 +40,7 @@ Key getSomeKey = GlobalKey();
       if (dataProvider
           .structureMap[childKeyList[i]]
           .toString()
-          .contains('Window')) {
+          .contains('WindowApplet')) {
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
 
         stackItemsList.add(stackItemDraggable);

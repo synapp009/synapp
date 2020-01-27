@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'core/models/appletModel.dart';
 import 'feedbackTextboxWidget.dart';
 import 'fitTextField.dart';
 
@@ -29,9 +30,8 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-
-    var initialValue = dataProvider.structureMap[key].content;
-
+    TextApplet textBox = dataProvider.structureMap[key];
+    var initialValue = textBox.content;
     double itemScale = dataProvider.structureMap[key].scale;
     Offset boxPosition = dataProvider.structureMap[widget.key].position;
     return Positioned(
@@ -70,14 +70,12 @@ class _TextboxWidgetState extends State<TextboxWidget> {
         child: LongPressDraggable(
             dragAnchor: DragAnchor.pointer,
             onDragCompleted: () {
-
               //position if textbox gets conected to a window
-              if (dataProvider.structureMap[key].fixed == true &&
+              if (textBox.fixed == true &&
                   dataProvider.getActualTargetKey(key) != null) {
                 boxPosition = dataProvider
                     .structureMap[dataProvider.getActualTargetKey(key)]
-                    .position ;
-
+                    .position;
               } else {
                 setState(() {
                   dataProvider.structureMap[widget.key].position =
@@ -107,14 +105,15 @@ class _TextboxWidgetState extends State<TextboxWidget> {
               child: Transform.scale(
                 alignment: Alignment.topLeft,
                 scale: dataProvider.getTargetScale(key),
-                              child: FitTextField(
+                child: FitTextField(
                   initialValue: initialValue,
                   itemKey: key,
                   itemScale: itemScale,
                 ),
               ),
             ),
-            data: dataProvider.structureMap[key]),
+            data: dataProvider.structureMap[key] as dynamic
+            ),
       ),
     );
   }

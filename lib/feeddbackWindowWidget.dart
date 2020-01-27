@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
+import 'core/models/appletModel.dart';
 import 'windowStackBuilder.dart';
 
 import 'data.dart';
@@ -14,7 +15,7 @@ class FeedbackWindowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dataProvider = Provider.of<Data>(context);
-
+    var window = dataProvider.structureMap[itemKey] as WindowApplet;
     var stackScale = dataProvider.notifier.value.row0[0];
 
     var itemScale = dataProvider.structureMap[itemKey].scale;
@@ -52,7 +53,7 @@ class FeedbackWindowWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(28 * itemScale),
                 ),
                 //margin: EdgeInsets.all(0),
-                color: dataProvider.structureMap[itemKey].color,
+                color: window.color,
 
                 child: WindowStackBuilder(itemKey),
               ),

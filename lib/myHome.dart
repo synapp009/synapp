@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:random_color/random_color.dart';
+import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:synapp/stackAnimator.dart';
-import 'package:synapp/textBox.dart';
 
+import 'core/models/appletModel.dart';
 import 'data.dart';
-import 'window.dart';
 
 class MyHome extends StatefulWidget {
+final id;
+MyHome(this.id);
   @override
   _MyHomeState createState() => _MyHomeState();
 }
@@ -25,27 +27,26 @@ class _MyHomeState extends State<MyHome> {
   List<AppBuilder> _apps = [
     AppBuilder(
       itemKey: new GlobalKey(),
-      type: new Window(),
-      label: Window.label,
-      iconData: Window.iconData,
+      type: new WindowApplet(),
+      label: WindowApplet.label,
+      iconData: WindowApplet.iconData,
       color: Colors.yellow,
     ),
     AppBuilder(
       itemKey: new GlobalKey(),
-      type: new TextBox(),
-      label: TextBox.label,
-      iconData: TextBox.iconData,
+      type: new TextApplet(),
+      label: TextApplet.label,
+      iconData: TextApplet.iconData,
       color: Colors.yellowAccent,
     ),
   ];
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-
+    
     BottomSheetApp modal = new BottomSheetApp(_apps, dataProvider);
 
     return Scaffold(
-      body: StackAnimator(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black87,
@@ -73,6 +74,7 @@ class _MyHomeState extends State<MyHome> {
           ],
         ),
       ),
+      body: StackAnimator(widget.id),
     );
   }
 }

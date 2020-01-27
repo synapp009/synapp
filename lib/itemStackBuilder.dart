@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import 'arrow.dart';
+import 'core/models/appletModel.dart';
+import 'core/models/arrowModel.dart';
 import 'textboxWidget.dart';
 
 import 'windowWidget.dart';
@@ -9,6 +10,8 @@ import 'arrowWidget.dart';
 import 'data.dart';
 
 class ItemStackBuilder extends StatefulWidget {
+final id;
+  ItemStackBuilder(this.id);
   @override
   _ItemStackBuilderState createState() => _ItemStackBuilderState();
 }
@@ -29,8 +32,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
           );
         },
         onWillAccept: (dynamic data) {
-          
-          if (dataProvider.structureMap[null].key != data.key) {
+         if (dataProvider.structureMap[null].key != data.key) {
             var stackOffset = Offset(dataProvider.notifier.value.row0.a,
                 dataProvider.notifier.value.row1.a);
             dataProvider.structureMap[data.key].scale = 1.0;
@@ -54,13 +56,15 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
     var dataProvider = Provider.of<Data>(context);
     List<Widget> stackItemsList = [];
     var stackItemDraggable;
+    print('this is it or what ${dataProvider.structureMap}');
     List childKeyList = dataProvider.structureMap[null].childKeys;
     for (int i = 0; i < childKeyList.length; i++) {
       if (dataProvider.structureMap[childKeyList[i]]
           .toString()
-          .contains('Window')) {
+          .contains('WindowApplet')) {
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
       } else {
+        
         stackItemDraggable = TextboxWidget(key: childKeyList[i]);
       }
 

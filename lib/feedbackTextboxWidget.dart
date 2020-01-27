@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/models/appletModel.dart';
 import 'data.dart';
 import 'fitTextField.dart';
 
@@ -15,11 +16,10 @@ class FeedbackTextboxWidget extends StatelessWidget {
     final dataProvider = Provider.of<Data>(context);
 
     var stackScale = dataProvider.notifier.value.row0[0];
-
+    var textBox = dataProvider.structureMap[itemKey] as TextApplet;
     var itemScale = dataProvider.structureMap[itemKey].scale;
-    var initialValue = dataProvider.structureMap[itemKey].content;
+    var initialValue = textBox.content;
     var targetScale = dataProvider.getTargetScale(itemKey);
-    print('itemscale $itemScale');
     return Transform.translate(
       offset: Offset((-pointerDownOffset.dx * stackScale * itemScale),
           -pointerDownOffset.dy * stackScale * itemScale),
