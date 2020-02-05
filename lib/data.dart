@@ -3,10 +3,12 @@ import 'package:angles/angles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
+import 'package:uuid/uuid.dart';
 
-import 'constants.dart';
+import 'core/constants.dart';
 import 'core/models/appletModel.dart';
 import 'core/models/arrowModel.dart';
+import 'core/models/projectModel.dart';
 
 class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
@@ -46,23 +48,31 @@ class Data with ChangeNotifier {
 
   Map<Key, dynamic> get getStructureMap => structureMap;
 
+String getIdFromKey(Key itemKey){
+  String itemId =  structureMap[itemKey].id;
+  return itemId;
+}
+
   void changeItemListPosition({Key itemKey, Key newKey}) {
+    String itemId = getIdFromKey(itemKey);
+
     structureMap.forEach((Key k, Applet v) => {
           if (
-            //v.toString().contains('WindowApplet') &&
-              v.childKeys != null 
-            //&& v.childKeys.contains(itemKey)
-              )
-            {
-              v.childKeys.remove(itemKey)
+          //v.toString().contains('WindowApplet') &&
+          v.childKeys != null
+          //&& v.childKeys.contains(itemKey)
+          )
+            { 
+              v.childKeys.remove(itemKey),
               //}
-        }});
+            }
+        });
 
     if (structureMap[newKey].childKeys == null) {
       structureMap[newKey].childKeys = [];
     }
     structureMap[newKey].childKeys.add(itemKey);
-
+    structureMap[newKey].childIds.add(itemId);
     notifyListeners();
   }
 
@@ -83,25 +93,54 @@ class Data with ChangeNotifier {
 
   createNewWindow(appPosition) {
     Key windowKey = new GlobalKey();
+    var uuid = Uuid();
+    String id = uuid.v4();
+
     Color color = new RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
 
     if (structureMap[null] == null) {
       structureMap[null] = WindowApplet(
         childKeys: [],
+        childIds: [],
       );
     }
+
     structureMap[null].childKeys.add(windowKey);
+    structureMap[null].childIds.add(id);
     structureMap[windowKey] = WindowApplet(
         key: windowKey,
+        id: id,
         size: Size(130, 130),
         position: Offset(200, 100),
         color: color,
         title: 'Title',
         childKeys: [],
+        childIds: [],
         scale: 1.0);
     selectedMap[windowKey] = false;
-    notifyListeners();
+    //notifyListeners();
+  }
+
+  Map<Key, Applet> createStructureMap(Project project) {
+    Map<Key, Applet> tempMap = {};
+    project.appletMap.forEach((Key key, Applet applet) { 
+      Key tempKey;
+      if (applet.id == "") {
+        tempMap[null] = applet;
+        tempKey = null;
+        if (tempMap[null].childKeys == null) {
+          tempMap[null].childKeys = [];
+        }
+      }else {
+        tempKey = new GlobalKey();
+      }
+      print('typeit baby ${applet.type}');
+      applet.key = tempKey;
+      tempMap[null].childKeys.add(tempKey);
+      tempMap[tempKey] = applet;
+    });
+    return tempMap;
   }
 
   createNewTextBox(appPosition) {
@@ -591,7 +630,7 @@ class Data with ChangeNotifier {
             position.dx - stackOffset.dx - itemSize.width * stackScale, 0);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        structureMap[null].childKeys.forEach((k) => {
+        structureMap["null"].childKeys.forEach((k) => {
               structureMap[k].position = Offset(
                   structureMap[k].position.dx - offsetChange.dx / stackScale,
                   structureMap[k].position.dy)
@@ -613,7 +652,7 @@ class Data with ChangeNotifier {
                 itemSize.height * stackScale);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        structureMap[null].childKeys.forEach((k) => {
+        structureMap["null"].childKeys.forEach((k) => {
               structureMap[k].position = Offset(structureMap[k].position.dx,
                   structureMap[k].position.dy - offsetChange.dy / stackScale)
             });
@@ -736,7 +775,7 @@ class Data with ChangeNotifier {
       );
       return _tempBool;
     }
-
+    
     //all childItems pointing to or getting targetted
     List childList = getAllChildren(key);
     childList.add(key);

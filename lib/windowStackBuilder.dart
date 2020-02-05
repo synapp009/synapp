@@ -21,7 +21,8 @@ class WindowStackBuilder extends StatelessWidget {
         child: Container(
           height: dataProvider.structureMap[itemKey].size.height,
           width: dataProvider.structureMap[itemKey].size.width,
-          child: Text( '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
+          child: Text(
+              '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
         ),
       ),
       //TextField(maxLines:40),
@@ -34,22 +35,22 @@ class WindowStackBuilder extends StatelessWidget {
     var dataProvider = Provider.of<Data>(context);
 
     var stackItemDraggable;
+
     List childKeyList = dataProvider.structureMap[itemKey].childKeys;
 
     for (int i = 0; i < childKeyList.length; i++) {
-      if (dataProvider
-          .structureMap[childKeyList[i]]
-          .toString()
-          .contains('WindowApplet')) {
+      if (dataProvider.structureMap[childKeyList[i]].type == "WindowApplet") {
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
 
-        stackItemsList.add(stackItemDraggable);
-      } else {
+      } else if (dataProvider.structureMap[childKeyList[i]].type ==
+          "TextApplet") {
         stackItemDraggable = TextboxWidget(key: childKeyList[i]);
-        stackItemsList.add(stackItemDraggable);
+       
+      } else {
+        stackItemDraggable = Container(height:0,width:0);
       }
+       stackItemsList.add(stackItemDraggable);
     }
     return stackItemsList;
   }
-
 }

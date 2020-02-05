@@ -14,7 +14,7 @@ class CustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-    dataProvider.structureMap = projectDetails.appletMap;
+    //dataProvider.structureMap = projectDetails.appletMap;
 
     return Card(
       child: Container(
@@ -25,7 +25,6 @@ class CustomCard extends StatelessWidget {
             FlatButton(
                 child: Text("See More"),
                 onPressed: () {
-                  print('horst ${projectDetails.appletMap}');
                   
                   /** Push a named route to the stcak, which does not require data to be  passed */
                   // Navigator.pushNamed(context, "/task");
@@ -48,8 +47,7 @@ class CustomCard extends StatelessWidget {
                   // ));
 
                   /** Push a new page while passing data to it */
-                  //print(projectDetails.id);
-                  //print(projectDetails.key);
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(

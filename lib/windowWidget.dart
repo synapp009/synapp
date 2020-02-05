@@ -270,8 +270,11 @@ class _WindowWidgetState extends State<WindowWidget>
           ),
         );
       }, onWillAccept: (dynamic data) {
+        _dataProvider.changeItemListPosition(
+                itemKey: data.key, newKey: windowKey);
+        return true;
         //true if window changes target
-        if (data.toString().contains('WindowApplet')) {
+        if (data.type == "WindowApplet") {
           if (_dataProvider.structureMap[windowKey].key != data.key &&
               !_dataProvider.structureMap[data.key].childKeys
                   .contains(windowKey)) {
@@ -311,7 +314,7 @@ class _WindowWidgetState extends State<WindowWidget>
       }, onLeave: (dynamic data) {
         _dataProvider.selectedMap[windowKey] = false;
       }, onAccept: (dynamic data) {
-        if (data.toString().contains('TextApplet')) {
+        if (data.type == 'TextApplet') {
           _dataProvider.structureMap[data.key].scale = _itemScale;
           if (_dataProvider.selectedMap[windowKey] == true) {
             _dataProvider.structureMap[data.key].fixed = true;

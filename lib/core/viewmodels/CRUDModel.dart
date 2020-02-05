@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import '../../locator.dart';
 import '../services/api.dart';
@@ -9,7 +10,6 @@ class CRUDModel extends ChangeNotifier {
   Api _api = locator<Api>();
 
   List<Project> projects;
-
 
   Future<List<Project>> fetchProjects() async {
     var result = await _api.getDataCollection();
@@ -25,23 +25,27 @@ class CRUDModel extends ChangeNotifier {
 
   Future<Project> getProjectById(String id) async {
     var doc = await _api.getDocumentById(id);
-    return  Project.fromMap(doc.data, doc.documentID) ;
+    return Project.fromMap(doc.data, doc.documentID);
   }
 
-
-  Future removeProject(String id) async{
-     await _api.removeDocument(id) ;
-     return ;
-  }
-  Future updateProject(Project data,String id) async{
-    await _api.updateDocument(data.toJson(), id) ;
-    return ;
+  Future removeProject(String id) async {
+    await _api.removeDocument(id);
+    return;
   }
 
-  Future addProject(Project data) async{
-    await _api.addDocument(data.toJson()) ;
-    return ;
-
+  Future updateProject(Project data, String id) async {
+    await _api.updateDocument(data.toJson(), id);
+    return;
   }
+
+  Future addProject(Project data) async {
+    await _api.addDocument(data.toJson());
+    return;
+  }
+
+    /*Future addAppletMap(Applet data, String id) async {
+    await _api.addAppletMap(data.toJson(), id);
+    return;
+  }*/
 
 }

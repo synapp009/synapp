@@ -1,8 +1,8 @@
 import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 
-import 'core/models/appletModel.dart';
-import 'core/models/arrowModel.dart';
+import './models/appletModel.dart';
+import './models/arrowModel.dart';
 
 class Constants {
   static const String homeRoute = '/';
@@ -12,13 +12,15 @@ class Constants {
 
   static Map<Key, Applet> initializeStructure(Map<Key, Applet> structureMap) {
     return structureMap = {
-      null: Applet(
+     null: Applet(
+          type: '',
+          id: '',
           key: null,
           size: Size(0, 0),
           position: Offset(0, 0),
           scale: 1,
-          childKeys: []
-          )
+          childKeys: [],
+          childIds: [])
     };
   }
 

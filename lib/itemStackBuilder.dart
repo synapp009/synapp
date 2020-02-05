@@ -10,7 +10,7 @@ import 'arrowWidget.dart';
 import 'data.dart';
 
 class ItemStackBuilder extends StatefulWidget {
-final id;
+  final id;
   ItemStackBuilder(this.id);
   @override
   _ItemStackBuilderState createState() => _ItemStackBuilderState();
@@ -26,13 +26,12 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
-           
             width: stackSize.width,
             height: stackSize.height,
           );
         },
         onWillAccept: (dynamic data) {
-         if (dataProvider.structureMap[null].key != data.key) {
+  /*        if (dataProvider.structureMap[null].key != data.key) {
             var stackOffset = Offset(dataProvider.notifier.value.row0.a,
                 dataProvider.notifier.value.row1.a);
             dataProvider.structureMap[data.key].scale = 1.0;
@@ -40,9 +39,9 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             dataProvider.changeItemListPosition(
                 itemKey: data.key, newKey: null);
             return true;
-          } else {
+          } else {*/
             return false;
-          }
+          //}
         },
         onLeave: (dynamic data) {},
         onAccept: (dynamic data) {},
@@ -55,17 +54,17 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
   List<Widget> stackItems(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
     List<Widget> stackItemsList = [];
-    var stackItemDraggable;
-    print('this is it or what ${dataProvider.structureMap}');
+    Widget stackItemDraggable;
     List childKeyList = dataProvider.structureMap[null].childKeys;
     for (int i = 0; i < childKeyList.length; i++) {
-      if (dataProvider.structureMap[childKeyList[i]]
-          .toString()
-          .contains('WindowApplet')) {
+
+      if (dataProvider.structureMap[childKeyList[i]].type == "WindowApplet") {
+      
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
-      } else {
-        
+      } else if (dataProvider.structureMap[childKeyList[i]].type == "TextApplet"){
         stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+      } else {
+        stackItemDraggable = Container(width:0,height:0);
       }
 
       stackItemsList.add(stackItemDraggable);

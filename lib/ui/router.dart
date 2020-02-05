@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
+import '../core/constants.dart';
 import 'views/home.dart';
 import 'views/login.dart';
 import 'views/register.dart';

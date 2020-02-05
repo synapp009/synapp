@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:synapp/commonComponents/customCard.dart';
+import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
 
@@ -57,31 +58,29 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Center(
         child: Container(
-            padding: const EdgeInsets.all(5.0),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: projectProvider.fetchProjectsAsStream(),
-              //Firestore.instance.collection("projects").snapshots(),
-              builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.hasError)
-                  return new Text('Error: ${snapshot.error}');
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return new Text('Loading...');
-                  default:
-                    projects = snapshot.data.documents
-                        .map((doc) => Project.fromMap(doc.data, doc.documentID))
-                        .toList();
-                  
-                    projects.forEach((v) => print(v.appletMap));
-                    
-                    return new ListView.builder(
-                        itemCount: projects.length,
-                        itemBuilder: (buildContext, index) =>
-                            CustomCard(projectDetails: projects[index]));
-                }
-              },
-            )),
+          padding: const EdgeInsets.all(5.0),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: projectProvider.fetchProjectsAsStream(),
+            //Firestore.instance.collection("projects").snapshots(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.hasError)
+                return new Text('Error: ${snapshot.error}');
+              switch (snapshot.connectionState) {
+                case ConnectionState.waiting:
+                  return new Text('Loading...');
+                default:
+                  projects = snapshot.data.documents
+                      .map((doc) => Project.fromMap(doc.data, doc.documentID))
+                      .toList();
+                  return new ListView.builder(
+                      itemCount: projects.length,
+                      itemBuilder: (buildContext, index) =>
+                          CustomCard(projectDetails: projects[index]));
+              }
+            },
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showDialog,
@@ -128,12 +127,13 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     if (taskDescripInputController.text.isNotEmpty &&
                         taskTitleInputController.text.isNotEmpty) {
-                      //Key newKey = new GlobalKey();
-                      Project project =  Project(
+                      Project project = Project(
                           //key: newKey,
+
                           name: taskTitleInputController.text,
                           description: taskDescripInputController.text);
-                      await Provider.of<CRUDModel>(context, listen: false)
+
+                      Provider.of<CRUDModel>(context, listen: false)
                           .addProject(project)
                           .then((result) => {
                                 Navigator.pop(context),
@@ -141,10 +141,10 @@ class _HomePageState extends State<HomePage> {
                                 taskDescripInputController.clear(),
                               })
                           .catchError((err) => print(err));
-                      /*
-                      final collRef = Firestore.instance.collection("projects");
+                      //await Provider.of<CRUDModel>(context, listen: false)
+                      //.addAppletMap(applet, docRef.documentID);
 
-                      DocumentReference docRef = collRef.document();
+                      /*
                       docRef.setData(project)
                           .then((result) => {
                             print('hop ${docRef.documentID}'),

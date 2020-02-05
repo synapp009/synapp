@@ -20,8 +20,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
-       dataProvider.structureMap = widget.project.appletMap;
-
+    dataProvider.structureMap = dataProvider.createStructureMap(widget.project);
 
 
     //set stackSize & headerHeight
@@ -41,6 +40,7 @@ class _HomeViewState extends State<HomeView> {
         leading: new IconButton(
           onPressed: () {
             widget.project.appletMap = dataProvider.structureMap;
+            //widget.project.appletMap = dataProvider.structureMap;
             crudProvider.updateProject(widget.project, widget.project.id);
             Navigator.pop(context);
           },

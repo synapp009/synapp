@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:synapp/core/models/appletModel.dart';
 
 class Api {
   final Firestore _db = Firestore.instance;
   final String path;
   CollectionReference ref;
-  DocumentReference docRef ;
 
   Api(this.path) {
     ref = _db.collection(path);
-    docRef = ref.document();
   }
 
   Future<QuerySnapshot> getDataCollection() {
@@ -29,9 +30,20 @@ class Api {
   }
 
   Future<DocumentReference> addDocument(Map data) {
-    data['id'] = docRef.documentID;
     return ref.add(data);
+    //.then((result) => addAppletMap(data, result.documentID));
   }
+
+  /*Future<DocumentReference> addAppletMap(Map data, String id) {
+    Applet applet = Applet(
+          key: null,
+          size: Size(0, 0),
+          position: Offset(0, 0),
+          scale: 1,
+          childKeys: []
+          );
+    return ref.document(id).collection("appletMap").add(applet.toJson());
+  }*/
 
   Future<void> updateDocument(Map data, String id) {
     return ref.document(id).updateData(data);

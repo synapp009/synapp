@@ -43,7 +43,7 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-    
+    var crudProvider = Provider.of<CRUDModel>(context);
     BottomSheetApp modal = new BottomSheetApp(_apps, dataProvider);
 
     return Scaffold(
@@ -153,5 +153,4 @@ ListTile _createTile(BuildContext context, String name, IconData icon,
 }
 
 _action1() {
-  print('action 1');
 }

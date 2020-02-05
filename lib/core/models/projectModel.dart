@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:synapp/core/viewmodels/CRUDModel.dart';
 
-import '../../constants.dart';
+import '../constants.dart';
 import 'appletModel.dart';
 import 'arrowModel.dart';
 
@@ -21,31 +24,29 @@ class Project with ChangeNotifier {
       this.appletMap,
       this.arrowMap,
       this.description}) {
-    // appletMap = Constants.initializeStructure(appletMap);
+    appletMap = Constants.initializeStructure(appletMap);
   }
 
-  static Map<Key, Applet> fromAppletMap(snapshot, id) {
+  static Map<Key, Applet> getAppletMap(List<dynamic> snapshot) {
     Map<Key, Applet> tempMap = {};
-
     if (snapshot != null) {
-      snapshot.forEach((dynamic k, dynamic a) {
-        Key tempKey = Key(k);
-        Applet tempApplet = Applet.fromMap(a, id);
-        tempMap[tempKey] = tempApplet;
+      snapshot.forEach((dynamic applet) {
+        Applet tempApplet = Applet.fromMap(applet);
+        Key newKey = tempApplet.id == 'null' ? null : new GlobalKey();
+        tempMap[newKey] = tempApplet;
       });
     }
 
     return tempMap;
   }
 
-  static Map<Key, Applet> tempMap;
   Project.fromMap(Map snapshot, String id)
       : id = id ?? '',
         //key = Key(snapshot['key']) ?? null,
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
         description = snapshot['description'] ?? '',
-        appletMap = fromAppletMap(snapshot['appletMap'], id) ?? null,
+        appletMap = getAppletMap(snapshot['appletList']) ?? null,
         arrowMap = snapshot['arrowMap'] ?? null;
 
   /*tempMap = appletMap.map((k, v) {
@@ -56,26 +57,34 @@ class Project with ChangeNotifier {
       }),*/
 
   toJson() {
-    Map<dynamic, dynamic> map;
+    List<dynamic> appletList = [];
+
+    if (appletMap != null) {
+      appletMap.forEach(
+        (k, Applet v) => appletList.add(v.toJson()),
+      );
+    } 
+
+    /*  Map<dynamic, dynamic> map = {};
 
     if (appletMap != null) {
       map = appletMap.map(
         (Key k, Applet v) => MapEntry(
-          k.toString() ?? null,
-          v.toJson() ?? null,
+          v.id,
+          v.toJson(),
         ),
       );
     } else {
       map = {};
-    }
+      
+    }*/
 
     return {
       "id": id,
       //"key" : key.toString(),
       "name": name,
       "img": img,
-      "appletMap": map,
-
+      "appletList": appletList,
       "arrowMap": arrowMap,
       "description": description
     };
