@@ -270,9 +270,8 @@ class _WindowWidgetState extends State<WindowWidget>
           ),
         );
       }, onWillAccept: (dynamic data) {
-        _dataProvider.changeItemListPosition(
-                itemKey: data.key, newKey: windowKey);
-        return true;
+
+       
         //true if window changes target
         if (data.type == "WindowApplet") {
           if (_dataProvider.structureMap[windowKey].key != data.key &&

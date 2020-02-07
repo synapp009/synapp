@@ -48,13 +48,14 @@ class Data with ChangeNotifier {
 
   Map<Key, dynamic> get getStructureMap => structureMap;
 
-String getIdFromKey(Key itemKey){
-  String itemId =  structureMap[itemKey].id;
-  return itemId;
-}
+  String getIdFromKey(Key itemKey) {
+    String itemId = structureMap[itemKey].id;
+    return itemId;
+  }
 
   void changeItemListPosition({Key itemKey, Key newKey}) {
     String itemId = getIdFromKey(itemKey);
+
 
     structureMap.forEach((Key k, Applet v) => {
           if (
@@ -62,23 +63,23 @@ String getIdFromKey(Key itemKey){
           v.childKeys != null
           //&& v.childKeys.contains(itemKey)
           )
-            { 
+            {
               v.childKeys.remove(itemKey),
-              //}
+              v.childIds.remove(itemId)
             }
         });
 
-    if (structureMap[newKey].childKeys == null) {
+     if (structureMap[newKey].childKeys == null) {
       structureMap[newKey].childKeys = [];
     }
     structureMap[newKey].childKeys.add(itemKey);
     structureMap[newKey].childIds.add(itemId);
-    notifyListeners();
+    //notifyListeners();
   }
 
   void changeItemScale(key, scale) {
     structureMap[key].scale = scale;
-    notifyListeners();
+    //notifyListeners();
   }
 
   createNewApp(type, GlobalKey itemKey) {
@@ -109,6 +110,7 @@ String getIdFromKey(Key itemKey){
     structureMap[null].childKeys.add(windowKey);
     structureMap[null].childIds.add(id);
     structureMap[windowKey] = WindowApplet(
+      type: 'WindowApplet',
         key: windowKey,
         id: id,
         size: Size(130, 130),
@@ -119,12 +121,12 @@ String getIdFromKey(Key itemKey){
         childIds: [],
         scale: 1.0);
     selectedMap[windowKey] = false;
-    //notifyListeners();
+    notifyListeners();
   }
 
   Map<Key, Applet> createStructureMap(Project project) {
     Map<Key, Applet> tempMap = {};
-    project.appletMap.forEach((Key key, Applet applet) { 
+    project.appletMap.forEach((Key key, Applet applet) {
       Key tempKey;
       if (applet.id == "") {
         tempMap[null] = applet;
@@ -132,7 +134,7 @@ String getIdFromKey(Key itemKey){
         if (tempMap[null].childKeys == null) {
           tempMap[null].childKeys = [];
         }
-      }else {
+      } else {
         tempKey = new GlobalKey();
       }
       print('typeit baby ${applet.type}');
@@ -161,14 +163,14 @@ String getIdFromKey(Key itemKey){
         scale: 1.0,
         textSize: 16);
 
-    notifyListeners();
+   // notifyListeners();
   }
 
   void onlySelectThis(key) {
     selectedMap.forEach((k, v) => {
           if (k != key) {selectedMap[k] = false}
         });
-    notifyListeners();
+    //notifyListeners();
   }
 
   Key getActualTargetKey(key) {
@@ -348,7 +350,7 @@ String getIdFromKey(Key itemKey){
     arrow.size = length / stackScale;
     arrow.angle = getAngle(itemOffset, actualPointer);
 
-    notifyListeners();
+    //notifyListeners();
   }
 
   Offset itemDropPosition(key, pointerDownOffset, pointerUpOffset) {
@@ -544,7 +546,7 @@ String getIdFromKey(Key itemKey){
       arrow.position =
           ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
     }
-    notifyListeners();
+    //notifyListeners();
   }
 
   connectAndUnselect(Key itemKey) {
@@ -576,7 +578,7 @@ String getIdFromKey(Key itemKey){
       updateArrow(originKey: itemKey, targetKey: tempKey);
     }
 
-    notifyListeners();
+    //notifyListeners();
   }
 
   void stackSizeChange(key, GlobalKey feedbackKey, position) {
@@ -677,7 +679,7 @@ String getIdFromKey(Key itemKey){
               arrow.position.dy + stackChange.dy)),
         });
 
-    notifier.notifyListeners();
+   // notifier.notifyListeners();
   }
 
   Key hitTestRaw(position, context) {
@@ -775,7 +777,7 @@ String getIdFromKey(Key itemKey){
       );
       return _tempBool;
     }
-    
+
     //all childItems pointing to or getting targetted
     List childList = getAllChildren(key);
     childList.add(key);
@@ -869,7 +871,7 @@ String getIdFromKey(Key itemKey){
     //update Offset
     notifier.value.setEntry(0, 3, -itemPosition.dx);
     notifier.value.setEntry(1, 3, -itemPosition.dy);
-    notifyListeners();
+    //notifyListeners();
   }
 
   hitTest(key, position, context) {

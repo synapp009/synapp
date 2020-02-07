@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:synapp/commonComponents/customCard.dart';
-import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
 

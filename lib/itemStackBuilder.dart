@@ -31,7 +31,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
           );
         },
         onWillAccept: (dynamic data) {
-  /*        if (dataProvider.structureMap[null].key != data.key) {
+         if (dataProvider.structureMap[null].key != data.key) {
             var stackOffset = Offset(dataProvider.notifier.value.row0.a,
                 dataProvider.notifier.value.row1.a);
             dataProvider.structureMap[data.key].scale = 1.0;
@@ -39,9 +39,9 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             dataProvider.changeItemListPosition(
                 itemKey: data.key, newKey: null);
             return true;
-          } else {*/
+          } else {
             return false;
-          //}
+          }
         },
         onLeave: (dynamic data) {},
         onAccept: (dynamic data) {},

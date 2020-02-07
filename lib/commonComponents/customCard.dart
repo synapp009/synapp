@@ -13,7 +13,6 @@ class CustomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
     //dataProvider.structureMap = projectDetails.appletMap;
 
     return Card(
@@ -51,7 +50,7 @@ class CustomCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ChangeNotifierProvider<Data>(
+                      builder: (context) => ListenableProvider(
                         lazy: true,
                         create: (_) => Data(),
                         child: HomeView(project: projectDetails),

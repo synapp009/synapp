@@ -4,7 +4,6 @@ import 'package:synapp/locator.dart';
 import 'package:synapp/ui/router.dart';
 
 import 'core/viewmodels/CRUDModel.dart';
-import 'data.dart';
 
 void main() {
   setupLocator();
@@ -20,9 +19,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => locator<CRUDModel>(),
         ),
-        ListenableProvider(
-          create: (_) => Data(),
-        )
+
       ],
       child: MaterialApp(
           debugShowCheckedModeBanner: false,
