@@ -14,10 +14,14 @@ class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
   Matrix4 matrix = Matrix4.identity();
 
+  //structure Map contains all the provider data of the Applets of a project
   Map<Key, Applet> structureMap;
+  //contains all the Arrows in a project between the Applets
   Map<GlobalKey, List<Arrow>> arrowMap;
 
+  //temp List to multi-select Applets by tabbing
   Map<Key, bool> selectedMap;
+
   Size stackSize;
   Offset positionForDrop;
   Offset currentStackPosition = Offset(0, 100);
@@ -40,8 +44,9 @@ class Data with ChangeNotifier {
     structureMap = Constants.initializeStructure(structureMap);
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
-    selectedMap = Constants.initializeSelectedMap(selectedMap);
+    selectedMap = Constants.initializeSelectedMap(structureMap);
     notifier = Constants.initializeNotifier(notifier);
+
   }
 
   Map<GlobalKey, List<Arrow>> get getArrowMap => arrowMap;
@@ -54,32 +59,28 @@ class Data with ChangeNotifier {
   }
 
   void changeItemListPosition({Key itemKey, Key newKey}) {
+
     String itemId = getIdFromKey(itemKey);
-
-
     structureMap.forEach((Key k, Applet v) => {
           if (
           //v.toString().contains('WindowApplet') &&
           v.childKeys != null
           //&& v.childKeys.contains(itemKey)
           )
-            {
-              v.childKeys.remove(itemKey),
-              v.childIds.remove(itemId)
-            }
+            {v.childKeys.remove(itemKey), v.childIds.remove(itemId)}
         });
 
-     if (structureMap[newKey].childKeys == null) {
+    if (structureMap[newKey].childKeys == null) {
       structureMap[newKey].childKeys = [];
     }
     structureMap[newKey].childKeys.add(itemKey);
     structureMap[newKey].childIds.add(itemId);
-    //notifyListeners();
+    notifyListeners();
   }
 
   void changeItemScale(key, scale) {
     structureMap[key].scale = scale;
-    //notifyListeners();
+    notifyListeners();
   }
 
   createNewApp(type, GlobalKey itemKey) {
@@ -110,7 +111,7 @@ class Data with ChangeNotifier {
     structureMap[null].childKeys.add(windowKey);
     structureMap[null].childIds.add(id);
     structureMap[windowKey] = WindowApplet(
-      type: 'WindowApplet',
+        type: 'WindowApplet',
         key: windowKey,
         id: id,
         size: Size(130, 130),
@@ -124,10 +125,28 @@ class Data with ChangeNotifier {
     notifyListeners();
   }
 
+  List<Key> getChildKeysFromId(List<String> childIds) {
+    List<Key> tempList = [];
+    childIds.forEach((String id) {
+      structureMap.forEach((Key structureMapKey, Applet applet) {
+
+
+        if (applet.id == id) {
+          tempList.add(structureMapKey);
+        }
+      });
+    });
+    return tempList;
+  }
+
   Map<Key, Applet> createStructureMap(Project project) {
+    print('structure map');
     Map<Key, Applet> tempMap = {};
     project.appletMap.forEach((Key key, Applet applet) {
-      Key tempKey;
+
+    });
+      
+      /*Key tempKey;
       if (applet.id == "") {
         tempMap[null] = applet;
         tempKey = null;
@@ -137,11 +156,23 @@ class Data with ChangeNotifier {
       } else {
         tempKey = new GlobalKey();
       }
-      print('typeit baby ${applet.type}');
       applet.key = tempKey;
-      tempMap[null].childKeys.add(tempKey);
+      if (!tempMap[null].childKeys.contains(tempKey) &&
+          tempMap[null].childIds.contains(applet.id)) {
+        tempMap[null].childKeys.add(tempKey);
+      }
+
+      selectedMap[tempKey] = false;
+
       tempMap[tempKey] = applet;
     });
+
+    tempMap.forEach((Key key, Applet applet) {
+      if (key != null) {
+        applet.childKeys = getChildKeysFromId(applet.childIds);
+      }
+    });*/
+
     return tempMap;
   }
 
@@ -163,14 +194,14 @@ class Data with ChangeNotifier {
         scale: 1.0,
         textSize: 16);
 
-   // notifyListeners();
+    // notifyListeners();
   }
 
   void onlySelectThis(key) {
     selectedMap.forEach((k, v) => {
           if (k != key) {selectedMap[k] = false}
         });
-    //notifyListeners();
+    notifyListeners();
   }
 
   Key getActualTargetKey(key) {
@@ -265,7 +296,7 @@ class Data with ChangeNotifier {
         angle: Angle.fromRadians(0),
       ),
     );
-    //notifyListeners();
+    notifyListeners();
   }
 
   Offset centerOfRenderBox(originKey) {
@@ -350,7 +381,7 @@ class Data with ChangeNotifier {
     arrow.size = length / stackScale;
     arrow.angle = getAngle(itemOffset, actualPointer);
 
-    //notifyListeners();
+    notifyListeners();
   }
 
   Offset itemDropPosition(key, pointerDownOffset, pointerUpOffset) {
@@ -546,7 +577,7 @@ class Data with ChangeNotifier {
       arrow.position =
           ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
     }
-    //notifyListeners();
+    notifyListeners();
   }
 
   connectAndUnselect(Key itemKey) {
@@ -578,7 +609,7 @@ class Data with ChangeNotifier {
       updateArrow(originKey: itemKey, targetKey: tempKey);
     }
 
-    //notifyListeners();
+    notifyListeners();
   }
 
   void stackSizeChange(key, GlobalKey feedbackKey, position) {
@@ -679,7 +710,7 @@ class Data with ChangeNotifier {
               arrow.position.dy + stackChange.dy)),
         });
 
-   // notifier.notifyListeners();
+    // notifier.notifyListeners();
   }
 
   Key hitTestRaw(position, context) {
@@ -871,7 +902,7 @@ class Data with ChangeNotifier {
     //update Offset
     notifier.value.setEntry(0, 3, -itemPosition.dx);
     notifier.value.setEntry(1, 3, -itemPosition.dy);
-    //notifyListeners();
+    notifyListeners();
   }
 
   hitTest(key, position, context) {

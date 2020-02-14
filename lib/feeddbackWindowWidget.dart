@@ -15,7 +15,7 @@ class FeedbackWindowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dataProvider = Provider.of<Data>(context);
-    var window = dataProvider.structureMap[itemKey] as WindowApplet;
+    var window = dataProvider.structureMap[itemKey];
     var stackScale = dataProvider.notifier.value.row0[0];
 
     var itemScale = dataProvider.structureMap[itemKey].scale;

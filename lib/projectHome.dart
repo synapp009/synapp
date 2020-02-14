@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:synapp/myHome.dart';
+import 'package:synapp/projectHomeView.dart';
 import 'core/models/projectModel.dart';
 import 'core/viewmodels/CRUDModel.dart';
 import 'stackAnimator.dart';
@@ -15,14 +15,10 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  
   @override
   Widget build(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
-    dataProvider.structureMap = dataProvider.createStructureMap(widget.project);
-
-
     //set stackSize & headerHeight
     Provider.of<Data>(context).statusBarHeight =
         MediaQuery.of(context).padding.top;
@@ -40,8 +36,8 @@ class _HomeViewState extends State<HomeView> {
         leading: new IconButton(
           onPressed: () {
             widget.project.appletMap = dataProvider.structureMap;
-            //widget.project.appletMap = dataProvider.structureMap;
             crudProvider.updateProject(widget.project, widget.project.id);
+            
             Navigator.pop(context);
           },
           color: Colors.black,

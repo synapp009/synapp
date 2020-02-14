@@ -29,14 +29,38 @@ class Project with ChangeNotifier {
 
   static Map<Key, Applet> getAppletMap(List<dynamic> snapshot) {
     Map<Key, Applet> tempMap = {};
+    Key newKey;
     if (snapshot != null) {
-      snapshot.forEach((dynamic applet) {
-        Applet tempApplet = Applet.fromMap(applet);
-        Key newKey = tempApplet.id == 'null' ? null : new GlobalKey();
+      snapshot.forEach((dynamic appletDraft) {
+        var tempApplet;
+
+        if (appletDraft.toString().contains('WindowApplet')) {
+          tempApplet = WindowApplet.fromMap(appletDraft);
+        } else if (appletDraft.toString().contains('TextApplet')) {
+          tempApplet = TextApplet.fromMap(appletDraft);
+        } else {
+          tempApplet = Applet.fromMap(appletDraft);
+        }
+
+        newKey = tempApplet.id == '' ? null : new GlobalKey();
+
         tempMap[newKey] = tempApplet;
       });
     }
 
+    tempMap.forEach((Key key, Applet applet) {
+      if (applet.childIds.length == 0 && applet.childKeys.length == 0) {
+        applet.childKeys = [];
+      }
+
+        applet.childIds.forEach((String childId) {
+          tempMap.forEach((Key subKey, Applet subApplet) {
+            if (subApplet.id == childId) {
+              applet.childKeys.add(subKey);
+            }
+          });
+        });
+    });
     return tempMap;
   }
 
@@ -63,7 +87,7 @@ class Project with ChangeNotifier {
       appletMap.forEach(
         (k, Applet v) => appletList.add(v.toJson()),
       );
-    } 
+    }
 
     /*  Map<dynamic, dynamic> map = {};
 

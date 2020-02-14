@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/constants.dart';
+import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
-import 'package:synapp/homeView.dart';
+import 'package:synapp/projectHome.dart';
 import '../data.dart';
 
 class CustomCard extends StatelessWidget {
@@ -13,8 +15,8 @@ class CustomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //dataProvider.structureMap = projectDetails.appletMap;
-
+    var dataProvider = Provider.of<Data>(context);
+    var crudProvider = Provider.of<CRUDModel>(context);
     return Card(
       child: Container(
         padding: const EdgeInsets.only(top: 5.0),
@@ -24,7 +26,13 @@ class CustomCard extends StatelessWidget {
             FlatButton(
                 child: Text("See More"),
                 onPressed: () {
-                  
+                  //dataProvider.structureMap =  projectDetails.appletMap; 
+                  crudProvider.getProjectById(projectDetails.id);
+                  projectDetails.appletMap.forEach((Key key, Applet applet) => dataProvider.structureMap[key] = applet);
+                  dataProvider.selectedMap = Constants.initializeSelectedMap(dataProvider.structureMap);
+
+                  //dataProvider.createStructureMap(projectDetails);
+
                   /** Push a named route to the stcak, which does not require data to be  passed */
                   // Navigator.pushNamed(context, "/task");
 
@@ -46,15 +54,11 @@ class CustomCard extends StatelessWidget {
                   // ));
 
                   /** Push a new page while passing data to it */
-                  
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ListenableProvider(
-                        lazy: true,
-                        create: (_) => Data(),
-                        child: HomeView(project: projectDetails),
-                      ),
+                      builder: (context) => HomeView(project: projectDetails),
                     ),
                   );
                 }),

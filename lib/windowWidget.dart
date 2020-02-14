@@ -84,7 +84,9 @@ class _WindowWidgetState extends State<WindowWidget>
     _dataProvider = Provider.of<Data>(context);
 
     _stackScale = _dataProvider.stackScale;
+
     _itemScale = _dataProvider.structureMap[windowKey].scale;
+
     _stackOffset = _dataProvider.stackOffset;
 
 //animation
@@ -270,8 +272,7 @@ class _WindowWidgetState extends State<WindowWidget>
           ),
         );
       }, onWillAccept: (dynamic data) {
-
-       
+       print(data.toString());
         //true if window changes target
         if (data.type == "WindowApplet") {
           if (_dataProvider.structureMap[windowKey].key != data.key &&
@@ -308,11 +309,13 @@ class _WindowWidgetState extends State<WindowWidget>
               });
             });
           });
+
           return true;
         }
       }, onLeave: (dynamic data) {
         _dataProvider.selectedMap[windowKey] = false;
       }, onAccept: (dynamic data) {
+        
         if (data.type == 'TextApplet') {
           _dataProvider.structureMap[data.key].scale = _itemScale;
           if (_dataProvider.selectedMap[windowKey] == true) {

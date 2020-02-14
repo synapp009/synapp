@@ -146,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                       /*
                       docRef.setData(project)
                           .then((result) => {
-                            print('hop ${docRef.documentID}'),
+                  
                                 Navigator.pop(context),                              
                                 taskTitleInputController.clear(),
                                 taskDescripInputController.clear(),

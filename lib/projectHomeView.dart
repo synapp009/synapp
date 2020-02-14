@@ -46,6 +46,7 @@ class _MyHomeState extends State<MyHome> {
     var crudProvider = Provider.of<CRUDModel>(context);
     BottomSheetApp modal = new BottomSheetApp(_apps, dataProvider);
 
+
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(

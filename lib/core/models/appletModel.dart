@@ -1,57 +1,78 @@
 import 'package:flutter/material.dart';
 
+Color _getColorFromString(String snapshot) {
+  Color tempColor;
+
+  if (snapshot != null && !snapshot.contains("null")) {
+    String valueString = snapshot.split('Color(0x')[1].split(')')[0];
+    int value = int.parse(valueString, radix: 16);
+    return tempColor = new Color(value);
+  } else {
+    return tempColor = null;
+  }
+}
+
+List<String> _childIdsSnapshotDynamicToList(List<dynamic> snapshot) {
+  List<String> tempList = [];
+
+  if (snapshot != null) {
+    snapshot.forEach(
+      (v) => tempList.add(
+        v.toString(),
+      ),
+    );
+  } else {
+    tempList = [];
+  }
+
+  return tempList;
+}
+
 class Applet {
   String id;
   Key key;
-  Size size;
   Offset position;
   double scale;
   List<Key> childKeys;
   List<String> childIds;
- Color color;
- String type;
-
+  Color color;
+  String type;
+  Size size;
 
   Applet(
       {this.childIds,
       this.key,
-      this.size,
       this.position,
       this.scale,
       this.childKeys,
       this.id,
       this.color,
-      this.type});
+      this.type,
+      this.size});
 
-  static List<String> childIdsSnapshotDynamicToList(List<dynamic> snapshot) {
-    List<String> tempList = [];
+  List<Key> _childKeysFromSnapshotChildIdsToKeys(
+      Map<dynamic, dynamic> snapshot) {}
 
-    if (snapshot != null) {
-      snapshot.forEach(
-        (v) => tempList.add(
-          v.toString(),
-        ),
-      );
-    } else {
-      tempList = [];
-    }
-
+  static List<Key> _getChildKeys(List snapshot) {
+    List<Key> tempList = [];
+    /*  snapshot.forEach((v) {
+        Key newKey = new GlobalKey();
+        tempList.add(newKey);
+      });*/
     return tempList;
   }
-
-  List<Key> childKeysFromSnapshotChildIdsToKeys(
-      Map<dynamic, dynamic> snapshot) {}
 
   Applet.fromMap(Map snapshot)
       : //key = Key(snapshot['key']) ?? '',
         id = snapshot['id'],
-        size = Size((snapshot['sizeWidth'] as num).toDouble(), (snapshot['sizeHeight'] as num).toDouble()) ?? null,
-        position = Offset((snapshot['positionDx'] as num).toDouble(),( snapshot['positionDy'] as num).toDouble()) ??
+        position = Offset((snapshot['positionDx'] as num).toDouble(),
+                (snapshot['positionDy'] as num).toDouble()) ??
             Offset(null, null),
-        color= snapshot['color'] ?? null,
+        color = _getColorFromString(snapshot['color']) ?? null,
         scale = (snapshot['scale'] as num).toDouble() ?? null,
-        childIds = childIdsSnapshotDynamicToList(snapshot['childIds']) ?? null,
-        type = snapshot['appletType'] ?? null;
+        childIds = _childIdsSnapshotDynamicToList(snapshot['childIds']) ?? null,
+        type = snapshot['type'] ?? null,
+        childKeys = _getChildKeys(snapshot['childIds']);
 
   //childKeys = childKeysFromSnapshotChildIdsToKeys( snapshot) ?? null;
 
@@ -59,14 +80,13 @@ class Applet {
     return {
       //"key": key.toString(),
       "id": id,
-      "sizeHeight": size.height,
-      "sizeWidth": size.width,
+
       "positionDx": position.dx,
       "positionDy": position.dy,
       "scale": scale,
       "childIds": childIds,
-      "appletType": type,
-      "color":color,
+      "type": type,
+      "color": color.toString(),
     };
   }
 }
@@ -76,47 +96,53 @@ class WindowApplet extends Applet {
   Color color;
   String title;
   Key key;
-  List<Key> childKeys;
+  List<Key> childKeys = [];
   List<String> childIds;
+  Size size;
+  Offset position;
+  double scale;
+
   //String id;
 
   static final IconData iconData = Icons.crop_din;
   static final String label = 'Box';
   String type = 'WindowApplet';
 
-  WindowApplet({
-    this.color,
-    this.title,
-    this.key,
-    this.id,
-    this.childKeys,
-    this.childIds,
-    size,
-    position,
-    scale,
-    type
+  WindowApplet(
+      {this.color,
+      this.title,
+      this.key,
+      this.id,
+      this.childKeys,
+      this.childIds,
+      this.size,
+      this.position,
+      this.scale,
+      type})
+      : super(scale: scale, type: type);
 
-  }) : super(
-            size: size,
-            position: position,
-            scale: scale,
-            type : type
-           );
-
-  WindowApplet.fromMap(Map snapshot, String id)
+  WindowApplet.fromMap(Map snapshot)
       : // key = Key(snapshot['key']) ?? '',
-        id = snapshot['id'],
-        color = snapshot['color'] as Color ?? '',
-        title = snapshot['title'] ?? '',
-        childIds = snapshot['childIds'] ?? [];
 
-        
+        id = snapshot['id'],
+        color = _getColorFromString(snapshot['color']) ?? '',
+        title = snapshot['title'] ?? '',
+        childIds = _childIdsSnapshotDynamicToList(snapshot['childIds']) ?? [],
+        type = snapshot['type'] ?? [],
+        scale = (snapshot['scale'] as num).toDouble() ?? null,
+        size = Size((snapshot['sizeWidth'] as num).toDouble(),
+                (snapshot['sizeHeight'] as num).toDouble()) ??
+            null,
+        position = Offset((snapshot['positionDx'] as num).toDouble(),
+                (snapshot['positionDy'] as num).toDouble()) ??
+            Offset(null, null);
 
   //childKeys = snapshot['childKeys'] ?? [];
 
   toJson() {
     return {
       //"key": key,
+      "type": type,
       "id": id,
       "color": color.toString(),
       "title": title,
@@ -137,6 +163,8 @@ class TextApplet extends Applet {
   String content;
   bool fixed;
   double textSize;
+  Size size;
+  double scale;
 
   // String id;
 
@@ -153,31 +181,39 @@ class TextApplet extends Applet {
     type,
     id,
     key,
-    size,
+    this.size,
     position,
     scale,
   }) : super(
-            key: key,
             size: size,
+            key: key,
             position: position,
             scale: scale,
             id: id,
-            type : type);
+            type: type);
 
-  TextApplet.fromMap(Map snapshot, String id)
-      : color = snapshot['color'] as Color ?? '',
+  TextApplet.fromMap(Map snapshot)
+      : color = _getColorFromString(snapshot['color']) ?? '',
         title = snapshot['title'] ?? '',
         textSize = snapshot['textSize'] ?? '',
         content = snapshot['content'] ?? '',
-        fixed = snapshot['fixed'] ?? '';
+        fixed = snapshot['fixed'] ?? '',
+        scale = (snapshot['scale'] as num).toDouble() ?? null,
+        size = Size((snapshot['sizeWidth'] as num).toDouble(),
+                (snapshot['sizeHeight'] as num).toDouble()) ??
+            null;
 
   toJson() {
     return {
-      "color": color,
+      "color": color.toString(),
       "title": title,
       "textSize": textSize,
       "content": content,
       "fixed": fixed,
+      "type": type,
+      "sizeHeight": size.height,
+      "sizeWidth": size.width,
+      "scale" : scale
     };
   }
 }

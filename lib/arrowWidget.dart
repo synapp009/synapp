@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:arrow_path/arrow_path.dart';
-
 import 'core/models/arrowModel.dart';
 import 'data.dart';
 

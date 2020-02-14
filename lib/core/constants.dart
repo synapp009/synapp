@@ -12,24 +12,26 @@ class Constants {
 
   static Map<Key, Applet> initializeStructure(Map<Key, Applet> structureMap) {
     return structureMap = {
-     null: Applet(
+      null: Applet(
+          color: null,
           type: '',
           id: '',
           key: null,
-          size: Size(0, 0),
           position: Offset(0, 0),
-          scale: 1,
+          scale: 1.0,
           childKeys: [],
           childIds: [])
     };
   }
 
   static Offset initializePositionMap(Offset positionForDrop) {
-    return positionForDrop = Offset(null, null);
+    return positionForDrop = Offset(0, 0);
   }
 
-  static Map<Key, bool> initializeSelectedMap(Map<Key, bool> selectedMap) {
-    return selectedMap = {null: false};
+  static Map<Key, bool> initializeSelectedMap(Map<Key, Applet> structureMap) {
+    Map<Key, bool> tempMap = {};
+    structureMap.forEach((Key key, Applet applet) => tempMap[key] = false);
+    return tempMap;
   }
 
   static Map<GlobalKey, List<Arrow>> initializeArrowMap(

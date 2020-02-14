@@ -35,9 +35,8 @@ class WindowStackBuilder extends StatelessWidget {
     var dataProvider = Provider.of<Data>(context);
 
     var stackItemDraggable;
-
+    
     List childKeyList = dataProvider.structureMap[itemKey].childKeys;
-
     for (int i = 0; i < childKeyList.length; i++) {
       if (dataProvider.structureMap[childKeyList[i]].type == "WindowApplet") {
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
