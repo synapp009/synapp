@@ -26,11 +26,13 @@ class CustomCard extends StatelessWidget {
             FlatButton(
                 child: Text("See More"),
                 onPressed: () {
-                  //dataProvider.structureMap =  projectDetails.appletMap; 
-                  crudProvider.getProjectById(projectDetails.id);
-                  projectDetails.appletMap.forEach((Key key, Applet applet) => dataProvider.structureMap[key] = applet);
-                  dataProvider.selectedMap = Constants.initializeSelectedMap(dataProvider.structureMap);
-
+                  //dataProvider.structureMap =  projectDetails.appletMap;
+                  Constants.initializeStructure(dataProvider.structureMap);
+                  projectDetails.appletMap.forEach((String id, Applet applet) {
+                    dataProvider.structureMap[applet.key] = applet;
+                  });
+                  dataProvider.selectedMap = Constants.initializeSelectedMap(
+                      dataProvider.structureMap);
                   //dataProvider.createStructureMap(projectDetails);
 
                   /** Push a named route to the stcak, which does not require data to be  passed */

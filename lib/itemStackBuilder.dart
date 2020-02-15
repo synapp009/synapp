@@ -54,7 +54,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
 
   List<Widget> stackItems(BuildContext context) {
     var dataProvider = Provider.of<Data>(context);
-
+    dataProvider.structureMap.forEach((key, value) {print(value.key);});
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
     List childKeyList = dataProvider.structureMap[null].childKeys;

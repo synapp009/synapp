@@ -272,7 +272,6 @@ class _WindowWidgetState extends State<WindowWidget>
           ),
         );
       }, onWillAccept: (dynamic data) {
-       print(data.toString());
         //true if window changes target
         if (data.type == "WindowApplet") {
           if (_dataProvider.structureMap[windowKey].key != data.key &&

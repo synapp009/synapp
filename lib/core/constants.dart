@@ -24,6 +24,20 @@ class Constants {
     };
   }
 
+    static Map<String, Applet> initializeAppletMap(Map<String, Applet> appletMap) {
+    return appletMap = {
+      null: Applet(
+          color: null,
+          type: '',
+          id: '',
+          key: null,
+          position: Offset(0, 0),
+          scale: 1.0,
+          childKeys: [],
+          childIds: [])
+    };
+  }
+
   static Offset initializePositionMap(Offset positionForDrop) {
     return positionForDrop = Offset(0, 0);
   }

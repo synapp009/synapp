@@ -13,7 +13,7 @@ class Project with ChangeNotifier {
   String description;
   String img;
   //Key key;
-  Map<Key, Applet> appletMap;
+  Map<String, Applet> appletMap;
   Map<GlobalKey, List<Arrow>> arrowMap;
 
   Project(
@@ -24,16 +24,16 @@ class Project with ChangeNotifier {
       this.appletMap,
       this.arrowMap,
       this.description}) {
-    appletMap = Constants.initializeStructure(appletMap);
+    appletMap = Constants.initializeAppletMap(appletMap);
   }
 
-  static Map<Key, Applet> getAppletMap(List<dynamic> snapshot) {
-    Map<Key, Applet> tempMap = {};
-    Key newKey;
+  static Map<String, Applet> getAppletMap(List<dynamic> snapshot, String id) {
+    Map<String, Applet> tempMap = {};
+    String newId;
     if (snapshot != null) {
       snapshot.forEach((dynamic appletDraft) {
-        var tempApplet;
-
+        dynamic tempApplet;
+        var tempId;
         if (appletDraft.toString().contains('WindowApplet')) {
           tempApplet = WindowApplet.fromMap(appletDraft);
         } else if (appletDraft.toString().contains('TextApplet')) {
@@ -41,26 +41,26 @@ class Project with ChangeNotifier {
         } else {
           tempApplet = Applet.fromMap(appletDraft);
         }
+        tempId = tempApplet.id == "" ? null : tempApplet.id;
 
-        newKey = tempApplet.id == '' ? null : new GlobalKey();
-
-        tempMap[newKey] = tempApplet;
+        tempMap[tempId] = tempApplet;
       });
     }
 
-    tempMap.forEach((Key key, Applet applet) {
-      if (applet.childIds.length == 0 && applet.childKeys.length == 0) {
+//create childKeys
+    tempMap.forEach((String id, Applet applet) {
+      if (applet.childIds.length == 0 || applet.childKeys == null) {
         applet.childKeys = [];
       }
-
-        applet.childIds.forEach((String childId) {
-          tempMap.forEach((Key subKey, Applet subApplet) {
-            if (subApplet.id == childId) {
-              applet.childKeys.add(subKey);
-            }
-          });
+      applet.childIds.forEach((String childId) {
+        tempMap.forEach((String subId, Applet subApplet) {
+          if (subApplet.id == childId) {
+            applet.childKeys.add(subApplet.key);
+          }
         });
+      });
     });
+
     return tempMap;
   }
 
@@ -70,7 +70,8 @@ class Project with ChangeNotifier {
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
         description = snapshot['description'] ?? '',
-        appletMap = getAppletMap(snapshot['appletList']) ?? null,
+        appletMap =
+            getAppletMap(snapshot['appletList'], snapshot['id']) ?? null,
         arrowMap = snapshot['arrowMap'] ?? null;
 
   /*tempMap = appletMap.map((k, v) {

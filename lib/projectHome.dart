@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:synapp/projectHomeView.dart';
+import 'core/models/appletModel.dart';
 import 'core/models/projectModel.dart';
 import 'core/viewmodels/CRUDModel.dart';
 import 'stackAnimator.dart';
@@ -35,9 +36,13 @@ class _HomeViewState extends State<HomeView> {
 
         leading: new IconButton(
           onPressed: () {
-            widget.project.appletMap = dataProvider.structureMap;
+            widget.project.appletMap.clear();
+            dataProvider.structureMap.forEach((Key key, Applet applet){
+
+              widget.project.appletMap[applet.id] = applet;
+            });
             crudProvider.updateProject(widget.project, widget.project.id);
-            
+            dataProvider.structureMap.clear();
             Navigator.pop(context);
           },
           color: Colors.black,

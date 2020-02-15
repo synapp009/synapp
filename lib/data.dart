@@ -140,9 +140,8 @@ class Data with ChangeNotifier {
   }
 
   Map<Key, Applet> createStructureMap(Project project) {
-    print('structure map');
     Map<Key, Applet> tempMap = {};
-    project.appletMap.forEach((Key key, Applet applet) {
+    project.appletMap.forEach((String id, Applet applet) {
 
     });
       
