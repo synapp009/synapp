@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:synapp/locator.dart';
 import 'package:synapp/ui/router.dart';
 
+import 'core/models/projectModel.dart';
 import 'core/viewmodels/CRUDModel.dart';
 import 'data.dart';
 
@@ -17,7 +18,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<Data>(create:(_) => Data() ),
+        //ChangeNotifierProvider<Data>(create:(_) => Data() ),
+        ChangeNotifierProvider<Project>(create:(_) => Project()),
         ChangeNotifierProvider(
           create: (_) => locator<CRUDModel>(),
         ),

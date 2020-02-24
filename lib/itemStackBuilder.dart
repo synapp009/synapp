@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/models/projectModel.dart';
 import 'core/models/appletModel.dart';
 import 'core/models/arrowModel.dart';
 import 'textboxWidget.dart';
@@ -19,26 +20,26 @@ class ItemStackBuilder extends StatefulWidget {
 class _ItemStackBuilderState extends State<ItemStackBuilder> {
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
-
-    var stackScale = dataProvider.stackScale;
-    var stackSize = dataProvider.stackSize;
+    var projectProvider = Provider.of<Project>(context);
+    var stackScale = projectProvider.stackScale;
+    var stackSize = projectProvider.stackSize;
     return Stack(overflow: Overflow.visible, children: [
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
+            color:Colors.green,
             width: stackSize.width,
             height: stackSize.height,
           );
         },
         onWillAccept: (dynamic data) {
-          if (dataProvider.structureMap[null].key != data.key) {
-            var stackOffset = Offset(dataProvider.notifier.value.row0.a,
-                dataProvider.notifier.value.row1.a);
-            dataProvider.structureMap[data.key].scale = 1.0;
-            dataProvider.currentTargetPosition = stackOffset;
-            dataProvider.changeItemListPosition(
-                itemKey: data.key, newKey: null);
+          if (projectProvider.appletMap[null].key != data.key) {
+            var stackOffset = Offset(projectProvider.notifier.value.row0.a,
+                projectProvider.notifier.value.row1.a);
+            projectProvider.appletMap[data.id].scale = 1.0;
+            projectProvider.currentTargetPosition = stackOffset;
+            projectProvider.changeItemListPosition(
+                itemId: data.id, newId: null);
             return true;
           } else {
             return false;
@@ -53,17 +54,17 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
   }
 
   List<Widget> stackItems(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
-    dataProvider.structureMap.forEach((key, value) {print(value.key);});
+    var projectProvider = Provider.of<Project>(context);
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
-    List childKeyList = dataProvider.structureMap[null].childKeys;
-    for (int i = 0; i < childKeyList.length; i++) {
-      if (dataProvider.structureMap[childKeyList[i]].type == "WindowApplet") {
-        stackItemDraggable = WindowWidget(key: childKeyList[i]);
-      } else if (dataProvider.structureMap[childKeyList[i]].type ==
+    print('cdkmsldc ${projectProvider.appletMap[null].childIds}');
+    List childIdList = projectProvider.appletMap[null].childIds;
+    for (int i = 0; i < childIdList.length; i++) {
+      if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
+        stackItemDraggable = WindowWidget(id: childIdList[i]);
+      } else if (projectProvider.appletMap[childIdList[i]].type ==
           "TextApplet") {
-        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+        stackItemDraggable = TextboxWidget(id: childIdList[i]);
       } else {
         stackItemDraggable = Container(width: 0, height: 0);
       }
@@ -75,15 +76,19 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
 }
 
 List<Widget> arrowItems(BuildContext context) {
-  var dataProvider = Provider.of<Data>(context);
+  var projectProvider = Provider.of<Project>(context);
   List<Widget> arrowItemsList = [];
-  Map<Key, List<Arrow>> arrowMap = dataProvider.arrowMap;
-
-  arrowMap.forEach((Key originKey, List<Arrow> arrowList) => {
+  Map<String, List<Arrow>> arrowMap = projectProvider.arrowMap;
+  Key originKey;
+  Key targetKey;
+  arrowMap.forEach((String originId, List<Arrow> arrowList) => {
+        originKey = projectProvider.getKeyFromId(originId),
         if (originKey != null)
           {
-            arrowList.forEach((Arrow tempArrow) =>
-                arrowItemsList.add(ArrowWidget(originKey, tempArrow.target)))
+            arrowList.forEach((Arrow tempArrow) {
+              targetKey = projectProvider.getKeyFromId(tempArrow.target);
+              arrowItemsList.add(ArrowWidget(originKey, targetKey));
+            }),
           }
       });
 

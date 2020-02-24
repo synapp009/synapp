@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:synapp/core/models/appletModel.dart';
+import 'package:synapp/core/models/projectModel.dart';
 
 class Api {
   final Firestore _db = Firestore.instance;
   final String path;
   CollectionReference ref;
+  DocumentReference doc;
 
   Api(this.path) {
     ref = _db.collection(path);
@@ -29,25 +31,33 @@ class Api {
     return ref.document(id).delete();
   }
 
-  Future<DocumentReference> addDocument(Map data) {
-    return ref.add(data);
+   Future<void>  addDocument(Map data) async {
+    var doc = await ref.add(data);
+    var id = doc.documentID;
+    var tempData = data;
+    tempData["id"] = id;
+    ref.document(id).updateData(tempData);
+    
     //.then((result) => addAppletMap(data, result.documentID));
   }
 
-  /*Future<DocumentReference> addAppletMap(Map data, String id) {
-    Applet applet = Applet(
-          key: null,
-          size: Size(0, 0),
-          position: Offset(0, 0),
-          scale: 1,
-          childKeys: []
-          );
-    return ref.document(id).collection("appletMap").add(applet.toJson());
-  }*/
+
 
   Future<void> updateDocument(Map data, String id) {
     return ref.document(id).updateData(data);
   }
 
-  
+  Future<void> updateApplet(
+      String projectId, Applet applet, String appletId) async {
+    var snapshots =
+        ref.document(projectId).collection('appletList').where((element) => element.data.containsValue(appletId)).getDocuments();
+
+    print(snapshots);
+
+    /*.forEach((document) async {
+      document.reference.updateData(<String, dynamic>{
+         
+      });
+    });*/
+  }
 }

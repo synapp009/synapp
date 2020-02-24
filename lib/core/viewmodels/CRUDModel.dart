@@ -38,8 +38,15 @@ class CRUDModel extends ChangeNotifier {
     return;
   }
 
+  Future updateApplet(String projectId, Applet applet, String appletId) async {
+    await _api.updateApplet( projectId,  applet.toJson(),  appletId);
+    return;
+  }
+
+
   Future addProject(Project data) async {
-    await _api.addDocument(data.toJson());
+
+   await _api.addDocument(data.toJson());
     return;
   }
 

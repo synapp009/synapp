@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'arrowWidget.dart';
+import 'core/models/projectModel.dart';
 import 'textboxWidget.dart';
 
 import 'data.dart';
@@ -8,21 +9,21 @@ import 'package:provider/provider.dart';
 import 'windowWidget.dart';
 
 class WindowStackBuilder extends StatelessWidget {
-  final Key itemKey;
+  final String id;
 
-  WindowStackBuilder(this.itemKey);
+  WindowStackBuilder(this.id);
 
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
+    var projectProvider = Provider.of<Project>(context);
     return Stack(overflow: Overflow.visible, children: [
       FittedBox(
         fit: BoxFit.scaleDown,
         child: Container(
-          height: dataProvider.structureMap[itemKey].size.height,
-          width: dataProvider.structureMap[itemKey].size.width,
+          height: projectProvider.appletMap[id].size.height,
+          width: projectProvider.appletMap[id].size.width,
           child: Text(
-              '${itemKey.toString()},${dataProvider.structureMap[itemKey].scale.toString()}'),
+              '${id.toString()},${projectProvider.appletMap[id].scale.toString()}'),
         ),
       ),
       //TextField(maxLines:40),
@@ -32,18 +33,18 @@ class WindowStackBuilder extends StatelessWidget {
 
   List<Widget> stackItems(BuildContext context) {
     List<Widget> stackItemsList = [];
-    var dataProvider = Provider.of<Data>(context);
+    var projectProvider = Provider.of<Project>(context);
 
     var stackItemDraggable;
-    
-    List childKeyList = dataProvider.structureMap[itemKey].childKeys;
-    for (int i = 0; i < childKeyList.length; i++) {
-      if (dataProvider.structureMap[childKeyList[i]].type == "WindowApplet") {
-        stackItemDraggable = WindowWidget(key: childKeyList[i]);
 
-      } else if (dataProvider.structureMap[childKeyList[i]].type ==
+    List childIdList = projectProvider.appletMap[id].childIds;
+    for (int i = 0; i < childIdList.length; i++) {
+      if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
+        stackItemDraggable = WindowWidget(id: childIdList[i]);
+
+      } else if (projectProvider.appletMap[childIdList[i]].type ==
           "TextApplet") {
-        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+        stackItemDraggable = TextboxWidget(id: childIdList[i]);
        
       } else {
         stackItemDraggable = Container(height:0,width:0);

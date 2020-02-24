@@ -15,8 +15,9 @@ class CustomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
+    //var dataProvider = Provider.of<Data>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
+    var projectProvider =  Provider.of<Project>(context);
     return Card(
       child: Container(
         padding: const EdgeInsets.only(top: 5.0),
@@ -26,13 +27,11 @@ class CustomCard extends StatelessWidget {
             FlatButton(
                 child: Text("See More"),
                 onPressed: () {
-                  //dataProvider.structureMap =  projectDetails.appletMap;
-                  Constants.initializeStructure(dataProvider.structureMap);
-                  projectDetails.appletMap.forEach((String id, Applet applet) {
-                    dataProvider.structureMap[applet.key] = applet;
-                  });
-                  dataProvider.selectedMap = Constants.initializeSelectedMap(
-                      dataProvider.structureMap);
+
+
+                 // projectDetails.appletMap.forEach((key, value) {projectProvider.appletMap[key] = value; }); 
+                 /* projectProvider.selectedMap = Constants.initializeSelectedMap(
+                      projectProvider.appletMap);*/
                   //dataProvider.createStructureMap(projectDetails);
 
                   /** Push a named route to the stcak, which does not require data to be  passed */

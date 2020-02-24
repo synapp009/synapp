@@ -2,28 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
 import 'core/models/appletModel.dart';
+import 'core/models/projectModel.dart';
 import 'windowStackBuilder.dart';
 
 import 'data.dart';
 
 class FeedbackWindowWidget extends StatelessWidget {
-  final Key itemKey;
+  final String id;
   final Offset pointerDownOffset;
   final GlobalKey feedbackKey;
-  FeedbackWindowWidget(this.itemKey, this.pointerDownOffset, this.feedbackKey);
+  FeedbackWindowWidget(this.id, this.pointerDownOffset, this.feedbackKey);
 
   @override
   Widget build(BuildContext context) {
-    final dataProvider = Provider.of<Data>(context);
-    var window = dataProvider.structureMap[itemKey];
-    var stackScale = dataProvider.notifier.value.row0[0];
+    final appletProvider = Provider.of<Project>(context);
+    var window = appletProvider.appletMap[id];
+    var stackScale = appletProvider.notifier.value.row0[0];
 
-    var itemScale = dataProvider.structureMap[itemKey].scale;
-    var childList = dataProvider.getAllChildren(itemKey);
+    var itemScale = appletProvider.appletMap[id].scale;
+    var childList = appletProvider.getAllChildren(id);
 
     Size animationOffseter = Size(
-        (dataProvider.structureMap[itemKey].size.width / 2) * 0.1,
-        (dataProvider.structureMap[itemKey].size.width / 2) * 0.1);
+        (appletProvider.appletMap[id].size.width / 2) * 0.1,
+        (appletProvider.appletMap[id].size.width / 2) * 0.1);
 
     return Transform.translate(
       offset: Offset(
@@ -44,9 +45,9 @@ class FeedbackWindowWidget extends StatelessWidget {
             SizedBox(
               key: feedbackKey,
               height:
-                  dataProvider.structureMap[itemKey].size.height * (itemScale),
+                  appletProvider.appletMap[id].size.height * (itemScale),
               width:
-                  dataProvider.structureMap[itemKey].size.width * (itemScale),
+                  appletProvider.appletMap[id].size.width * (itemScale),
               child: Material(
                 animationDuration: Duration.zero,
                 shape: SuperellipseShape(
@@ -55,7 +56,7 @@ class FeedbackWindowWidget extends StatelessWidget {
                 //margin: EdgeInsets.all(0),
                 color: window.color,
 
-                child: WindowStackBuilder(itemKey),
+                child: WindowStackBuilder(id),
               ),
             ),
           ],

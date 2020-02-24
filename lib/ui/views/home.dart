@@ -126,12 +126,10 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     if (taskDescripInputController.text.isNotEmpty &&
                         taskTitleInputController.text.isNotEmpty) {
-                      Project project = Project(
-                          //key: newKey,
-
+                      Project project = new Project(
                           name: taskTitleInputController.text,
                           description: taskDescripInputController.text);
-
+                       
                       Provider.of<CRUDModel>(context, listen: false)
                           .addProject(project)
                           .then((result) => {

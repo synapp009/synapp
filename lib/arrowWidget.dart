@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/models/arrowModel.dart';
+import 'core/models/projectModel.dart';
 import 'data.dart';
 
 class ArrowWidget extends StatelessWidget {
@@ -14,20 +15,20 @@ class ArrowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     var sector;
     Arrow tempArrow;
-    var dataProvider = Provider.of<Data>(context);
-    double originScale = dataProvider.structureMap[originKey].scale;
-    double targetScale = dataProvider.structureMap[targetKey].scale;
-    var stackScale = dataProvider.stackScale;
-    var actualTargetKey = dataProvider.getActualTargetKey(targetKey);
+    var projectProvider = Provider.of<Project>(context);
+    double originScale = projectProvider.appletMap[originKey].scale;
+    double targetScale = projectProvider.appletMap[targetKey].scale;
+    var stackScale = projectProvider.stackScale;
+    var actualTargetKey = projectProvider.getActualTargetKey(targetKey);
 
-    dataProvider.arrowMap[originKey].forEach((Arrow k) => {
+    projectProvider.arrowMap[originKey].forEach((Arrow k) => {
           if (k.target == targetKey) {tempArrow = k}
         });
     return Positioned(
       top: tempArrow.position.dy,
-      //dataProvider.centerOfRenderBox(originKey).dy,
+      //projectProvider.centerOfRenderBox(originKey).dy,
       left: tempArrow.position.dx,
-      //dataProvider.centerOfRenderBox(originKey).dx,
+      //projectProvider.centerOfRenderBox(originKey).dx,
       child: Transform.translate(
         offset: Offset(0, -50),
         child: Transform.rotate(

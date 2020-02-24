@@ -217,4 +217,6 @@ class TextApplet extends Applet {
       "scale" : scale
     };
   }
+
+  
 }

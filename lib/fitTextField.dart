@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:synapp/core/models/appletModel.dart';
+import 'package:synapp/core/models/projectModel.dart';
 
 import 'data.dart';
 
@@ -44,10 +45,10 @@ class FitTextFieldState extends State<FitTextField> {
 
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
-    Key actualTargetKey = dataProvider.getActualTargetKey(widget.itemKey);
+    var projectProvider = Provider.of<Project>(context);
+    Key actualTargetKey = projectProvider.getActualTargetKey(widget.itemKey);
 
-    var textBox = dataProvider.structureMap[widget.itemKey] as TextApplet;
+    var textBox = projectProvider.appletMap[widget.itemKey] as TextApplet;
     bool isFixed = textBox.fixed;
 
     // Use TextPainter to calculate the width of our text
@@ -72,11 +73,11 @@ class FitTextFieldState extends State<FitTextField> {
         key: widget.feedbackKey,
         width: actualTargetKey == null
             ? textWidth * widget.itemScale
-            : dataProvider.structureMap[actualTargetKey].size
+            : projectProvider.appletMap[actualTargetKey].size
                 .width -20 , // textWidth * widget.itemScale
         child: FittedBox(
           child: Container(
-            width: actualTargetKey == null ? textWidth : dataProvider.structureMap[actualTargetKey].size.width -20, //dataProvider.structureMap[dataProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
+            width: actualTargetKey == null ? textWidth : projectProvider.appletMap[actualTargetKey].size.width -20, //projectProvider.appletMap[projectProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
             //decoration: new BoxDecoration(color: color),
 
             child: TextField(

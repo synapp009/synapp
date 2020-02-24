@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/models/projectModel.dart';
 import 'core/models/appletModel.dart';
 import 'feedbackTextboxWidget.dart';
 import 'fitTextField.dart';
@@ -9,15 +10,16 @@ import 'fitTextField.dart';
 import 'data.dart';
 
 class TextboxWidget extends StatefulWidget {
-  TextboxWidget({GlobalKey key}) : super(key: key);
+  final String id;
+  TextboxWidget({this.id}) ;
 
   @override
-  _TextboxWidgetState createState() => _TextboxWidgetState(key);
+  _TextboxWidgetState createState() => _TextboxWidgetState(id);
 }
 
 class _TextboxWidgetState extends State<TextboxWidget> {
-  final GlobalKey key;
-  _TextboxWidgetState(this.key);
+  final String id;
+  _TextboxWidgetState(this.id);
 
   var pointerDownOffset = Offset(0, 0);
   var pointerUpOffset = Offset(0, 0);
@@ -29,11 +31,12 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   GlobalKey feedbackKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
-    TextApplet textBox = dataProvider.structureMap[key];
+    var projectProvider = Provider.of<Project>(context);
+    var key = projectProvider.getKeyFromId(id);
+    TextApplet textBox = projectProvider.appletMap[key];
     var initialValue = textBox.content;
-    double itemScale = dataProvider.structureMap[key].scale;
-    Offset boxPosition = dataProvider.structureMap[widget.key].position;
+    double itemScale = projectProvider.appletMap[key].scale;
+    Offset boxPosition = projectProvider.appletMap[widget.key].position;
     return Positioned(
       top: boxPosition.dy * itemScale,
       left: boxPosition.dx * itemScale,
@@ -43,9 +46,9 @@ class _TextboxWidgetState extends State<TextboxWidget> {
           pointerMoving = false;
         },
         onPointerDown: (PointerDownEvent event) {
-          if (dataProvider.firstItem) {
-            dataProvider.actualItemKey = key;
-            dataProvider.firstItem = false;
+          if (projectProvider.firstItem) {
+            projectProvider.actualItemKey = key;
+            projectProvider.firstItem = false;
           }
           absorbing = true;
           pointerMoving = false;
@@ -54,7 +57,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
           });
         },
         onPointerUp: (PointerUpEvent event) {
-          dataProvider.firstItem = true;
+          projectProvider.firstItem = true;
           if (!pointerMoving) {
             setState(() {
               absorbing = false;
@@ -72,28 +75,28 @@ class _TextboxWidgetState extends State<TextboxWidget> {
             onDragCompleted: () {
               //position if textbox gets conected to a window
               if (textBox.fixed == true &&
-                  dataProvider.getActualTargetKey(key) != null) {
-                boxPosition = dataProvider
-                    .structureMap[dataProvider.getActualTargetKey(key)]
+                  projectProvider.getActualTargetKey(key) != null) {
+                boxPosition = projectProvider
+                    .appletMap[projectProvider.getActualTargetKey(key)]
                     .position;
               } else {
                 setState(() {
-                  dataProvider.structureMap[widget.key].position =
-                      dataProvider.itemDropPosition(
+                  projectProvider.appletMap[widget.key].position =
+                      projectProvider.itemDropPosition(
                           key, pointerDownOffset, pointerUpOffset);
                 });
               }
             },
             onDraggableCanceled: (vel, off) {
               setState(() {
-                dataProvider.structureMap[widget.key].position = dataProvider
+                projectProvider.appletMap[widget.key].position = projectProvider
                     .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
               });
-              dataProvider.stackSizeChange(key, feedbackKey, off);
+              projectProvider.stackSizeChange(key, feedbackKey, off);
             },
             childWhenDragging: Container(),
-            feedback: ListenableProvider<Data>.value(
-              value: Provider.of<Data>(context),
+            feedback: ListenableProvider<Project>.value(
+              value: Provider.of<Project>(context),
               child: Material(
                 color: Colors.transparent,
                 child:
@@ -104,7 +107,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
               absorbing: absorbing,
               child: Transform.scale(
                 alignment: Alignment.topLeft,
-                scale: dataProvider.getTargetScale(key),
+                scale: projectProvider.getTargetScale(key),
                 child: FitTextField(
                   initialValue: initialValue,
                   itemKey: key,
@@ -112,7 +115,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                 ),
               ),
             ),
-            data: dataProvider.structureMap[key] as dynamic
+            data: projectProvider.appletMap[key] as dynamic
             ),
       ),
     );

@@ -1,22 +1,19 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:provider/provider.dart';
+import 'core/models/projectModel.dart';
 import 'itemStackBuilder.dart';
 
-import 'data.dart';
-
 class StackAnimator extends StatelessWidget {
-final id;
+  final id;
   StackAnimator(this.id);
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
+    var projectProvider = Provider.of<Project>(context);
 
     Size displaySize = MediaQuery.of(context).size;
-    ValueNotifier<Matrix4> notifier = dataProvider.notifier;
-
+    ValueNotifier<Matrix4> notifier = projectProvider.notifier;
+    print('animator ${projectProvider.appletMap}');
     setMaxScaleAndOffset(context) {
       //sets the boundaries of the visable part of the screen
       // and the maximum scale to zoom out
@@ -31,87 +28,88 @@ final id;
       var mostRightKey;
       var mostTopKey;
       var mostBottomKey;
-      List keyAtBottomList = dataProvider.structureMap[null].childKeys;
-
+      List keyAtBottomList = projectProvider.appletMap[null].childKeys;
+      print('stackanimation ${projectProvider.appletMap[null]}');
+      print('stackani bottomlist $keyAtBottomList');
       mostBottomKey = keyAtBottomList[0];
       mostLeftKey = keyAtBottomList[0];
       mostRightKey = keyAtBottomList[0];
       mostTopKey = keyAtBottomList[0];
       for (int i = 0; i < keyAtBottomList.length; i++) {
-        if ((dataProvider.structureMap[keyAtBottomList[i]].position.dx +
-                dataProvider.structureMap[keyAtBottomList[i]].size.width) >
-            (dataProvider.structureMap[mostRightKey].position.dx +
-                dataProvider.structureMap[mostRightKey].size.width)) {
+        if ((projectProvider.appletMap[keyAtBottomList[i]].position.dx +
+                projectProvider.appletMap[keyAtBottomList[i]].size.width) >
+            (projectProvider.appletMap[mostRightKey].position.dx +
+                projectProvider.appletMap[mostRightKey].size.width)) {
           mostRightKey = keyAtBottomList[i];
         }
-        if (dataProvider.structureMap[keyAtBottomList[i]].position.dx <
-            dataProvider.structureMap[mostLeftKey].position.dx) {
+        if (projectProvider.appletMap[keyAtBottomList[i]].position.dx <
+            projectProvider.appletMap[mostLeftKey].position.dx) {
           mostLeftKey = keyAtBottomList[i];
         }
 
-        if ((dataProvider.structureMap[keyAtBottomList[i]].position.dy) <
-            dataProvider.structureMap[mostTopKey].position.dy) {
+        if ((projectProvider.appletMap[keyAtBottomList[i]].position.dy) <
+            projectProvider.appletMap[mostTopKey].position.dy) {
           mostTopKey = keyAtBottomList[i];
         }
-        if ((dataProvider.structureMap[keyAtBottomList[i]].position.dy +
-                dataProvider.structureMap[keyAtBottomList[i]].size.height) >
-            dataProvider.structureMap[mostTopKey].position.dy +
-                dataProvider.structureMap[mostTopKey].size.height) {
+        if ((projectProvider.appletMap[keyAtBottomList[i]].position.dy +
+                projectProvider.appletMap[keyAtBottomList[i]].size.height) >
+            projectProvider.appletMap[mostTopKey].position.dy +
+                projectProvider.appletMap[mostTopKey].size.height) {
           mostBottomKey = keyAtBottomList[i];
         }
       }
 
-      maxLeftOffset = dataProvider.structureMap[mostLeftKey].position.dx *
-          dataProvider.stackScale;
+      maxLeftOffset = projectProvider.appletMap[mostLeftKey].position.dx *
+          projectProvider.stackScale;
 
-      maxRightOffset = dataProvider.structureMap[mostRightKey].position.dx;
+      maxRightOffset = projectProvider.appletMap[mostRightKey].position.dx;
 
-      maxTopOffset = dataProvider.structureMap[mostTopKey].position.dy *
-          dataProvider.stackScale;
+      maxTopOffset = projectProvider.appletMap[mostTopKey].position.dy *
+          projectProvider.stackScale;
 
 //set max scale
-      maxScaleWidth = (displaySize.width / 
-          (dataProvider.structureMap[mostLeftKey].position.dx +
-              dataProvider.structureMap[mostRightKey].position.dx +
-              dataProvider.structureMap[mostRightKey].size.width));
+      maxScaleWidth = (displaySize.width /
+          (projectProvider.appletMap[mostLeftKey].position.dx +
+              projectProvider.appletMap[mostRightKey].position.dx +
+              projectProvider.appletMap[mostRightKey].size.width));
 
       maxScaleHeight = (displaySize.height /
-          (dataProvider.structureMap[mostLeftKey].position.dy +
-              dataProvider.structureMap[mostRightKey].position.dy +
-              dataProvider.structureMap[mostRightKey].size.height +
-              dataProvider.headerHeight()));
+          (projectProvider.appletMap[mostLeftKey].position.dy +
+              projectProvider.appletMap[mostRightKey].position.dy +
+              projectProvider.appletMap[mostRightKey].size.height +
+              projectProvider.headerHeight()));
 
       maxScale =
           maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth;
 
-      if (dataProvider.structureMap[null].childKeys.length > 1) {
-        if (dataProvider.stackScale < maxScale) {
+      if (projectProvider.appletMap[null].childKeys.length > 1) {
+        if (projectProvider.stackScale < maxScale) {
           notifier.value.setEntry(0, 0, maxScale);
           notifier.value.setEntry(1, 1, maxScale);
         }
 
-        if (dataProvider.stackOffset.dx >
+        if (projectProvider.stackOffset.dx >
             -maxLeftOffset + displaySize.width / 2) {
           //left offset barrier
 
           notifier.value.setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
         }
-        if ((dataProvider.stackOffset.dx +
-                dataProvider.structureMap[mostRightKey].position.dx *
-                    dataProvider.stackScale +
-                dataProvider.structureMap[mostRightKey].size.width *
-                    dataProvider.stackScale) <
+        if ((projectProvider.stackOffset.dx +
+                projectProvider.appletMap[mostRightKey].position.dx *
+                    projectProvider.stackScale +
+                projectProvider.appletMap[mostRightKey].size.width *
+                    projectProvider.stackScale) <
             displaySize.width / 2) {
           var tempOffsetRightDx =
-              -(dataProvider.structureMap[mostRightKey].position.dx *
-                      dataProvider.stackScale +
-                  dataProvider.structureMap[mostRightKey].size.width *
-                      dataProvider.stackScale -
+              -(projectProvider.appletMap[mostRightKey].position.dx *
+                      projectProvider.stackScale +
+                  projectProvider.appletMap[mostRightKey].size.width *
+                      projectProvider.stackScale -
                   displaySize.width / (1.99));
           notifier.value.setEntry(0, 3, tempOffsetRightDx);
         }
 
-        if (dataProvider.stackOffset.dy >
+        if (projectProvider.stackOffset.dy >
             -maxTopOffset + displaySize.height / 2) {
           //top offset barrier
           notifier.value.setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
@@ -123,9 +121,8 @@ final id;
       onMatrixUpdate: (m, tm, sm, rm) {
         //notifier.value = m;
 
-        dataProvider.stackScale = notifier.value.row0[0];
-
-        dataProvider.stackOffset =
+        projectProvider.stackScale = notifier.value.row0[0];
+        projectProvider.stackOffset =
             Offset(notifier.value.row0.a, notifier.value.row1.a);
 
         notifier.value = m;
@@ -135,13 +132,13 @@ final id;
       child: Stack(children: [
         Container(color: Colors.transparent),
         Positioned(
-          top: dataProvider.generalStackOffset.dy,
-          left: dataProvider.generalStackOffset.dx,
+          top: projectProvider.generalStackOffset.dy,
+          left: projectProvider.generalStackOffset.dx,
           child: AnimatedBuilder(
-              animation: Provider.of<Data>(context).notifier,
-              builder: (ctx, child) {
+              animation: Provider.of<Project>(context).notifier,
+              builder: (context, child) {
                 return Transform(
-                  transform: Provider.of<Data>(context).notifier.value,
+                  transform: Provider.of<Project>(context).notifier.value,
                   child: ItemStackBuilder(id),
                 );
               }),

@@ -5,6 +5,7 @@ import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:synapp/stackAnimator.dart';
 
 import 'core/models/appletModel.dart';
+import 'core/models/projectModel.dart';
 import 'data.dart';
 
 class MyHome extends StatefulWidget {
@@ -42,10 +43,10 @@ class _MyHomeState extends State<MyHome> {
   ];
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
+    var projectProvider = Provider.of<Project>(context);
+    print('myhome ${projectProvider.appletMap} ');
     var crudProvider = Provider.of<CRUDModel>(context);
-    BottomSheetApp modal = new BottomSheetApp(_apps, dataProvider);
-
+    BottomSheetApp modal = new BottomSheetApp(_apps, projectProvider);
 
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -82,8 +83,8 @@ class _MyHomeState extends State<MyHome> {
 
 class BottomSheetApp {
   final _apps;
-  final dataProvider;
-  BottomSheetApp(this._apps, this.dataProvider);
+  final projectProvider;
+  BottomSheetApp(this._apps, this.projectProvider);
   mainBottomSheet(BuildContext context) {
     showModalBottomSheet(
         backgroundColor: Color.fromRGBO(244, 245, 248, 1),
@@ -113,7 +114,7 @@ class BottomSheetApp {
                             key: _apps[index].itemKey,
                             onPressed: () {
                               //Navigator.pop(context);
-                              dataProvider.createNewApp(
+                              projectProvider.createNewApp(
                                   _apps[index].type, _apps[index].itemKey);
                             },
                             child: new Icon(
@@ -142,12 +143,12 @@ class BottomSheetApp {
 }
 
 ListTile _createTile(BuildContext context, String name, IconData icon,
-    Function action, dataProvider) {
+    Function action, projectProvider) {
   return ListTile(
     leading: Icon(icon),
     title: Text(name),
     onTap: () {
-      dataProvider.createNewWindow();
+      projectProvider.createNewWindow();
       action();
     },
   );

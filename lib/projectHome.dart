@@ -18,13 +18,16 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
-    var dataProvider = Provider.of<Data>(context);
+    var projectProvider = Provider.of<Project>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
+    projectProvider = widget.project;
+    projectProvider.name = widget.project.name;
+    projectProvider.appletMap = widget.project.appletMap;
+    projectProvider.id = widget.project.id;
     //set stackSize & headerHeight
-    Provider.of<Data>(context).statusBarHeight =
-        MediaQuery.of(context).padding.top;
-    if (dataProvider.stackSize == null) {
-      dataProvider.stackSize = MediaQuery.of(context).size;
+    projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
+    if (projectProvider.stackSize == null) {
+      projectProvider.stackSize = MediaQuery.of(context).size;
     }
 
     return Scaffold(
@@ -36,13 +39,11 @@ class _HomeViewState extends State<HomeView> {
 
         leading: new IconButton(
           onPressed: () {
-            widget.project.appletMap.clear();
-            dataProvider.structureMap.forEach((Key key, Applet applet){
-
-              widget.project.appletMap[applet.id] = applet;
-            });
-            crudProvider.updateProject(widget.project, widget.project.id);
-            dataProvider.structureMap.clear();
+            print(widget.project.id);
+            print('exit widget ${widget.project.appletMap}');
+            print('exit ${projectProvider.appletMap}');
+            crudProvider.updateProject(projectProvider, widget.project.id);
+            //projectProvider.appletMap.clear();
             Navigator.pop(context);
           },
           color: Colors.black,

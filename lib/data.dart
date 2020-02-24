@@ -10,7 +10,7 @@ import 'core/models/appletModel.dart';
 import 'core/models/arrowModel.dart';
 import 'core/models/projectModel.dart';
 
-class Data with ChangeNotifier {
+/*class Data with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
   Matrix4 matrix = Matrix4.identity();
 
@@ -966,4 +966,4 @@ class Data with ChangeNotifier {
             {k != key ? selectedMap[k] = false : selectedMap[k] = true}
         });
   }
-}
+}*/

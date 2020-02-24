@@ -10,20 +10,6 @@ class Constants {
   static const String taskRoute = '/task';
   static const String registerRoute = '/register';
 
-  static Map<Key, Applet> initializeStructure(Map<Key, Applet> structureMap) {
-    return structureMap = {
-      null: Applet(
-          color: null,
-          type: '',
-          id: '',
-          key: null,
-          position: Offset(0, 0),
-          scale: 1.0,
-          childKeys: [],
-          childIds: [])
-    };
-  }
-
     static Map<String, Applet> initializeAppletMap(Map<String, Applet> appletMap) {
     return appletMap = {
       null: Applet(
@@ -42,14 +28,14 @@ class Constants {
     return positionForDrop = Offset(0, 0);
   }
 
-  static Map<Key, bool> initializeSelectedMap(Map<Key, Applet> structureMap) {
-    Map<Key, bool> tempMap = {};
-    structureMap.forEach((Key key, Applet applet) => tempMap[key] = false);
+  static Map<String, bool> initializeSelectedMap(Map<String, Applet> structureMap) {
+    Map<String, bool> tempMap = {};
+    structureMap.forEach((String id, Applet applet) => tempMap[id] = false);
     return tempMap;
   }
 
-  static Map<GlobalKey, List<Arrow>> initializeArrowMap(
-      Map<GlobalKey, List<Arrow>> arrowMap) {
+  static Map<String, List<Arrow>> initializeArrowMap(
+      Map<String, List<Arrow>> arrowMap) {
     return arrowMap = {
       null: [
         Arrow(
