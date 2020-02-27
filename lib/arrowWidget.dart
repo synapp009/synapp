@@ -13,17 +13,21 @@ class ArrowWidget extends StatelessWidget {
   ArrowWidget(this.originKey, this.targetKey);
   @override
   Widget build(BuildContext context) {
+
     var sector;
     Arrow tempArrow;
     var projectProvider = Provider.of<Project>(context);
-    double originScale = projectProvider.appletMap[originKey].scale;
-    double targetScale = projectProvider.appletMap[targetKey].scale;
+        var originId = projectProvider.getIdFromKey(originKey);
+    double originScale = projectProvider.appletMap[originId].scale;
+    double targetScale = projectProvider.appletMap[originId].scale;
     var stackScale = projectProvider.stackScale;
     var actualTargetKey = projectProvider.getActualTargetKey(targetKey);
-
-    projectProvider.arrowMap[originKey].forEach((Arrow k) => {
-          if (k.target == targetKey) {tempArrow = k}
+    var targetId = projectProvider.getIdFromKey(targetKey);
+    
+    projectProvider.arrowMap[originId].forEach((Arrow k) => {
+          if (k.target == targetId) {tempArrow = k}
         });
+
     return Positioned(
       top: tempArrow.position.dy,
       //projectProvider.centerOfRenderBox(originKey).dy,

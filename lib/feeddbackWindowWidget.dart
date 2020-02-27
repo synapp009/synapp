@@ -20,7 +20,7 @@ class FeedbackWindowWidget extends StatelessWidget {
     var stackScale = appletProvider.notifier.value.row0[0];
 
     var itemScale = appletProvider.appletMap[id].scale;
-    var childList = appletProvider.getAllChildren(id);
+    var childList = appletProvider.getAllChildren(appletProvider.getKeyFromId(id));
 
     Size animationOffseter = Size(
         (appletProvider.appletMap[id].size.width / 2) * 0.1,

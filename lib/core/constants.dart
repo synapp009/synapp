@@ -30,6 +30,7 @@ class Constants {
 
   static Map<String, bool> initializeSelectedMap(Map<String, Applet> structureMap) {
     Map<String, bool> tempMap = {};
+    print('selected');
     structureMap.forEach((String id, Applet applet) => tempMap[id] = false);
     return tempMap;
   }

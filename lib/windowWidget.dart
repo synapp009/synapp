@@ -108,9 +108,7 @@ class _WindowWidgetState extends State<WindowWidget>
       });
     }
 
-    if (id == _projectProvider.actualItemKey &&
-        !_pointerMoving &&
-        !_isTapped) {
+    if (id == _projectProvider.actualItemKey && !_pointerMoving && !_isTapped) {
       _scale = 1 + _controller.value;
     } else if (id == _projectProvider.actualItemKey &&
         !_pointerMoving &&
@@ -136,6 +134,7 @@ class _WindowWidgetState extends State<WindowWidget>
     }
 
     return Positioned(
+      key: _projectProvider.appletMap[id].key,
       top: _projectProvider.appletMap[id].position.dy * _itemScale,
       left: _projectProvider.appletMap[id].position.dx * _itemScale,
       child: DragTarget(
@@ -144,8 +143,9 @@ class _WindowWidgetState extends State<WindowWidget>
           onPointerDown: (PointerDownEvent event) {
             _pointerUp = false;
             if (_projectProvider.firstItem) {
-              _projectProvider.actualItemKey = _projectProvider.getKeyFromId(id);
-              _projectProvider.getAllArrows(id);
+              _projectProvider.actualItemKey =
+                  _projectProvider.getKeyFromId(id);
+              _projectProvider.getAllArrows(_projectProvider.appletMap[id].key);
               _projectProvider.firstItem = false;
             }
 
@@ -174,13 +174,15 @@ class _WindowWidgetState extends State<WindowWidget>
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
               _projectProvider.updateArrowToKeyMap(
-                  id, _dragStarted, feedbackKey);
+                  _projectProvider.appletMap[id].key,
+                  _dragStarted,
+                  feedbackKey);
             }
 
             offset =
                 Offset(offset.dx + event.delta.dx, offset.dy + event.delta.dy);
 
-            _controller.reverse();
+            //_controller.reverse();
 
             //set if Pointer is Moving with threshold
             if ((event.localPosition.dx - _pointerDownOffset.dx).abs() >
@@ -203,13 +205,14 @@ class _WindowWidgetState extends State<WindowWidget>
               _projectProvider.onlySelectThis(id);
             },
             onLongPressMoveUpdate: (details) {
-              _projectProvider.hitTest(
-                  id, details.globalPosition, context);
+              _projectProvider.hitTest(_projectProvider.appletMap[id].key,
+                  details.globalPosition, context);
               _projectProvider.setArrowToPointer(
-                  id, details.globalPosition);
+                  _projectProvider.appletMap[id].key, details.globalPosition);
             },
             onLongPressEnd: (details) {
-              _projectProvider.connectAndUnselect(id);
+              _projectProvider
+                  .connectAndUnselect(_projectProvider.appletMap[id].key);
             },
             onLongPressUp: () {},
             onTap: () {
@@ -219,22 +222,22 @@ class _WindowWidgetState extends State<WindowWidget>
 
               _isTapped = true;
               _animation();
-              _maxSimultaneousDrags =
-                  _projectProvider.selectedMap[id] ? 0 : 1;
+              _maxSimultaneousDrags = _projectProvider.selectedMap[id] ? 0 : 1;
               _isTapped = false;
             },
             child: LongPressDraggable(
                 //hapticFeedbackOnStart: true,
 
-                maxSimultaneousDrags:
-                    _projectProvider.selectedMap[id] ? 0 : 1,
+                maxSimultaneousDrags: _projectProvider.selectedMap[id] ? 0 : 1,
                 onDragEnd: (DraggableDetails details) {
                   //_projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
                     setState(() {
                       _dragStarted = false;
                       _projectProvider.updateArrowToKeyMap(
-                          id, _dragStarted, id);
+                          _projectProvider.appletMap[id].key,
+                          _dragStarted,
+                          _projectProvider.appletMap[id].key);
 
                       _projectProvider.hasArrowToKeyMap.clear();
                     });
@@ -247,17 +250,19 @@ class _WindowWidgetState extends State<WindowWidget>
                     _dragStarted = true;
                     setState(() {
                       _projectProvider.updateArrowToKeyMap(
-                          id, _dragStarted, feedbackKey);
+                          _projectProvider.appletMap[id].key,
+                          _dragStarted,
+                          feedbackKey);
                     });
                   });
                 },
                 onDragCompleted: () {
-                  setState(() {
-                    _projectProvider.appletMap[id].position =
-                        _projectProvider.itemDropPosition(
-                            id, _pointerDownOffset, _pointerUpOffset);
-                  });
-                  //_crudProvider.updateApplet(  _projectProvider.appletMap[id], _itemId);
+                  _projectProvider.appletMap[id].position =
+                      _projectProvider.itemDropPosition(
+                          id, _pointerDownOffset, _pointerUpOffset);
+                  setState(() {});
+
+                  //_crudProvider.updateApplet(_projectProvider.id, _projectProvider.appletMap[id], id);
                 },
                 onDraggableCanceled: (vel, Offset off) {
                   setState(() {
@@ -272,8 +277,8 @@ class _WindowWidgetState extends State<WindowWidget>
                 childWhenDragging: Container(),
                 feedback: ChangeNotifierProvider<Project>.value(
                   value: Provider.of<Project>(context),
-                  child: FeedbackWindowWidget(
-                      id, _pointerDownOffset, feedbackKey),
+                  child:
+                      FeedbackWindowWidget(id, _pointerDownOffset, feedbackKey),
                 ),
                 child: _animatedButtonUI,
                 data: _projectProvider.appletMap[id]),
@@ -283,14 +288,14 @@ class _WindowWidgetState extends State<WindowWidget>
         //true if window changes target
         if (data.type == "WindowApplet") {
           if (_projectProvider.appletMap[id].key != data.key &&
-              !_projectProvider.appletMap[data.id].childIds
-                  .contains(id)) {
-            _projectProvider.changeItemListPosition(
-                itemKey: data.key, newKey: id);
-            Key _targetKey = _projectProvider.getActualTargetKey(data.key);
-            double _targetScale = _projectProvider.appletMap[_targetKey].scale;
+              !_projectProvider.appletMap[data.id].childIds.contains(id)) {
 
-            _projectProvider.appletMap[data.key].scale = _targetScale * 0.3;
+            _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+            Key _targetKey = _projectProvider.getActualTargetKey(data.key);
+            String _targetId = _projectProvider.getIdFromKey(_targetKey);
+            double _targetScale = _projectProvider.appletMap[_targetId].scale;
+
+            _projectProvider.appletMap[data.id].scale = _targetScale * 0.3;
 
             return true;
           } else {
@@ -299,13 +304,12 @@ class _WindowWidgetState extends State<WindowWidget>
         } else {
           //if for example textboxWidget
 
-          _projectProvider.changeItemListPosition(
-              itemKey: data.key, newKey: id);
-          Key _targetKey = _projectProvider.getActualTargetKey(data.key);
+          _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+          Key _targetKey = _projectProvider.getActualTargetKey(data.id);
           double _targetScale = _projectProvider.appletMap[_targetKey].scale;
-          _projectProvider.appletMap[data.key].scale = _targetScale;
+          _projectProvider.appletMap[data.id].scale = _targetScale;
 
-          _projectProvider.appletMap[data.key].scale = _itemScale;
+          _projectProvider.appletMap[data.id].scale = _itemScale;
           _timer = new Timer(Duration(milliseconds: 1000), () {
             _projectProvider.selectedMap[id] = true;
             setState(() {
@@ -361,10 +365,8 @@ class _WindowWidgetState extends State<WindowWidget>
 
             SizedBox(
               key: sizedBoxKey,
-              height: _projectProvider.appletMap[id].size.height *
-                  _itemScale,
-              width:
-                  _projectProvider.appletMap[id].size.width * _itemScale,
+              height: _projectProvider.appletMap[id].size.height * _itemScale,
+              width: _projectProvider.appletMap[id].size.width * _itemScale,
               child: Material(
                 shape: SuperellipseShape(
                     side: BorderSide(

@@ -16,19 +16,25 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
-    projectProvider = widget.project;
-    projectProvider.name = widget.project.name;
-    projectProvider.appletMap = widget.project.appletMap;
-    projectProvider.id = widget.project.id;
+
     //set stackSize & headerHeight
     projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
     if (projectProvider.stackSize == null) {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
+    var statusBarHeight = MediaQuery.of(context).padding.top;
+    projectProvider.updateProvider(widget.project, statusBarHeight);
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,

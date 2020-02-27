@@ -41,7 +41,7 @@ class Project with ChangeNotifier {
     positionForDrop = Constants.initializePositionMap(positionForDrop);
     selectedMap = Constants.initializeSelectedMap(appletMap);
     notifier = Constants.initializeNotifier(notifier);
-    stackSize = Size(400,400);
+    stackSize = Size(400, 400);
   }
 
   Map<String, Applet> get getStructureMap => appletMap;
@@ -64,7 +64,6 @@ class Project with ChangeNotifier {
 
         tempMap[tempId] = tempApplet;
       });
-
     }
 
 //create childKeys
@@ -88,7 +87,13 @@ class Project with ChangeNotifier {
   static Map<String, List<Arrow>> getJsonMap(Map<dynamic, dynamic> snapshot) {
     Map<String, List<Arrow>> tempMap = {};
 
-    return null;
+    if (snapshot.length > 1) {
+      snapshot.forEach((key, value) {
+        value.forEach((dat) => tempMap[key].add(Arrow.fromMap(dat)));
+      });
+    }
+
+    return tempMap;
   }
 
   Project.fromMap(Map snapshot, String id)
@@ -97,9 +102,8 @@ class Project with ChangeNotifier {
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
         description = snapshot['description'] ?? '',
-        appletMap =
-            getAppletMap(snapshot['appletList'], snapshot['id']) ?? null,
-        arrowMap = getJsonMap(snapshot['arrowMap']) ?? null;
+        appletMap = getAppletMap(snapshot['appletList'], snapshot['id']) ?? {},
+        arrowMap = getJsonMap(snapshot['arrowMap']) ?? {};
 
   /*tempMap = appletMap.map((k, v) {
         String tempK = k.toString();
@@ -170,25 +174,43 @@ class Project with ChangeNotifier {
 
   Map<String, dynamic> get getappletMap => appletMap;
 
+  updateProvider(Project data, statusHeight) {
+    id = data.id;
+    name = data.name;
+    description = data.description;
+    img = data.img;
+    appletMap = data.appletMap;
+    arrowMap = data.arrowMap;
+    selectedMap = Constants.initializeSelectedMap(appletMap);
+    statusBarHeight = statusHeight;
+  }
+
   String getIdFromKey(Key itemKey) {
-    String itemId = appletMap[itemKey].id;
+    var itemId;
+    appletMap.forEach((key, value) {
+      if (value.key == (itemKey)) {
+        itemId = key;
+      }
+    });
+    //String itemId = appletMap[itemKey].id;
     return itemId;
   }
 
   void changeItemListPosition({String itemId, String newId}) {
     //String itemId = getIdFromKey(itemId);
     Key itemKey = getKeyFromId(itemId);
+    Key newKey = getKeyFromId(newId);
     appletMap.forEach((String id, Applet v) => {
           if (
           //v.toString().contains('WindowApplet') &&
-          v.childKeys != null
+          v.childKeys != null && v.childIds.contains(itemId)
           //&& v.childKeys.contains(itemKey)
           )
             {v.childKeys.remove(itemKey), v.childIds.remove(itemId)}
         });
 
-    if (appletMap[newId].childKeys == null) {
-      appletMap[newId].childKeys = [];
+    if (appletMap[newId].childIds == null) {
+      appletMap[newId].childIds = [];
     }
     appletMap[newId].childKeys.add(itemKey);
     appletMap[newId].childIds.add(itemId);
@@ -308,7 +330,7 @@ class Project with ChangeNotifier {
         scale: 1.0,
         textSize: 16);
 
-    // notifyListeners();
+    notifyListeners();
   }
 
   void onlySelectThis(key) {
@@ -319,17 +341,18 @@ class Project with ChangeNotifier {
   }
 
   Key getActualTargetKey(key) {
-    var tempKey;
+    var tempId;
     appletMap.forEach((k, dynamic v) => {
           if (v.toString().contains('WindowApplet') &&
               v.childKeys.contains(key))
-            {tempKey = k}
+            {tempId = k}
         });
-    return tempKey;
+    return getKeyFromId(tempId);
   }
 
   double headerHeight() {
     double appBarHeight = AppBar().preferredSize.height;
+    print('statusbarheight $statusBarHeight');
     var tempHeight = statusBarHeight + appBarHeight;
     return tempHeight;
   }
@@ -357,21 +380,23 @@ class Project with ChangeNotifier {
     }
   }
 
-  List getAllChildren(itemKey) {
-    var tempList = [];
-    var childList = [];
-    var todoList = [];
-    var doneList = [];
-
-    todoList.addAll(appletMap[itemKey].childKeys);
+  List<Key> getAllChildren(Key itemKey) {
+    String itemId = getIdFromKey(itemKey);
+    List<Key> tempList = [];
+    List<Key> childList = [];
+    List<Key> todoList = [];
+    List<Key> doneList = [];
+    String tempId;
+    todoList.addAll(appletMap[itemId].childKeys);
 
     while (todoList.length > 0) {
       tempList = [];
       todoList.forEach((f) => {
+            tempId = getIdFromKey(f),
             if (!childList.contains(f)) {childList.add(f)},
             doneList.add(f),
-            if (appletMap[f].toString().contains('WindowApplet'))
-              {tempList.addAll(appletMap[f].childKeys)}
+            if (appletMap[tempId].toString().contains('WindowApplet'))
+              {tempList.addAll(appletMap[tempId].childKeys)}
           });
 
       doneList.forEach((f) => todoList.remove(f));
@@ -413,9 +438,9 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  Offset centerOfRenderBox(originKey) {
+  Offset centerOfRenderBox(String originId) {
     //calculate the Center of a originKey RenderBox
-
+    GlobalKey originKey = getKeyFromId(originId);
     var centerOfOrigin;
     var tempStackOffset;
     RenderBox originBox = originKey.currentContext.findRenderObject();
@@ -482,9 +507,10 @@ class Project with ChangeNotifier {
     //set the size and ancle of the Arrow between widget and pointer
     //from center of a RenderBox (startKey)
     Arrow arrow;
-    arrowMap[startKey].forEach((k) => k.target == null ? arrow = k : null);
-    var itemScale = appletMap[startKey].scale;
-    var itemOffset = centerOfRenderBox(startKey);
+    String startId = getIdFromKey(startKey);
+    arrowMap[startId].forEach((k) => k.target == null ? arrow = k : null);
+    var itemScale = appletMap[startId].scale;
+    var itemOffset = centerOfRenderBox(startId);
 
     var length = diagonalLength(
       actualPointer,
@@ -498,15 +524,19 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  Offset itemDropPosition(key, pointerDownOffset, pointerUpOffset) {
-    var itemScale = appletMap[key].scale;
-    var targetKey = getActualTargetKey(key);
+  Offset itemDropPosition(id, pointerDownOffset, pointerUpOffset) {
+    var itemScale = appletMap[id].scale;
+    var dropKey = getKeyFromId(id);
+    print('dropKey $dropKey');
+    var targetKey = getActualTargetKey(dropKey);
+    print('targetKey $targetKey');
     var targetOffset = getPositionOfRenderBox(targetKey);
+    print('targetOffset $targetOffset');
     var itemHeaderOffset = 0;
 
     //checks if there is some relevance of additional offset caused by trag helper offset
     if (targetKey != null &&
-        appletMap[key].toString().contains('WindowApplet')) {
+        appletMap[id].toString().contains('WindowApplet')) {
       itemHeaderOffset = 20;
     }
 
@@ -591,6 +621,8 @@ class Project with ChangeNotifier {
       final GlobalKey draggedKey,
       final Map<Key, List<Key>> hasArrowToKeyMap}) {
     Arrow arrow;
+    String originId = getIdFromKey(originKey);
+    String targetId = getIdFromKey(targetKey);
 
 //get size and arrow of origin and target
     RenderBox originRenderBox = originKey.currentContext.findRenderObject();
@@ -634,8 +666,9 @@ class Project with ChangeNotifier {
     }
 
 //get correct arrow
-    arrowMap[originKey].forEach((v) => {
-          if (v.target == targetKey)
+    arrowMap[originId].forEach((v) => {
+
+          if (v.target == targetId)
             {
               arrow = v,
             }
@@ -705,25 +738,25 @@ class Project with ChangeNotifier {
             {
               tempId = id,
               tempKey = getKeyFromId(id),
-              positionOfTarget = centerOfRenderBox(tempKey),
+              positionOfTarget = centerOfRenderBox(id),
               positionOfTarget = Offset(
                   positionOfTarget.dx, positionOfTarget.dy + headerHeight()),
               setArrowToPointer(itemKey, positionOfTarget),
               selectedMap[id] = false,
               selectedMap[itemId] = false,
-              arrowMap[itemKey].forEach((Arrow l) => {
+              arrowMap[itemId].forEach((Arrow l) => {
                     if (l.target == null) {l.target = tempId}
                   })
             }
         });
-    for (int i = 0; i < arrowMap[itemKey].length; i++) {
-      if (arrowMap[itemKey][i].target == null) {
-        arrowMap[itemKey].removeAt(i);
+    for (int i = 0; i < arrowMap[itemId].length; i++) {
+      if (arrowMap[itemId][i].target == null) {
+        arrowMap[itemId].removeAt(i);
       }
     }
 
     if (tempId != null) {
-      updateArrow(originKey: itemKey, targetKey: itemKey);
+      // updateArrow(originKey: itemKey, targetKey: itemKey);
     }
 
     notifyListeners();
@@ -846,7 +879,6 @@ class Project with ChangeNotifier {
     var selectedKey;
 
     Size displaySize = MediaQuery.of(context).size;
-
     Map<Key, Offset> renderBoxesOffset = {};
     List targetList = [];
 
@@ -907,7 +939,7 @@ class Project with ChangeNotifier {
     return selectedKey;
   }
 
-  getAllArrows(key) {
+  getAllArrows(Key key) {
     //get all arrows pointing to or coming from the item and also it's children items
     bool keyIsTargetOrOrigin(k) {
       bool _tempBool = false;
@@ -938,13 +970,15 @@ class Project with ChangeNotifier {
     List childList = getAllChildren(key);
     childList.add(key);
     var originKey;
+    var childId;
     childList.forEach((childKey) => {
+           childId = getIdFromKey(childKey),
           arrowMap.forEach((String originId, List<Arrow> listOfArrows) => {
                 originKey = getKeyFromId(originId),
                 if (originKey != null)
                   {
                     listOfArrows.forEach((Arrow a) => {
-                          if (a.target == childKey &&
+                          if (a.target == childId &&
                               keyIsTargetOrOrigin(childKey))
                             {
                               if (hasArrowToKeyMap[originKey] == null)
@@ -1005,6 +1039,7 @@ class Project with ChangeNotifier {
                   }
               })
         });
+        notifyListeners();
   }
 
   zoomToBox(selectedKey, context) {
@@ -1076,22 +1111,26 @@ class Project with ChangeNotifier {
           if (tempPosition.dx > renderBoxesOffset[k].dx &&
               tempPosition.dx <
                   renderBoxesOffset[k].dx +
-                      appletMap[k].size.width *
-                          appletMap[k].scale *
+                      appletMap[getIdFromKey(k)].size.width *
+                          appletMap[getIdFromKey(k)].scale *
                           stackScale &&
               (tempPosition.dy - headerHeight()) > renderBoxesOffset[k].dy &&
               tempPosition.dy - headerHeight() <
                   renderBoxesOffset[k].dy +
-                      appletMap[k].size.height *
+                      appletMap[getIdFromKey(k)].size.height *
                           stackScale *
-                          appletMap[k].scale)
+                          appletMap[getIdFromKey(k)].scale)
             {
-              selectedMap[k] = true,
+              selectedMap[getIdFromKey(k)] = true,
               targetList = getAllTargets(k),
-              targetList.forEach((k) => selectedMap[k] = false)
+              targetList.forEach((k) => selectedMap[getIdFromKey(k)] = false)
             }
           else
-            {k != key ? selectedMap[k] = false : selectedMap[k] = true}
+            {
+              k != key
+                  ? selectedMap[getIdFromKey(k)] = false
+                  : selectedMap[getIdFromKey(k)] = true
+            }
         });
   }
 }

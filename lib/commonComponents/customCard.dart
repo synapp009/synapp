@@ -17,7 +17,7 @@ class CustomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     //var dataProvider = Provider.of<Data>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
-    var projectProvider =  Provider.of<Project>(context);
+   // var projectProvider = Provider.of<Project>(context);
     return Card(
       child: Container(
         padding: const EdgeInsets.only(top: 5.0),
@@ -27,10 +27,12 @@ class CustomCard extends StatelessWidget {
             FlatButton(
                 child: Text("See More"),
                 onPressed: () {
+                /*  var statusBarHeight = MediaQuery.of(context).padding.top;
+                  projectProvider.updateProvider(
+                      projectDetails, statusBarHeight);*/
 
-
-                 // projectDetails.appletMap.forEach((key, value) {projectProvider.appletMap[key] = value; }); 
-                 /* projectProvider.selectedMap = Constants.initializeSelectedMap(
+                  // projectDetails.appletMap.forEach((key, value) {projectProvider.appletMap[key] = value; });
+                  /* projectProvider.selectedMap = Constants.initializeSelectedMap(
                       projectProvider.appletMap);*/
                   //dataProvider.createStructureMap(projectDetails);
 
@@ -59,7 +61,10 @@ class CustomCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HomeView(project: projectDetails),
+                      builder: (context) => ChangeNotifierProvider<Project>(
+                        create: (_) => Project(),
+                        child: HomeView(project: projectDetails),
+                      ),
                     ),
                   );
                 }),

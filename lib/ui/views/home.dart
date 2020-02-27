@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final projectProvider = Provider.of<CRUDModel>(context);
+    final crudProvider = Provider.of<CRUDModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
         child: Container(
           padding: const EdgeInsets.all(5.0),
           child: StreamBuilder<QuerySnapshot>(
-            stream: projectProvider.fetchProjectsAsStream(),
+            stream: crudProvider.fetchProjectsAsStream(),
             //Firestore.instance.collection("projects").snapshots(),
             builder:
                 (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -128,8 +128,10 @@ class _HomePageState extends State<HomePage> {
                         taskTitleInputController.text.isNotEmpty) {
                       Project project = new Project(
                           name: taskTitleInputController.text,
-                          description: taskDescripInputController.text);
-                       
+                          description: taskDescripInputController.text,
+                          appletMap: {},
+                          arrowMap: {});
+
                       Provider.of<CRUDModel>(context, listen: false)
                           .addProject(project)
                           .then((result) => {

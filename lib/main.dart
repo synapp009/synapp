@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         //ChangeNotifierProvider<Data>(create:(_) => Data() ),
-        ChangeNotifierProvider<Project>(create:(_) => Project()),
+        //ChangeNotifierProvider<Project>(create:(_) => Project()),
         ChangeNotifierProvider(
           create: (_) => locator<CRUDModel>(),
         ),

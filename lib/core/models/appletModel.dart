@@ -38,6 +38,7 @@ class Applet {
   Color color;
   String type;
   Size size;
+  bool fixed;
 
   Applet(
       {this.childIds,
@@ -48,7 +49,8 @@ class Applet {
       this.id,
       this.color,
       this.type,
-      this.size});
+      this.size,
+      this.fixed});
 
   List<Key> _childKeysFromSnapshotChildIdsToKeys(
       Map<dynamic, dynamic> snapshot) {}
@@ -102,6 +104,7 @@ class WindowApplet extends Applet {
   Size size;
   Offset position;
   double scale;
+  bool fixed;
 
   //String id;
 
@@ -119,6 +122,7 @@ class WindowApplet extends Applet {
       this.size,
       this.position,
       this.scale,
+      this.fixed,
       type})
       : super(scale: scale, type: type);
 
