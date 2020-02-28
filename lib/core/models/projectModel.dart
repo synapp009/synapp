@@ -41,7 +41,7 @@ class Project with ChangeNotifier {
     positionForDrop = Constants.initializePositionMap(positionForDrop);
     selectedMap = Constants.initializeSelectedMap(appletMap);
     notifier = Constants.initializeNotifier(notifier);
-    stackSize = Size(400, 400);
+    stackSize = null;
   }
 
   Map<String, Applet> get getStructureMap => appletMap;
@@ -89,6 +89,7 @@ class Project with ChangeNotifier {
 
     if (snapshot.length > 1) {
       snapshot.forEach((key, value) {
+        tempMap[key] = [];
         value.forEach((dat) => tempMap[key].add(Arrow.fromMap(dat)));
       });
     }
@@ -126,7 +127,7 @@ class Project with ChangeNotifier {
     if (arrowMap != null) {
       if (arrowMap.length > 1) {
         arrowMap.forEach((key, value) {
-          print('oh no');
+
           var tempList = [];
           value.forEach((element) {
             var tempArrow = element.toJson();
@@ -218,7 +219,7 @@ class Project with ChangeNotifier {
   }
 
   void changeItemScale(key, scale) {
-    appletMap[key].scale = scale;
+    appletMap[getIdFromKey(key)].scale = scale;
     notifyListeners();
   }
 
@@ -333,26 +334,26 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  void onlySelectThis(key) {
+  void onlySelectThis(String key) {
     selectedMap.forEach((k, v) => {
           if (k != key) {selectedMap[k] = false}
         });
     notifyListeners();
   }
 
-  Key getActualTargetKey(key) {
-    var tempId;
+  Key getActualTargetKey(Key key) {
+    var tempId = getIdFromKey(key);
+    var targetId;
     appletMap.forEach((k, dynamic v) => {
           if (v.toString().contains('WindowApplet') &&
-              v.childKeys.contains(key))
-            {tempId = k}
+              v.childIds.contains(tempId))
+            {targetId = k}
         });
-    return getKeyFromId(tempId);
+    return getKeyFromId(targetId);
   }
 
   double headerHeight() {
     double appBarHeight = AppBar().preferredSize.height;
-    print('statusbarheight $statusBarHeight');
     var tempHeight = statusBarHeight + appBarHeight;
     return tempHeight;
   }
@@ -363,7 +364,7 @@ class Project with ChangeNotifier {
     return tempScale;
   }
 
-  Offset getPositionOfRenderBox(targetKey) {
+  Offset getPositionOfRenderBox(GlobalKey targetKey) {
     //with expensive RenderedBox, --> maybe better options?
     Offset tempPosition;
     if (targetKey != null) {
@@ -406,18 +407,19 @@ class Project with ChangeNotifier {
     return childList;
   }
 
-  List getAllTargets(key) {
-    List tempList = [];
+  List<Key> getAllTargets(Key key) {
+    List<Key> tempList = [];
 
     Key tempKey = getActualTargetKey(key);
+    print('tempKey $tempKey');
     while (tempKey != null) {
       tempList.add(tempKey);
-      tempKey = getActualTargetKey(tempKey);
     }
+    print(tempList);
     return tempList;
   }
 
-  void addArrow(key) {
+  void addArrow(String key) {
     //adds an Arrow to the list of arrows from origin widget to null
     if (arrowMap[key] == null) {
       arrowMap[key] = [];
@@ -527,11 +529,8 @@ class Project with ChangeNotifier {
   Offset itemDropPosition(id, pointerDownOffset, pointerUpOffset) {
     var itemScale = appletMap[id].scale;
     var dropKey = getKeyFromId(id);
-    print('dropKey $dropKey');
     var targetKey = getActualTargetKey(dropKey);
-    print('targetKey $targetKey');
     var targetOffset = getPositionOfRenderBox(targetKey);
-    print('targetOffset $targetOffset');
     var itemHeaderOffset = 0;
 
     //checks if there is some relevance of additional offset caused by trag helper offset
@@ -539,7 +538,6 @@ class Project with ChangeNotifier {
         appletMap[id].toString().contains('WindowApplet')) {
       itemHeaderOffset = 20;
     }
-
     return Offset(
         ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
             pointerDownOffset.dx),
@@ -547,6 +545,7 @@ class Project with ChangeNotifier {
                 itemScale /
                 stackScale -
             pointerDownOffset.dy));
+           
   }
 
   Size sizeOfRenderBox(GlobalKey itemKey) {
@@ -596,9 +595,14 @@ class Project with ChangeNotifier {
   bool boxHitTest(
       {final Offset itemPosition,
       final Size itemSize,
-      final Offset targetPosition,
+       Offset targetPosition,
       final Size targetSize}) {
-    if (((itemPosition.dx > targetPosition.dx &&
+        //print('itemPosition $itemPosition');
+        //print('itemSize $itemSize');
+        //print('targetPosition $targetPosition');
+        //print('targetSize $targetSize');
+        targetPosition = Offset(0,0);
+    if (((itemPosition.dx > targetPosition.dx  &&
                 itemPosition.dx < targetPosition.dx + targetSize.width) ||
             (itemPosition.dx + itemSize.width > targetPosition.dx &&
                 itemPosition.dx + itemSize.width <
@@ -608,6 +612,7 @@ class Project with ChangeNotifier {
             (itemPosition.dy + itemSize.height > targetPosition.dy &&
                 itemPosition.dy + itemSize.height <
                     targetPosition.dy + targetSize.height))) {
+                      
       return true;
     } else {
       return false;
@@ -667,7 +672,6 @@ class Project with ChangeNotifier {
 
 //get correct arrow
     arrowMap[originId].forEach((v) => {
-
           if (v.target == targetId)
             {
               arrow = v,
@@ -676,7 +680,6 @@ class Project with ChangeNotifier {
 
 //check if one (feedback, target or origin) is inside another
 //hasArrowToKeyMap.forEach()
-//boxHitTest()
 
     if (draggedKey == originKey) {
       //if origin gets tragged, use feedback as origin
@@ -756,7 +759,7 @@ class Project with ChangeNotifier {
     }
 
     if (tempId != null) {
-      // updateArrow(originKey: itemKey, targetKey: itemKey);
+      updateArrow(originKey: itemKey, targetKey: getKeyFromId(tempId));
     }
 
     notifyListeners();
@@ -772,11 +775,11 @@ class Project with ChangeNotifier {
     return tempKey;
   }
 
-  void stackSizeChange(key, GlobalKey feedbackKey, position) {
+  void stackSizeChange(String key, GlobalKey feedbackKey, position) {
     Offset offsetChange;
-
     RenderBox itemBox = feedbackKey.currentContext.findRenderObject();
     var itemSize = itemBox.size;
+
     var stackChange = Offset(0, 0);
 
     if (position.dx > stackOffset.dx &&
@@ -787,7 +790,7 @@ class Project with ChangeNotifier {
                 ((stackSize.height + headerHeight()) * stackScale)) {
     } else {
       if (position.dx > stackOffset.dx + stackSize.width * stackScale) {
-        //sector 1
+        //sector1
         offsetChange = Offset(
             position.dx -
                 stackOffset.dx -
@@ -823,10 +826,11 @@ class Project with ChangeNotifier {
             position.dx - stackOffset.dx - itemSize.width * stackScale, 0);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        appletMap["null"].childKeys.forEach((k) => {
-              appletMap[k].position = Offset(
-                  appletMap[k].position.dx - offsetChange.dx / stackScale,
-                  appletMap[k].position.dy)
+        appletMap[null].childKeys.forEach((k) => {
+              appletMap[getIdFromKey(k)].position = Offset(
+                  appletMap[getIdFromKey(k)].position.dx -
+                      offsetChange.dx / stackScale,
+                  appletMap[getIdFromKey(k)].position.dy)
             });
         notifier.value
             .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
@@ -845,9 +849,11 @@ class Project with ChangeNotifier {
                 itemSize.height * stackScale);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        appletMap["null"].childKeys.forEach((k) => {
-              appletMap[k].position = Offset(appletMap[k].position.dx,
-                  appletMap[k].position.dy - offsetChange.dy / stackScale)
+        appletMap[null].childKeys.forEach((k) => {
+              appletMap[getIdFromKey(k)].position = Offset(
+                  appletMap[getIdFromKey(k)].position.dx,
+                  appletMap[getIdFromKey(k)].position.dy -
+                      offsetChange.dy / stackScale)
             });
         notifier.value
             .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
@@ -869,75 +875,9 @@ class Project with ChangeNotifier {
               arrow.position.dx + stackChange.dx,
               arrow.position.dy + stackChange.dy)),
         });
-
-    // notifier.notifyListeners();
+     //notifyListeners();
   }
 
-  Key hitTestRaw(position, context) {
-    //checks if position of a context layes in a box and gives out the key of the box
-    Map<Key, bool> selectedMap = {};
-    var selectedKey;
-
-    Size displaySize = MediaQuery.of(context).size;
-    Map<Key, Offset> renderBoxesOffset = {};
-    List targetList = [];
-
-    //store all widgets in view into the list
-    List widgetsInView = [];
-    Offset itemKeyPosition;
-    Size itemKeySize;
-    appletMap.forEach((String itemId, dynamic widget) => {
-          itemKeyPosition = Offset(appletMap[itemId].position.dx * stackScale,
-                  appletMap[itemId].position.dy * stackScale + headerHeight()) +
-              stackOffset,
-          itemKeySize = appletMap[itemId].size / stackScale,
-          if (itemId != null)
-            {
-              if (boxHitTest(
-                  itemPosition: itemKeyPosition,
-                  itemSize: itemKeySize,
-                  targetPosition: stackOffset,
-                  targetSize: displaySize))
-                {widgetsInView.add(getKeyFromId(itemId))}
-            },
-        });
-
-    //hit Test for items laying in the widgetsInView
-    widgetsInView.forEach((k) => {
-          renderBoxesOffset[k] = getPositionOfRenderBox(k),
-
-          /* boxHitTestWithScaleAndOffset(
-                    itemPosition: details.globalPosition,
-                    itemSize: Size(0,0),
-                    targetPosition: renderBoxesOffset[k],
-                    targetSize: displaySize)*/
-
-          if (position.dx > renderBoxesOffset[k].dx &&
-              position.dx <
-                  renderBoxesOffset[k].dx +
-                      appletMap[k].size.width *
-                          appletMap[k].scale *
-                          stackScale &&
-              (position.dy - headerHeight()) > renderBoxesOffset[k].dy &&
-              position.dy - headerHeight() <
-                  renderBoxesOffset[k].dy +
-                      appletMap[k].size.height *
-                          stackScale *
-                          appletMap[k].scale)
-            {
-              selectedMap[k] = true,
-              targetList = getAllTargets(k),
-              targetList.forEach((k) => selectedMap[k] = false)
-            }
-        });
-    selectedMap.forEach((k, v) => {
-          if (v == true)
-            {
-              selectedKey = k,
-            }
-        });
-    return selectedKey;
-  }
 
   getAllArrows(Key key) {
     //get all arrows pointing to or coming from the item and also it's children items
@@ -972,7 +912,7 @@ class Project with ChangeNotifier {
     var originKey;
     var childId;
     childList.forEach((childKey) => {
-           childId = getIdFromKey(childKey),
+          childId = getIdFromKey(childKey),
           arrowMap.forEach((String originId, List<Arrow> listOfArrows) => {
                 originKey = getKeyFromId(originId),
                 if (originKey != null)
@@ -1039,7 +979,7 @@ class Project with ChangeNotifier {
                   }
               })
         });
-        notifyListeners();
+    notifyListeners();
   }
 
   zoomToBox(selectedKey, context) {
@@ -1069,22 +1009,23 @@ class Project with ChangeNotifier {
 
   hitTest(key, position, context) {
     //checks if position of a context layes in a box and gives out the key of the box
-
     Size displaySize = MediaQuery.of(context).size;
 
     Map<Key, Offset> renderBoxesOffset = {};
-    List targetList = [];
+    List<Key> targetList = [];
 
     //store all widgets in view into the list
-    List widgetsInView = [];
+    List<Key> widgetsInView = [];
     Offset itemKeyPosition;
     Offset tempPosition = position;
     Size itemKeySize;
-    appletMap.forEach((String itemId, dynamic widget) => {
-          itemKeyPosition = Offset(appletMap[itemId].position.dx,
-                  appletMap[itemId].position.dy + headerHeight()) +
-              stackOffset,
-          itemKeySize = appletMap[itemId].size,
+    GlobalKey tempKey;
+    RenderObject tempObj;
+    appletMap.forEach((String itemId, Applet widget) => {
+
+          itemKeyPosition = getPositionOfRenderBox(widget.key),
+          
+          itemKeySize = widget.size,
           if (itemId != null)
             {
               if (boxHitTest(
@@ -1092,38 +1033,34 @@ class Project with ChangeNotifier {
                   itemSize: itemKeySize,
                   targetPosition: stackOffset,
                   targetSize: displaySize))
-                {widgetsInView.add(getKeyFromId(itemId))}
+                {
+                  widgetsInView.add(getKeyFromId(itemId))}
             },
         });
 
-    //hit Test for items laying in the widgetsInView
+        var idFromKey;
+        //hit Test for items laying in the widgetsInView
     widgetsInView.forEach((k) => {
-          //hitTest(item: details.globalPosition.dx, target: k),
 
           renderBoxesOffset[k] = getPositionOfRenderBox(k),
-
-          /* boxHitTestWithScaleAndOffset(
-                    itemPosition: details.globalPosition,
-                    itemSize: Size(0,0),
-                    targetPosition: renderBoxesOffset[k],
-                    targetSize: displaySize)*/
-
+           idFromKey = getIdFromKey(k),
+     
           if (tempPosition.dx > renderBoxesOffset[k].dx &&
               tempPosition.dx <
                   renderBoxesOffset[k].dx +
-                      appletMap[getIdFromKey(k)].size.width *
-                          appletMap[getIdFromKey(k)].scale *
+                      appletMap[idFromKey].size.width *
+                          appletMap[idFromKey].scale *
                           stackScale &&
               (tempPosition.dy - headerHeight()) > renderBoxesOffset[k].dy &&
               tempPosition.dy - headerHeight() <
                   renderBoxesOffset[k].dy +
-                      appletMap[getIdFromKey(k)].size.height *
+                      appletMap[idFromKey].size.height *
                           stackScale *
-                          appletMap[getIdFromKey(k)].scale)
+                          appletMap[idFromKey].scale)
             {
-              selectedMap[getIdFromKey(k)] = true,
+              selectedMap[idFromKey] = true,
               targetList = getAllTargets(k),
-              targetList.forEach((k) => selectedMap[getIdFromKey(k)] = false)
+              targetList.forEach((targetKey) => selectedMap[getIdFromKey(targetKey)] = false)
             }
           else
             {

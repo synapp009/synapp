@@ -44,7 +44,6 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
-    print('myhome ${projectProvider.appletMap} ');
     var crudProvider = Provider.of<CRUDModel>(context);
     BottomSheetApp modal = new BottomSheetApp(_apps, projectProvider);
 

@@ -16,7 +16,7 @@ class Arrow {
         position = Offset((snapshot["positionDx"] as num).toDouble(),
             (snapshot["positionDy"] as num).toDouble()),
         size = (snapshot["size"] as num).toDouble(),
-        angle = Angle.fromDegrees((snapshot["angle"]));
+        angle = Angle.fromDegrees((snapshot["angle"] as num).toDouble());
 
   toJson() {
     return {
@@ -25,7 +25,7 @@ class Arrow {
       "positionDx": position.dx,
       "positionDy": position.dy,
       "size": size,
-      "angle": angle.toString(),
+      "angle": angle.degrees,
     };
   }
 }

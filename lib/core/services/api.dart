@@ -52,7 +52,6 @@ class Api {
     var snapshots =
         ref.document(projectId).collection('appletList').where((element) => element.data.containsValue(appletId)).getDocuments();
 
-    print(snapshots);
 
     /*.forEach((document) async {
       document.reference.updateData(<String, dynamic>{

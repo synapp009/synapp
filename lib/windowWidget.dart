@@ -230,7 +230,7 @@ class _WindowWidgetState extends State<WindowWidget>
 
                 maxSimultaneousDrags: _projectProvider.selectedMap[id] ? 0 : 1,
                 onDragEnd: (DraggableDetails details) {
-                  //_projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
+                  // _projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
                     setState(() {
                       _dragStarted = false;
@@ -257,10 +257,11 @@ class _WindowWidgetState extends State<WindowWidget>
                   });
                 },
                 onDragCompleted: () {
-                  _projectProvider.appletMap[id].position =
-                      _projectProvider.itemDropPosition(
-                          id, _pointerDownOffset, _pointerUpOffset);
-                  setState(() {});
+                  setState(() {
+                    _projectProvider.appletMap[id].position =
+                        _projectProvider.itemDropPosition(
+                            id, _pointerDownOffset, _pointerUpOffset);
+                  });
 
                   //_crudProvider.updateApplet(_projectProvider.id, _projectProvider.appletMap[id], id);
                 },
@@ -289,7 +290,6 @@ class _WindowWidgetState extends State<WindowWidget>
         if (data.type == "WindowApplet") {
           if (_projectProvider.appletMap[id].key != data.key &&
               !_projectProvider.appletMap[data.id].childIds.contains(id)) {
-
             _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
             Key _targetKey = _projectProvider.getActualTargetKey(data.key);
             String _targetId = _projectProvider.getIdFromKey(_targetKey);
@@ -306,7 +306,7 @@ class _WindowWidgetState extends State<WindowWidget>
 
           _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
           Key _targetKey = _projectProvider.getActualTargetKey(data.id);
-          double _targetScale = _projectProvider.appletMap[_targetKey].scale;
+          double _targetScale = _projectProvider.appletMap[data.id].scale;
           _projectProvider.appletMap[data.id].scale = _targetScale;
 
           _projectProvider.appletMap[data.id].scale = _itemScale;

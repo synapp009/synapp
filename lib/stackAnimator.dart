@@ -28,7 +28,6 @@ class StackAnimator extends StatelessWidget {
       var mostTopKey;
       var mostBottomKey;
       List keyAtBottomList = projectProvider.appletMap[null].childKeys;
-      print('stackanimation ${projectProvider.getIdFromKey( keyAtBottomList[0])}');
       mostBottomKey = keyAtBottomList[0];
       mostLeftKey = keyAtBottomList[0];
       mostRightKey = keyAtBottomList[0];

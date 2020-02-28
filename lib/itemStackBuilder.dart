@@ -22,14 +22,14 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
     var stackScale = projectProvider.stackScale;
-    var stackSize = projectProvider.stackSize;
+
     return Stack(overflow: Overflow.visible, children: [
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
-            color:Colors.green,
-            width: stackSize.width,
-            height: stackSize.height,
+            color: Colors.green,
+            width: projectProvider.stackSize.width,
+            height: projectProvider.stackSize.height,
           );
         },
         onWillAccept: (dynamic data) {
@@ -57,7 +57,6 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
     var projectProvider = Provider.of<Project>(context);
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
-    print('cdkmsldc ${projectProvider.appletMap[null].childIds}');
     List childIdList = projectProvider.appletMap[null].childIds;
     for (int i = 0; i < childIdList.length; i++) {
       if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
@@ -81,6 +80,7 @@ List<Widget> arrowItems(BuildContext context) {
   Map<String, List<Arrow>> arrowMap = projectProvider.arrowMap;
   Key originKey;
   Key targetKey;
+    print('rebuild');
   arrowMap.forEach((String originId, List<Arrow> arrowList) => {
         originKey = projectProvider.getKeyFromId(originId),
         if (originKey != null)

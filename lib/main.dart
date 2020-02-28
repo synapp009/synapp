@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
         //ChangeNotifierProvider<Project>(create:(_) => Project()),
         ChangeNotifierProvider(
           create: (_) => locator<CRUDModel>(),
+        
         ),
       ],
       child: MaterialApp(

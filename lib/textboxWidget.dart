@@ -92,7 +92,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                 projectProvider.appletMap[widget.key].position = projectProvider
                     .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
               });
-              projectProvider.stackSizeChange(key, feedbackKey, off);
+              projectProvider.stackSizeChange(id, feedbackKey, off);
             },
             childWhenDragging: Container(),
             feedback: ListenableProvider<Project>.value(

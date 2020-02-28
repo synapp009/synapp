@@ -20,6 +20,7 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   void initState() {
+
     super.initState();
   }
 
@@ -30,6 +31,7 @@ class _HomeViewState extends State<HomeView> {
 
     //set stackSize & headerHeight
     projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
+
     if (projectProvider.stackSize == null) {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
@@ -45,9 +47,7 @@ class _HomeViewState extends State<HomeView> {
 
         leading: new IconButton(
           onPressed: () {
-            print(widget.project.id);
-            print('exit widget ${widget.project.appletMap}');
-            print('exit ${projectProvider.appletMap}');
+
             crudProvider.updateProject(projectProvider, widget.project.id);
             //projectProvider.appletMap.clear();
             Navigator.pop(context);
