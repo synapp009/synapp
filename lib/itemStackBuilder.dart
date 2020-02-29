@@ -39,7 +39,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             projectProvider.appletMap[data.id].scale = 1.0;
             projectProvider.currentTargetPosition = stackOffset;
             projectProvider.changeItemListPosition(
-                itemId: data.id, newId: null);
+               itemId: data.id, newId: null);
             return true;
           } else {
             return false;
@@ -80,7 +80,6 @@ List<Widget> arrowItems(BuildContext context) {
   Map<String, List<Arrow>> arrowMap = projectProvider.arrowMap;
   Key originKey;
   Key targetKey;
-    print('rebuild');
   arrowMap.forEach((String originId, List<Arrow> arrowList) => {
         originKey = projectProvider.getKeyFromId(originId),
         if (originKey != null)

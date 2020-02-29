@@ -39,6 +39,7 @@ class Applet {
   String type;
   Size size;
   bool fixed;
+  bool selected;
 
   Applet(
       {this.childIds,
@@ -50,7 +51,8 @@ class Applet {
       this.color,
       this.type,
       this.size,
-      this.fixed});
+      this.fixed,
+      this.selected}){selected = false;}
 
   List<Key> _childKeysFromSnapshotChildIdsToKeys(
       Map<dynamic, dynamic> snapshot) {}
@@ -105,6 +107,7 @@ class WindowApplet extends Applet {
   Offset position;
   double scale;
   bool fixed;
+  bool selected;
 
   //String id;
 
@@ -123,8 +126,9 @@ class WindowApplet extends Applet {
       this.position,
       this.scale,
       this.fixed,
+      this.selected,
       type})
-      : super(scale: scale, type: type);
+      : super(scale: scale, type: type,selected:selected);
 
   WindowApplet.fromMap(Map snapshot)
       : key = new GlobalKey(),
@@ -170,6 +174,7 @@ class TextApplet extends Applet {
   double textSize;
   Size size;
   double scale;
+  bool selected;
 
   // String id;
 
@@ -183,6 +188,7 @@ class TextApplet extends Applet {
     this.textSize,
     this.content,
     this.fixed,
+    this.selected,
     type,
     id,
     key,
@@ -195,7 +201,8 @@ class TextApplet extends Applet {
             position: position,
             scale: scale,
             id: id,
-            type: type);
+            type: type,
+            selected:selected);
 
   TextApplet.fromMap(Map snapshot)
       : color = _getColorFromString(snapshot['color']) ?? '',

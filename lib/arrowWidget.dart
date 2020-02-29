@@ -18,11 +18,11 @@ class ArrowWidget extends StatelessWidget {
     Arrow tempArrow;
     var projectProvider = Provider.of<Project>(context);
         var originId = projectProvider.getIdFromKey(originKey);
+        var targetId = projectProvider.getIdFromKey(targetKey);
+
     double originScale = projectProvider.appletMap[originId].scale;
-    double targetScale = projectProvider.appletMap[originId].scale;
+    double targetScale = projectProvider.appletMap[targetId].scale;
     var stackScale = projectProvider.stackScale;
-    var actualTargetKey = projectProvider.getActualTargetKey(targetKey);
-    var targetId = projectProvider.getIdFromKey(targetKey);
     
     projectProvider.arrowMap[originId].forEach((Arrow k) => {
           if (k.target == targetId) {tempArrow = k}
@@ -76,7 +76,8 @@ class ArrowPainter extends CustomPainter {
 
     Path path = Path();
     Path pathArrow = Path();
-
+  print('originscale $originScale');
+  print('targetscale $targetScale');
     canvas.drawCircle(Offset(0, size.height / 2), 3 * originScale,
         paint..color = Colors.black);
     canvas.drawCircle(Offset(size.width, size.height / 2), 3 * targetScale,
@@ -97,7 +98,7 @@ class ArrowPainter extends CustomPainter {
 
     //Text of the arrow
     textSpan = TextSpan(
-        text: '...',
+        //text: '...',
         style: TextStyle(color: Colors.black, fontSize: 16 / stackScale));
     textPainter = TextPainter(
       text: textSpan,

@@ -22,8 +22,9 @@ class WindowStackBuilder extends StatelessWidget {
         child: Container(
           height: projectProvider.appletMap[id].size.height,
           width: projectProvider.appletMap[id].size.width,
-          child: Text(
+          /*child: Text(
               '${id.toString()},${projectProvider.appletMap[id].scale.toString()}'),
+        */
         ),
       ),
       //TextField(maxLines:40),
@@ -41,15 +42,13 @@ class WindowStackBuilder extends StatelessWidget {
     for (int i = 0; i < childIdList.length; i++) {
       if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
         stackItemDraggable = WindowWidget(id: childIdList[i]);
-
       } else if (projectProvider.appletMap[childIdList[i]].type ==
           "TextApplet") {
         stackItemDraggable = TextboxWidget(id: childIdList[i]);
-       
       } else {
-        stackItemDraggable = Container(height:0,width:0);
+        stackItemDraggable = Container(height: 0, width: 0);
       }
-       stackItemsList.add(stackItemDraggable);
+      stackItemsList.add(stackItemDraggable);
     }
     return stackItemsList;
   }

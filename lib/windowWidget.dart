@@ -101,8 +101,8 @@ class _WindowWidgetState extends State<WindowWidget>
       _controller.forward();
       _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
         setState(() {
-          _projectProvider.selectedMap[id] =
-              _projectProvider.selectedMap[id] ? false : true;
+          _projectProvider.appletMap[id].selected =
+              _projectProvider.appletMap[id].selected ? false : true;
           _controller.reverse();
         });
       });
@@ -122,7 +122,7 @@ class _WindowWidgetState extends State<WindowWidget>
     _isPointerMoving() {
       _timer = new Timer(const Duration(milliseconds: 200), () {
         setState(() {
-          if (!_pointerMoving && !_projectProvider.selectedMap[id]) {
+          if (!_pointerMoving && !_projectProvider.appletMap[id].selected) {
             _controller.forward();
             if (_pointerUp) {
               _controller.reverse();
@@ -222,13 +222,15 @@ class _WindowWidgetState extends State<WindowWidget>
 
               _isTapped = true;
               _animation();
-              _maxSimultaneousDrags = _projectProvider.selectedMap[id] ? 0 : 1;
+              _maxSimultaneousDrags =
+                  _projectProvider.appletMap[id].selected ? 0 : 1;
               _isTapped = false;
             },
             child: LongPressDraggable(
                 //hapticFeedbackOnStart: true,
 
-                maxSimultaneousDrags: _projectProvider.selectedMap[id] ? 0 : 1,
+                maxSimultaneousDrags:
+                    _projectProvider.appletMap[id].selected ? 0 : 1,
                 onDragEnd: (DraggableDetails details) {
                   // _projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
@@ -238,7 +240,6 @@ class _WindowWidgetState extends State<WindowWidget>
                           _projectProvider.appletMap[id].key,
                           _dragStarted,
                           _projectProvider.appletMap[id].key);
-
                       _projectProvider.hasArrowToKeyMap.clear();
                     });
                   });
@@ -248,12 +249,12 @@ class _WindowWidgetState extends State<WindowWidget>
 
                   _timer = new Timer(Duration(milliseconds: 200), () {
                     _dragStarted = true;
-                    setState(() {
-                      _projectProvider.updateArrowToKeyMap(
-                          _projectProvider.appletMap[id].key,
-                          _dragStarted,
-                          feedbackKey);
-                    });
+
+                    _projectProvider.updateArrowToKeyMap(
+                        _projectProvider.appletMap[id].key,
+                        _dragStarted,
+                        feedbackKey);
+                    setState(() {});
                   });
                 },
                 onDragCompleted: () {
@@ -289,7 +290,10 @@ class _WindowWidgetState extends State<WindowWidget>
         //true if window changes target
         if (data.type == "WindowApplet") {
           if (_projectProvider.appletMap[id].key != data.key &&
-              !_projectProvider.appletMap[data.id].childIds.contains(id)) {
+              !_projectProvider.appletMap[data.id].childIds.contains(id) &&
+              //!_projectProvider.appletMap[null].childIds.contains(id) &&
+              !_projectProvider.appletMap[id].childIds.contains(id)
+              ) {
             _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
             Key _targetKey = _projectProvider.getActualTargetKey(data.key);
             String _targetId = _projectProvider.getIdFromKey(_targetKey);
@@ -304,18 +308,18 @@ class _WindowWidgetState extends State<WindowWidget>
         } else {
           //if for example textboxWidget
 
-          _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+         // _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
           Key _targetKey = _projectProvider.getActualTargetKey(data.id);
           double _targetScale = _projectProvider.appletMap[data.id].scale;
           _projectProvider.appletMap[data.id].scale = _targetScale;
 
           _projectProvider.appletMap[data.id].scale = _itemScale;
           _timer = new Timer(Duration(milliseconds: 1000), () {
-            _projectProvider.selectedMap[id] = true;
+            _projectProvider.appletMap[id].selected = true;
             setState(() {
               _timer = new Timer(Duration(milliseconds: 2000), () {
                 setState(() {
-                  _projectProvider.selectedMap[id] = false;
+                  _projectProvider.appletMap[id].selected = false;
                 });
               });
             });
@@ -324,17 +328,17 @@ class _WindowWidgetState extends State<WindowWidget>
           return true;
         }
       }, onLeave: (dynamic data) {
-        _projectProvider.selectedMap[id] = false;
+        _projectProvider.appletMap[id].selected = false;
       }, onAccept: (dynamic data) {
         if (data.type == 'TextApplet') {
           _projectProvider.appletMap[data.key].scale = _itemScale;
-          if (_projectProvider.selectedMap[id] == true) {
+          if (_projectProvider.appletMap[id].selected == true) {
             _projectProvider.appletMap[data.key].fixed = true;
             _projectProvider.appletMap[data.key].position = Offset(10, 10);
           } else {
             _projectProvider.appletMap[data.key].fixed = false;
           }
-          _projectProvider.selectedMap[id] = false;
+          _projectProvider.appletMap[id].selected = false;
         }
       }),
     );
@@ -370,13 +374,13 @@ class _WindowWidgetState extends State<WindowWidget>
               child: Material(
                 shape: SuperellipseShape(
                     side: BorderSide(
-                        color: _projectProvider.selectedMap[id]
+                        color: _projectProvider.appletMap[id].selected
                             ? Colors.black
                             : Colors.transparent,
                         width: 1 * _itemScale),
                     borderRadius: BorderRadius.circular(28 * _itemScale)),
                 //margin: EdgeInsets.all(0),
-                color: _projectProvider.selectedMap[id]
+                color: _projectProvider.appletMap[id].selected
                     ? _tonedColor(_projectProvider.appletMap[id].color)
                     : _projectProvider.appletMap[id].color,
                 child: WindowStackBuilder(id),
