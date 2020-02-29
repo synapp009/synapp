@@ -67,6 +67,7 @@ class Applet {
     return tempList;
   }
 
+
   Applet.fromMap(Map snapshot)
       : key = snapshot['id'] == '' ? null : new GlobalKey(),
         id = snapshot['id'],

@@ -105,7 +105,7 @@ class Project with ChangeNotifier {
         description = snapshot['description'] ?? '',
         appletMap = getAppletMap(snapshot['appletList'], snapshot['id']) ?? {},
         arrowMap = getJsonMap(snapshot['arrowMap']) ?? {};
-
+        
   /*tempMap = appletMap.map((k, v) {
         String tempK = k.toString();
         dynamic tempV = v.toJson();
