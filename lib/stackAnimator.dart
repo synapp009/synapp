@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/constants.dart';
 import 'core/models/projectModel.dart';
 import 'itemStackBuilder.dart';
 
@@ -13,6 +14,9 @@ class StackAnimator extends StatelessWidget {
 
     Size displaySize = MediaQuery.of(context).size;
     ValueNotifier<Matrix4> notifier = projectProvider.notifier;
+    if(notifier==null){
+      projectProvider.notifier = Constants.initializeNotifier(notifier);
+    }
     setMaxScaleAndOffset(context) {
       //sets the boundaries of the visable part of the screen
       // and the maximum scale to zoom out

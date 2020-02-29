@@ -254,7 +254,7 @@ class _WindowWidgetState extends State<WindowWidget>
                         _projectProvider.appletMap[id].key,
                         _dragStarted,
                         feedbackKey);
-                    setState(() {});
+                    //setState(() {});
                   });
                 },
                 onDragCompleted: () {

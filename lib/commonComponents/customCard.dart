@@ -61,8 +61,8 @@ class CustomCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ChangeNotifierProvider(
-                        create: (_) => Project(),
+                      builder: (context) => ListenableProvider(
+                        create: (_) => projectDetails,
                         child: HomeView(project: projectDetails),
                       ),
                     ),
