@@ -34,7 +34,6 @@ class _WindowWidgetState extends State<WindowWidget>
 
   static GlobalKey feedbackKey = GlobalKey();
   static GlobalKey sizedBoxKey = GlobalKey();
-  var windowKey;
   var _projectProvider;
   var _crudProvider;
 
@@ -92,7 +91,6 @@ class _WindowWidgetState extends State<WindowWidget>
     id = _projectProvider.getIdFromKey(widget.key);
 
     _stackScale = _projectProvider.stackScale;
-    windowKey = _projectProvider.appletMap[id].key;
     _itemScale = _projectProvider.appletMap[id].scale;
 
     _stackOffset = _projectProvider.stackOffset;
@@ -162,18 +160,15 @@ class _WindowWidgetState extends State<WindowWidget>
             _pointerMoving = false;
           },
           onPointerUp: (PointerUpEvent event) {
-              _controller.reverse();
-          
+            _controller.reverse();
 
             _pointerUpOffset = event.position;
             _pointerUp = true;
             _pointerMoving = false;
             _projectProvider.firstItem = true;
-
-      
           },
           onPointerMove: (PointerMoveEvent event) {
-           // _projectProvider.stackSizeHitTest(event.position);
+            // _projectProvider.stackSizeHitTest(event.position);
 
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
@@ -182,8 +177,6 @@ class _WindowWidgetState extends State<WindowWidget>
                   _dragStarted,
                   feedbackKey);
             }
-
-      
 
             _controller.reverse();
 
@@ -261,18 +254,21 @@ class _WindowWidgetState extends State<WindowWidget>
                   });
                 },
                 onDragCompleted: () {
-                  _projectProvider.appletMap[id].position =
-                      _projectProvider.itemDropPosition(
-                          widget.key, _pointerDownOffset, _pointerUpOffset);
-
+                  setState(() {
+                    _projectProvider.appletMap[id].position =
+                        _projectProvider.itemDropPosition(
+                            widget.key, _pointerDownOffset, _pointerUpOffset);
+                  });
                   //_crudProvider.updateApplet(_projectProvider.id, _projectProvider.appletMap[id], id);
                 },
                 onDraggableCanceled: (vel, Offset off) {
-                  _projectProvider.appletMap[id].position =
-                      _projectProvider.itemDropPosition(
-                          widget.key, _pointerDownOffset, _pointerUpOffset);
+                  setState(() {
+                    _projectProvider.appletMap[id].position =
+                        _projectProvider.itemDropPosition(
+                            widget.key, _pointerDownOffset, _pointerUpOffset);
 
-                  _projectProvider.stackSizeChange(id, feedbackKey, off);
+                    _projectProvider.stackSizeChange(id, feedbackKey, off);
+                  });
                 },
                 dragAnchor: DragAnchor.pointer,
                 childWhenDragging: Container(),
@@ -298,11 +294,7 @@ class _WindowWidgetState extends State<WindowWidget>
             Key _targetKey = _projectProvider.getActualTargetKey(data.key);
             String _targetId = _projectProvider.getIdFromKey(_targetKey);
             double _targetScale = _projectProvider.appletMap[_targetId].scale;
-  
-                          _projectProvider.appletMap[data.id].scale = _targetScale * 0.3;
-
-         
-
+            _projectProvider.appletMap[data.id].scale = _targetScale * 0.3;
             return true;
           } else {
             return false;
@@ -316,6 +308,7 @@ class _WindowWidgetState extends State<WindowWidget>
           _projectProvider.appletMap[data.id].scale = _targetScale;
 
           _projectProvider.appletMap[data.id].scale = _itemScale;
+
           _timer = new Timer(Duration(milliseconds: 1000), () {
             _projectProvider.appletMap[id].selected = true;
             setState(() {
