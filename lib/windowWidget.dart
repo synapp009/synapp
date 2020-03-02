@@ -70,7 +70,7 @@ class _WindowWidgetState extends State<WindowWidget>
 
   double _stackScale;
   Offset _stackOffset;
-  Offset offset = Offset(0, 0);
+
   Map<Key, List<Key>> hasArrowToKeyMap = {};
   String id;
 
@@ -170,10 +170,10 @@ class _WindowWidgetState extends State<WindowWidget>
             _pointerMoving = false;
             _projectProvider.firstItem = true;
 
-            offset = Offset(0, 0);
+      
           },
           onPointerMove: (PointerMoveEvent event) {
-            //_projectProvider.stackSizeHitTest(event.position);
+           // _projectProvider.stackSizeHitTest(event.position);
 
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
@@ -183,8 +183,7 @@ class _WindowWidgetState extends State<WindowWidget>
                   feedbackKey);
             }
 
-            offset =
-                Offset(offset.dx + event.delta.dx, offset.dy + event.delta.dy);
+      
 
             _controller.reverse();
 
@@ -299,8 +298,10 @@ class _WindowWidgetState extends State<WindowWidget>
             Key _targetKey = _projectProvider.getActualTargetKey(data.key);
             String _targetId = _projectProvider.getIdFromKey(_targetKey);
             double _targetScale = _projectProvider.appletMap[_targetId].scale;
+  
+                          _projectProvider.appletMap[data.id].scale = _targetScale * 0.3;
 
-            _projectProvider.appletMap[data.id].scale = _targetScale * 0.3;
+         
 
             return true;
           } else {
