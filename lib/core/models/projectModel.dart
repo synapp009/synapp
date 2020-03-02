@@ -187,9 +187,7 @@ class Project with ChangeNotifier {
     return itemId;
   }
 
-  var numberChanged = 1;
   void changeItemListPosition({String itemId, String newId}) {
-    numberChanged++;
     //String itemId = getIdFromKey(itemId);
     Key itemKey = getKeyFromId(itemId);
     Key newKey = getKeyFromId(newId);
@@ -208,8 +206,7 @@ class Project with ChangeNotifier {
 
     appletMap[newId].childIds.add(itemId);
 
-    appletMap.forEach((key, value) {
-    });
+    appletMap.forEach((key, value) {});
     notifyListeners();
   }
 
@@ -360,7 +357,7 @@ class Project with ChangeNotifier {
     //with expensive RenderedBox, --> maybe better options?
     Offset tempPosition;
 
-    if (targetKey != null ) {
+    if (targetKey != null) {
       RenderBox targetRenderObject =
           targetKey.currentContext.findRenderObject();
       tempPosition = targetRenderObject.localToGlobal(Offset.zero);

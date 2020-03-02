@@ -16,13 +16,13 @@ class FeedbackWindowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appletProvider = Provider.of<Project>(context);
-    print(appletProvider.appletMap[id].scale);
     var window = appletProvider.appletMap[id];
     var stackScale = appletProvider.notifier.value.row0[0];
 
     var itemScale = appletProvider.appletMap[id].scale;
-    var childList = appletProvider.getAllChildren(appletProvider.getKeyFromId(id));
-
+    var childList =
+        appletProvider.getAllChildren(appletProvider.getKeyFromId(id));
+ 
     Size animationOffseter = Size(
         (appletProvider.appletMap[id].size.width / 2) * 0.1,
         (appletProvider.appletMap[id].size.width / 2) * 0.1);
@@ -42,13 +42,10 @@ class FeedbackWindowWidget extends StatelessWidget {
         scale: stackScale + (stackScale * 0.1),
         child: Column(
           children: [
-
             SizedBox(
               key: feedbackKey,
-              height:
-                  appletProvider.appletMap[id].size.height * itemScale,
-              width:
-                  appletProvider.appletMap[id].size.width * itemScale,
+              height: appletProvider.appletMap[id].size.height * itemScale,
+              width: appletProvider.appletMap[id].size.width * itemScale,
               child: Material(
                 animationDuration: Duration.zero,
                 shape: SuperellipseShape(

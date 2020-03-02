@@ -242,15 +242,15 @@ class _WindowWidgetState extends State<WindowWidget>
                 },
                 onDragStarted: () {
                   HapticFeedback.mediumImpact();
+                  setState(() {
+                    _timer = new Timer(Duration(milliseconds: 200), () {
+                      _dragStarted = true;
 
-                  _timer = new Timer(Duration(milliseconds: 200), () {
-                    _dragStarted = true;
-
-                    _projectProvider.updateArrowToKeyMap(
-                        _projectProvider.appletMap[id].key,
-                        _dragStarted,
-                        feedbackKey);
-                    //setState(() {});
+                      _projectProvider.updateArrowToKeyMap(
+                          _projectProvider.appletMap[id].key,
+                          _dragStarted,
+                          feedbackKey);
+                    });
                   });
                 },
                 onDragCompleted: () {
@@ -273,7 +273,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 dragAnchor: DragAnchor.pointer,
                 childWhenDragging: Container(),
                 feedback: ChangeNotifierProvider<Project>.value(
-                  value: Provider.of<Project>(context),
+                  value: _projectProvider,
                   child:
                       FeedbackWindowWidget(id, _pointerDownOffset, feedbackKey),
                 ),
