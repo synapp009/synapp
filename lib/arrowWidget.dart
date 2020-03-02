@@ -76,8 +76,6 @@ class ArrowPainter extends CustomPainter {
 
     Path path = Path();
     Path pathArrow = Path();
-  print('originscale $originScale');
-  print('targetscale $targetScale');
     canvas.drawCircle(Offset(0, size.height / 2), 3 * originScale,
         paint..color = Colors.black);
     canvas.drawCircle(Offset(size.width, size.height / 2), 3 * targetScale,

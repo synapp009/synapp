@@ -57,16 +57,20 @@ class CustomCard extends StatelessWidget {
                   // ));
 
                   /** Push a new page while passing data to it */
-
+                  projectDetails.appletMap.forEach((key, value) {
+                    value.key = new GlobalKey();
+                  });
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ListenableProvider(
+                        lazy:true,
                         create: (_) => projectDetails,
                         child: HomeView(project: projectDetails),
                       ),
                     ),
                   );
+                  
                 }),
           ],
         ),

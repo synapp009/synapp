@@ -45,9 +45,9 @@ class FeedbackWindowWidget extends StatelessWidget {
             SizedBox(
               key: feedbackKey,
               height:
-                  appletProvider.appletMap[id].size.height * (itemScale),
+                  appletProvider.appletMap[id].size.height * itemScale,
               width:
-                  appletProvider.appletMap[id].size.width * (itemScale),
+                  appletProvider.appletMap[id].size.width * itemScale,
               child: Material(
                 animationDuration: Duration.zero,
                 shape: SuperellipseShape(

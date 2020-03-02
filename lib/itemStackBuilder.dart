@@ -33,13 +33,16 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
           );
         },
         onWillAccept: (dynamic data) {
-          if (projectProvider.appletMap[null].key != data.key) {
+          if (projectProvider.appletMap[null].id != data.id &&
+              !projectProvider.appletMap[data.id].childIds.contains(null) &&
+              !projectProvider.leaveApplet &&
+              !projectProvider.appletMap[null].childIds.contains(data.id)) {
             var stackOffset = Offset(projectProvider.notifier.value.row0.a,
                 projectProvider.notifier.value.row1.a);
             projectProvider.appletMap[data.id].scale = 1.0;
             projectProvider.currentTargetPosition = stackOffset;
             projectProvider.changeItemListPosition(
-               itemId: data.id, newId: null);
+                itemId: data.id, newId: null);
             return true;
           } else {
             return false;
@@ -57,10 +60,15 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
     var projectProvider = Provider.of<Project>(context);
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
-    List childIdList = projectProvider.appletMap[null].childIds;
+        List childIdList = projectProvider.appletMap[null].childIds;
+
+    List<Key> childKeyList = projectProvider.appletMap[null].childIds.map((e) => projectProvider.getKeyFromId(e)).toList();
+    print(childKeyList);
+
+
     for (int i = 0; i < childIdList.length; i++) {
       if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
-        stackItemDraggable = WindowWidget(id: childIdList[i]);
+        stackItemDraggable = WindowWidget(key: childKeyList[i]);
       } else if (projectProvider.appletMap[childIdList[i]].type ==
           "TextApplet") {
         stackItemDraggable = TextboxWidget(id: childIdList[i]);

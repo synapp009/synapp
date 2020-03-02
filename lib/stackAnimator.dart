@@ -13,10 +13,12 @@ class StackAnimator extends StatelessWidget {
     var projectProvider = Provider.of<Project>(context);
 
     Size displaySize = MediaQuery.of(context).size;
-    ValueNotifier<Matrix4> notifier = projectProvider.notifier;
-    if(notifier==null){
-      projectProvider.notifier = Constants.initializeNotifier(notifier);
+    ValueNotifier<Matrix4> notifier;
+    if (notifier == null) {
+      notifier = Constants.initializeNotifier(notifier);
     }
+    projectProvider.notifier = notifier;
+
     setMaxScaleAndOffset(context) {
       //sets the boundaries of the visable part of the screen
       // and the maximum scale to zoom out
@@ -31,59 +33,110 @@ class StackAnimator extends StatelessWidget {
       var mostRightKey;
       var mostTopKey;
       var mostBottomKey;
-      List keyAtBottomList = projectProvider.appletMap[null].childKeys;
+      List keyAtBottomList = projectProvider.appletMap[null].childIds.map((e) => projectProvider.getKeyFromId(e)).toList();
+
+      //List keyAtBottomList = projectProvider.appletMap[null].;
       mostBottomKey = keyAtBottomList[0];
       mostLeftKey = keyAtBottomList[0];
       mostRightKey = keyAtBottomList[0];
       mostTopKey = keyAtBottomList[0];
       for (int i = 0; i < keyAtBottomList.length; i++) {
-        if ((projectProvider.appletMap[projectProvider.getIdFromKey( keyAtBottomList[i])].position.dx +
-                projectProvider.appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])].size.width) >
-            (projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx +
-                projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].size.width)) {
+        if ((projectProvider
+                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
+                    .position
+                    .dx +
+                projectProvider
+                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
+                    .size
+                    .width) >
+            (projectProvider
+                    .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                    .position
+                    .dx +
+                projectProvider
+                    .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                    .size
+                    .width)) {
           mostRightKey = keyAtBottomList[i];
         }
-        if (projectProvider.appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])].position.dx <
-            projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)].position.dx) {
+        if (projectProvider
+                .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
+                .position
+                .dx <
+            projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)]
+                .position.dx) {
           mostLeftKey = keyAtBottomList[i];
         }
 
-        if ((projectProvider.appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])].position.dy) <
-            projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)].position.dy) {
+        if ((projectProvider
+                .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
+                .position
+                .dy) <
+            projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)]
+                .position.dy) {
           mostTopKey = keyAtBottomList[i];
         }
-        if ((projectProvider.appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])].position.dy +
-                projectProvider.appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])].size.height) >
-            projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)].position.dy +
-                projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)].size.height) {
+        if ((projectProvider
+                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
+                    .position
+                    .dy +
+                projectProvider
+                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
+                    .size
+                    .height) >
+            projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)]
+                    .position.dy +
+                projectProvider
+                    .appletMap[projectProvider.getIdFromKey(mostTopKey)]
+                    .size
+                    .height) {
           mostBottomKey = keyAtBottomList[i];
         }
       }
 
-      maxLeftOffset = projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)].position.dx *
+      maxLeftOffset = projectProvider
+              .appletMap[projectProvider.getIdFromKey(mostLeftKey)]
+              .position
+              .dx *
           projectProvider.stackScale;
 
-      maxRightOffset = projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx;
+      maxRightOffset = projectProvider
+          .appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx;
 
-      maxTopOffset = projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)].position.dy *
+      maxTopOffset = projectProvider
+              .appletMap[projectProvider.getIdFromKey(mostTopKey)].position.dy *
           projectProvider.stackScale;
 
 //set max scale
       maxScaleWidth = (displaySize.width /
-          (projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)].position.dx +
-              projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx +
-              projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].size.width));
+          (projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)]
+                  .position.dx +
+              projectProvider
+                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                  .position
+                  .dx +
+              projectProvider
+                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                  .size
+                  .width));
 
       maxScaleHeight = (displaySize.height /
-          (projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)].position.dy +
-              projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dy +
-              projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].size.height +
+          (projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)]
+                  .position.dy +
+              projectProvider
+                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                  .position
+                  .dy +
+              projectProvider
+                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                  .size
+                  .height +
               projectProvider.headerHeight()));
 
       maxScale =
           maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth;
 
-      if (projectProvider.appletMap[null].childKeys.length > 1) {
+      if (projectProvider.appletMap[null].childIds.length > 1) {
         if (projectProvider.stackScale < maxScale) {
           notifier.value.setEntry(0, 0, maxScale);
           notifier.value.setEntry(1, 1, maxScale);
@@ -96,17 +149,28 @@ class StackAnimator extends StatelessWidget {
           notifier.value.setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
         }
         if ((projectProvider.stackOffset.dx +
-                projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx *
+                projectProvider
+                        .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                        .position
+                        .dx *
                     projectProvider.stackScale +
-                projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].size.width *
+                projectProvider
+                        .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                        .size
+                        .width *
                     projectProvider.stackScale) <
             displaySize.width / 2) {
-          var tempOffsetRightDx =
-              -(projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx *
-                      projectProvider.stackScale +
-                  projectProvider.appletMap[projectProvider.getIdFromKey(mostRightKey)].size.width *
-                      projectProvider.stackScale -
-                  displaySize.width / (1.99));
+          var tempOffsetRightDx = -(projectProvider
+                      .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                      .position
+                      .dx *
+                  projectProvider.stackScale +
+              projectProvider
+                      .appletMap[projectProvider.getIdFromKey(mostRightKey)]
+                      .size
+                      .width *
+                  projectProvider.stackScale -
+              displaySize.width / (1.99));
           notifier.value.setEntry(0, 3, tempOffsetRightDx);
         }
 

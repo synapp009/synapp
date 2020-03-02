@@ -19,7 +19,6 @@ class Constants {
           key: null,
           position: Offset(0, 0),
           scale: 1.0,
-          childKeys: [],
           childIds: [],
           selected: false)
     };

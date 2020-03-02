@@ -36,7 +36,7 @@ class _HomeViewState extends State<HomeView> {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
     var statusBarHeight = MediaQuery.of(context).padding.top;
-    projectProvider.updateProvider(widget.project, statusBarHeight);
+    //projectProvider.updateProvider(widget.project, statusBarHeight);
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,

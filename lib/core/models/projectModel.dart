@@ -42,6 +42,7 @@ class Project with ChangeNotifier {
     //selectedMap = Constants.initializeSelectedMap(appletMap);
     notifier = Constants.initializeNotifier(notifier);
     stackSize = null;
+    leaveApplet = false;
   }
 
   Map<String, Applet> get getStructureMap => appletMap;
@@ -65,21 +66,6 @@ class Project with ChangeNotifier {
         tempMap[tempId] = tempApplet;
       });
     }
-
-//create childKeys
-    tempMap.forEach((String id, Applet applet) {
-      if (applet.childIds.length == 0 || applet.childKeys == null) {
-        applet.childKeys = [];
-      }
-
-      applet.childIds.forEach((String childId) {
-        tempMap.forEach((String subId, Applet subApplet) {
-          if (subId == childId) {
-            applet.childKeys.add(subApplet.key);
-          }
-        });
-      });
-    });
 
     return tempMap;
   }
@@ -105,7 +91,7 @@ class Project with ChangeNotifier {
         description = snapshot['description'] ?? '',
         appletMap = getAppletMap(snapshot['appletList'], snapshot['id']) ?? {},
         arrowMap = getJsonMap(snapshot['arrowMap']) ?? {};
-        
+
   /*tempMap = appletMap.map((k, v) {
         String tempK = k.toString();
         dynamic tempV = v.toJson();
@@ -161,6 +147,7 @@ class Project with ChangeNotifier {
   double statusBarHeight;
   double maxScale;
   Offset maxOffset;
+  bool leaveApplet;
 
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
@@ -183,6 +170,10 @@ class Project with ChangeNotifier {
     arrowMap = data.arrowMap;
     //selectedMap = Constants.initializeSelectedMap(appletMap);
     statusBarHeight = statusHeight;
+
+    data.appletMap.forEach((key, value) {
+      value.key = null;
+    });
   }
 
   String getIdFromKey(Key itemKey) {
@@ -196,30 +187,28 @@ class Project with ChangeNotifier {
     return itemId;
   }
 
+  var numberChanged = 1;
   void changeItemListPosition({String itemId, String newId}) {
+    numberChanged++;
     //String itemId = getIdFromKey(itemId);
     Key itemKey = getKeyFromId(itemId);
     Key newKey = getKeyFromId(newId);
     appletMap.forEach((String id, Applet v) => {
- 
           if (
           //v.toString().contains('WindowApplet') &&
-          v.childKeys != null && v.childIds.contains(itemId)
+          v.childIds != null && v.childIds.contains(itemId)
           //&& v.childKeys.contains(itemKey)
           )
-            {v.childKeys.remove(itemKey), v.childIds.remove(itemId)}
+            {v.childIds.remove(itemId)}
         });
 
     if (appletMap[newId].childIds == null) {
       appletMap[newId].childIds = [];
     }
 
-    appletMap[newId].childKeys.add(itemKey);
-
     appletMap[newId].childIds.add(itemId);
 
     appletMap.forEach((key, value) {
-      print('$key, ${value.childKeys}');
     });
     notifyListeners();
   }
@@ -249,12 +238,10 @@ class Project with ChangeNotifier {
 
     if (appletMap[null] == null) {
       appletMap[null] = WindowApplet(
-        childKeys: [],
         childIds: [],
       );
     }
 
-    appletMap[null].childKeys.add(windowKey);
     appletMap[null].childIds.add(id);
     appletMap[id] = WindowApplet(
         type: 'WindowApplet',
@@ -264,7 +251,6 @@ class Project with ChangeNotifier {
         position: Offset(200, 100),
         color: color,
         title: 'Title',
-        childKeys: [],
         childIds: [],
         scale: 1.0,
         selected: false);
@@ -326,7 +312,7 @@ class Project with ChangeNotifier {
     if (appletMap[null] == null) {
       appletMap[null] = TextApplet();
     }
-    appletMap[null].childKeys.add(textboxKey);
+    appletMap[null].childIds.add(textboxId);
     appletMap[textboxId] = TextApplet(
         key: textboxKey,
         size: Size(100, 40),
@@ -351,9 +337,8 @@ class Project with ChangeNotifier {
   Key getActualTargetKey(Key key) {
     var tempId = getIdFromKey(key);
     var targetId;
-    appletMap.forEach((k, dynamic v) => {
-          if (v.toString().contains('WindowApplet') &&
-              v.childIds.contains(tempId))
+    appletMap.forEach((k, Applet v) => {
+          if (v.type == 'WindowApplet' && v.childIds.contains(tempId))
             {targetId = k}
         });
     return getKeyFromId(targetId);
@@ -374,7 +359,8 @@ class Project with ChangeNotifier {
   Offset getPositionOfRenderBox(GlobalKey targetKey) {
     //with expensive RenderedBox, --> maybe better options?
     Offset tempPosition;
-    if (targetKey != null) {
+
+    if (targetKey != null ) {
       RenderBox targetRenderObject =
           targetKey.currentContext.findRenderObject();
       tempPosition = targetRenderObject.localToGlobal(Offset.zero);
@@ -395,22 +381,35 @@ class Project with ChangeNotifier {
     List<Key> todoList = [];
     List<Key> doneList = [];
     String tempId;
-    todoList.addAll(appletMap[itemId].childKeys);
 
-    while (todoList.length > 0) {
+    appletMap[itemId].childIds.forEach((element) {
+      todoList.add(getKeyFromId(element));
+    });
+    print(todoList.length);
+/*
+    for (int i = 0; i < todoList.length; i++) {
       tempList = [];
       todoList.forEach((f) => {
             tempId = getIdFromKey(f),
-            if (!childList.contains(f)) {childList.add(f)},
+            if (!childList.contains(f))
+              {
+                childList.add(f),
+              },
             doneList.add(f),
-            if (appletMap[tempId].toString().contains('WindowApplet'))
-              {tempList.addAll(appletMap[tempId].childKeys)}
+            if (appletMap[tempId].type == "WindowApplet")
+              {
+                appletMap[itemId].childIds.forEach((element) {
+                  tempList.add(
+                    getKeyFromId(element),
+                  );
+                })
+              }
           });
 
       doneList.forEach((f) => todoList.remove(f));
       todoList.addAll(tempList);
     }
-
+*/
     return childList;
   }
 
@@ -531,9 +530,9 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  Offset itemDropPosition(id, pointerDownOffset, pointerUpOffset) {
-    var itemScale = appletMap[id].scale;
-    var dropKey = getKeyFromId(id);
+  Offset itemDropPosition(GlobalKey id, pointerDownOffset, pointerUpOffset) {
+    var itemScale = appletMap[getIdFromKey(id)].scale;
+    var dropKey = id;
     var targetKey = getActualTargetKey(dropKey);
     var targetOffset = getPositionOfRenderBox(targetKey);
     var itemHeaderOffset = 0;
@@ -543,6 +542,8 @@ class Project with ChangeNotifier {
         appletMap[id].toString().contains('WindowApplet')) {
       itemHeaderOffset = 20;
     }
+
+    notifyListeners();
     return Offset(
         ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
             pointerDownOffset.dx),
@@ -836,11 +837,10 @@ class Project with ChangeNotifier {
             position.dx - stackOffset.dx - itemSize.width * stackScale, 0);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        appletMap[null].childKeys.forEach((k) => {
-              appletMap[getIdFromKey(k)].position = Offset(
-                  appletMap[getIdFromKey(k)].position.dx -
-                      offsetChange.dx / stackScale,
-                  appletMap[getIdFromKey(k)].position.dy)
+        appletMap[null].childIds.forEach((k) => {
+              appletMap[k].position = Offset(
+                  appletMap[k].position.dx - offsetChange.dx / stackScale,
+                  appletMap[k].position.dy)
             });
         notifier.value
             .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
@@ -859,11 +859,9 @@ class Project with ChangeNotifier {
                 itemSize.height * stackScale);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        appletMap[null].childKeys.forEach((k) => {
-              appletMap[getIdFromKey(k)].position = Offset(
-                  appletMap[getIdFromKey(k)].position.dx,
-                  appletMap[getIdFromKey(k)].position.dy -
-                      offsetChange.dy / stackScale)
+        appletMap[null].childIds.forEach((k) => {
+              appletMap[k].position = Offset(appletMap[k].position.dx,
+                  appletMap[k].position.dy - offsetChange.dy / stackScale)
             });
         notifier.value
             .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
