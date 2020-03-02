@@ -385,8 +385,7 @@ class Project with ChangeNotifier {
     appletMap[itemId].childIds.forEach((element) {
       todoList.add(getKeyFromId(element));
     });
-    print(todoList.length);
-/*
+
     for (int i = 0; i < todoList.length; i++) {
       tempList = [];
       todoList.forEach((f) => {
@@ -409,7 +408,9 @@ class Project with ChangeNotifier {
       doneList.forEach((f) => todoList.remove(f));
       todoList.addAll(tempList);
     }
-*/
+    todoList.clear();
+    doneList.clear();
+    tempList.clear();
     return childList;
   }
 

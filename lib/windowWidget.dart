@@ -106,7 +106,7 @@ class _WindowWidgetState extends State<WindowWidget>
         setState(() {
           _projectProvider.appletMap[id].selected =
               _projectProvider.appletMap[id].selected ? false : true;
-          //_controller.reverse();
+          _controller.reverse();
         });
       });
     }
@@ -128,7 +128,7 @@ class _WindowWidgetState extends State<WindowWidget>
           if (!_pointerMoving && !_projectProvider.appletMap[id].selected) {
             _controller.forward();
             if (_pointerUp) {
-              //_controller.reverse();
+              _controller.reverse();
               _pointerUp = false;
             }
           }
@@ -162,9 +162,8 @@ class _WindowWidgetState extends State<WindowWidget>
             _pointerMoving = false;
           },
           onPointerUp: (PointerUpEvent event) {
-            _timer = new Timer(Duration(milliseconds: 200), () {
-              //_controller.reverse();
-            });
+              _controller.reverse();
+          
 
             _pointerUpOffset = event.position;
             _pointerUp = true;
@@ -187,7 +186,7 @@ class _WindowWidgetState extends State<WindowWidget>
             offset =
                 Offset(offset.dx + event.delta.dx, offset.dy + event.delta.dy);
 
-            //_controller.reverse();
+            _controller.reverse();
 
             //set if Pointer is Moving with threshold
             if ((event.localPosition.dx - _pointerDownOffset.dx).abs() >
