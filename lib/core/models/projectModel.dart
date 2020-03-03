@@ -28,6 +28,8 @@ class Project with ChangeNotifier {
   //temp List to multi-select Applets by tabbing
   //Map<String, bool> selectedMap;
 
+  ValueNotifier<Matrix4> notifier;
+
   Project(
       {this.id,
       //this.key,
@@ -135,7 +137,6 @@ class Project with ChangeNotifier {
     };
   }
 
-  ValueNotifier<Matrix4> notifier;
   Matrix4 matrix = Matrix4.identity();
 
   Size stackSize;
@@ -338,6 +339,7 @@ class Project with ChangeNotifier {
           if (v.type == 'WindowApplet' && v.childIds.contains(tempId))
             {targetId = k}
         });
+    print('$tempId targetId $targetId');
     return getKeyFromId(targetId);
   }
 
@@ -377,32 +379,30 @@ class Project with ChangeNotifier {
     List<Key> childList = [];
     List<Key> todoList = [];
     List<Key> doneList = [];
-    String tempId;
+    String todoId;
 
     appletMap[itemId].childIds.forEach((element) {
       todoList.add(getKeyFromId(element));
     });
 
     for (int i = 0; i < todoList.length; i++) {
-      tempList = [];
-      todoList.forEach((f) => {
-            tempId = getIdFromKey(f),
-            if (!childList.contains(f))
+      tempList.clear();
+      todoList.forEach((todoKey) => {
+            todoId = getIdFromKey(todoKey),
+            if (!childList.contains(todoKey))
               {
-                childList.add(f),
+                childList.add(todoKey),
               },
-            doneList.add(f),
-            if (appletMap[tempId].type == "WindowApplet")
+            doneList.add(todoKey),
+            if (appletMap[todoId].type == "WindowApplet")
               {
-                appletMap[itemId].childIds.forEach((element) {
-                  tempList.add(
-                    getKeyFromId(element),
-                  );
+                appletMap[todoId].childIds.forEach((element) {
+                  tempList.add(getKeyFromId(element));
                 })
               }
           });
 
-      doneList.forEach((f) => todoList.remove(f));
+      doneList.forEach((doneKey) => todoList.remove(doneKey));
       todoList.addAll(tempList);
     }
     todoList.clear();

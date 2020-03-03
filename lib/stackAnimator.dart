@@ -14,10 +14,11 @@ class StackAnimator extends StatelessWidget {
 
     Size displaySize = MediaQuery.of(context).size;
     ValueNotifier<Matrix4> notifier;
-    if (notifier == null) {
-      notifier = Constants.initializeNotifier(notifier);
+    if (projectProvider.notifier == null) {
+print('null');
+      projectProvider.notifier = Constants.initializeNotifier(notifier);
     }
-    projectProvider.notifier = notifier;
+    notifier = projectProvider.notifier;
 
     setMaxScaleAndOffset(context) {
       //sets the boundaries of the visable part of the screen
@@ -200,10 +201,10 @@ class StackAnimator extends StatelessWidget {
           top: projectProvider.generalStackOffset.dy,
           left: projectProvider.generalStackOffset.dx,
           child: AnimatedBuilder(
-              animation: Provider.of<Project>(context).notifier,
+              animation: projectProvider.notifier,
               builder: (context, child) {
                 return Transform(
-                  transform: Provider.of<Project>(context).notifier.value,
+                  transform: projectProvider.notifier.value,
                   child: ItemStackBuilder(id),
                 );
               }),

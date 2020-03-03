@@ -16,7 +16,7 @@ import 'windowStackBuilder.dart';
 import 'feeddbackWindowWidget.dart';
 
 class WindowWidget extends StatefulWidget {
-  WindowWidget({Key key}) : super(key: key);
+  WindowWidget({GlobalKey key}) : super(key: key);
 
   @override
   _WindowWidgetState createState() => _WindowWidgetState();
@@ -63,7 +63,6 @@ class _WindowWidgetState extends State<WindowWidget>
   var _onDragEndOffset;
   var _pointerMoving = false;
   var _pointerUp = false;
-  var _itemId;
 
   var _itemScale;
 
@@ -92,10 +91,8 @@ class _WindowWidgetState extends State<WindowWidget>
 
     _stackScale = _projectProvider.stackScale;
     _itemScale = _projectProvider.appletMap[id].scale;
-
     _stackOffset = _projectProvider.stackOffset;
 
-    _itemId = _projectProvider.appletMap[id].id;
 
 //animation
     _animation() {
@@ -290,11 +287,31 @@ class _WindowWidgetState extends State<WindowWidget>
               //!_projectProvider.appletMap[null].childIds.contains(id) &&
               !_projectProvider.appletMap[id].childIds.contains(id)) {
             _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+            Key _dragItemTargetKey =
+                _projectProvider.getActualTargetKey(data.key);
+            String _dragItemTargetId =
+                _projectProvider.getIdFromKey(_dragItemTargetKey);
+            double _dragItemTargetScale =
+                _projectProvider.appletMap[_dragItemTargetId].scale;
+            _projectProvider.appletMap[data.id].scale =
+                _dragItemTargetScale * 0.3;
 
-            Key _targetKey = _projectProvider.getActualTargetKey(data.key);
-            String _targetId = _projectProvider.getIdFromKey(_targetKey);
-            double _targetScale = _projectProvider.appletMap[_targetId].scale;
-            _projectProvider.appletMap[data.id].scale = _targetScale * 0.3;
+          /*  List<Key> childrenList =
+                Provider.of<Project>(context).getAllChildren(data.id);
+            if (childrenList != null) {
+              childrenList.forEach((element) {
+                Key _dragItemTargetKey =
+                    _projectProvider.getActualTargetKey(element);
+                String _dragItemTargetId =
+                    _projectProvider.getIdFromKey(_dragItemTargetKey);
+                double _dragItemTargetScale =
+                    _projectProvider.appletMap[_dragItemTargetId].scale;
+                _projectProvider
+                    .appletMap[_projectProvider.getIdFromKey(element)]
+                    .scale = _dragItemTargetScale * 0.3;
+              });
+            }*/
+
             return true;
           } else {
             return false;

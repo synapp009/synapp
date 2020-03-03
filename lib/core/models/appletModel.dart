@@ -30,7 +30,7 @@ List<String> _childIdsSnapshotDynamicToList(List<dynamic> snapshot) {
 
 class Applet {
    String id;
-  Key key;
+  GlobalKey key;
   Offset position;
   double scale;
   List<String> childIds;
@@ -50,7 +50,7 @@ class Applet {
       this.type,
       this.size,
       this.fixed,
-      this.selected}){selected = false;key= Key(id);}
+      this.selected}){selected = false;}
 
   List<Key> _childKeysFromSnapshotChildIdsToKeys(
       Map<dynamic, dynamic> snapshot) {}
@@ -67,7 +67,7 @@ class Applet {
 
 
   Applet.fromMap(Map snapshot)
-      : key = Key(snapshot['id']) ?? null,
+      : //key = Key(snapshot['id']) ?? null,
         id = snapshot['id'],
         position = Offset((snapshot['positionDx'] as num).toDouble(),
                 (snapshot['positionDy'] as num).toDouble()) ??
@@ -99,7 +99,7 @@ class WindowApplet extends Applet {
   String id;
   Color color;
   String title;
-  Key key;
+  GlobalKey key;
   List<String> childIds;
   Size size;
   Offset position;
@@ -125,10 +125,10 @@ class WindowApplet extends Applet {
       this.fixed,
       this.selected,
       type})
-      : super(scale: scale, type: type,selected:selected);
+      : super(scale: scale, type: type,selected:selected,key:key);
 
   WindowApplet.fromMap(Map snapshot)
-      : key = Key(snapshot['id']) ?? null,
+      : //key = Key(snapshot['id']) ?? null,
 
         id = snapshot['id'],
         color = _getColorFromString(snapshot['color']) ?? '',

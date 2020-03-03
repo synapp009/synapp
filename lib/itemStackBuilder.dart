@@ -27,7 +27,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
-            color: Colors.green,
+            //color: Colors.green,
             width: projectProvider.stackSize.width,
             height: projectProvider.stackSize.height,
           );
@@ -62,8 +62,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
     Widget stackItemDraggable;
         List childIdList = projectProvider.appletMap[null].childIds;
 
-    List<Key> childKeyList = projectProvider.appletMap[null].childIds.map((e) => projectProvider.getKeyFromId(e)).toList();
-    print(childKeyList);
+    List<GlobalKey> childKeyList = projectProvider.appletMap[null].childIds.map((e) => projectProvider.getGlobalKeyFromId(e)).toList();
 
 
     for (int i = 0; i < childIdList.length; i++) {

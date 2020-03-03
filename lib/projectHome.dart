@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:synapp/projectHomeView.dart';
+import 'core/constants.dart';
 import 'core/models/appletModel.dart';
 import 'core/models/projectModel.dart';
 import 'core/viewmodels/CRUDModel.dart';
