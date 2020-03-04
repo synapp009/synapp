@@ -25,7 +25,6 @@ class FeedbackWindowWidget extends StatelessWidget {
     String _windowTargetId = appletProvider.getIdFromKey(_windowTargetKey);
     double _windowTargetScale =
         appletProvider.appletMap[_windowTargetId].scale;
-    print('$id, $_windowTargetScale');
 
  
             

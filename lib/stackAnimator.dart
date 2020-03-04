@@ -15,7 +15,6 @@ class StackAnimator extends StatelessWidget {
     Size displaySize = MediaQuery.of(context).size;
     ValueNotifier<Matrix4> notifier;
     if (projectProvider.notifier == null) {
-print('null');
       projectProvider.notifier = Constants.initializeNotifier(notifier);
     }
     notifier = projectProvider.notifier;

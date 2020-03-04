@@ -149,6 +149,7 @@ class Project with ChangeNotifier {
   double maxScale;
   Offset maxOffset;
   bool leaveApplet;
+  double scaleChange = 1.0;
 
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
@@ -339,7 +340,6 @@ class Project with ChangeNotifier {
           if (v.type == 'WindowApplet' && v.childIds.contains(tempId))
             {targetId = k}
         });
-    print('$tempId targetId $targetId');
     return getKeyFromId(targetId);
   }
 
@@ -359,7 +359,7 @@ class Project with ChangeNotifier {
     //with expensive RenderedBox, --> maybe better options?
     Offset tempPosition;
 
-    if (targetKey != null) {
+    if (targetKey != null && targetKey.currentContext != null) {
       RenderBox targetRenderObject =
           targetKey.currentContext.findRenderObject();
       tempPosition = targetRenderObject.localToGlobal(Offset.zero);
@@ -380,12 +380,15 @@ class Project with ChangeNotifier {
     List<Key> todoList = [];
     List<Key> doneList = [];
     String todoId;
+    int count = 0;
 
     appletMap[itemId].childIds.forEach((element) {
       todoList.add(getKeyFromId(element));
     });
-
-    for (int i = 0; i < todoList.length; i++) {
+print(todoList);
+    while (todoList.length > 0) {
+      count++;
+      print(count);
       tempList.clear();
       todoList.forEach((todoKey) => {
             todoId = getIdFromKey(todoKey),
@@ -406,8 +409,7 @@ class Project with ChangeNotifier {
       todoList.addAll(tempList);
     }
     todoList.clear();
-    doneList.clear();
-    tempList.clear();
+
     return childList;
   }
 
@@ -1013,6 +1015,7 @@ class Project with ChangeNotifier {
   }
 
   hitTest(key, position, context) {
+    print('hittest');
     //checks if position of a context layes in a box and gives out the key of the box
     Size displaySize = MediaQuery.of(context).size;
 
@@ -1059,9 +1062,9 @@ class Project with ChangeNotifier {
                           appletMap[idFromKey].scale)
             {
               appletMap[idFromKey].selected = true,
-              targetList = getAllTargets(k),
+              //targetList = getAllTargets(k),
               targetList
-                  .forEach((targetKey) => appletMap[targetKey].selected = false)
+                  .forEach((targetKey) => appletMap[getIdFromKey(targetKey)].selected = false)
             }
           else
             {

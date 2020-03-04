@@ -39,11 +39,16 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
               !projectProvider.appletMap[null].childIds.contains(data.id)) {
             var stackOffset = Offset(projectProvider.notifier.value.row0.a,
                 projectProvider.notifier.value.row1.a);
+            double _scaleChange = projectProvider.appletMap[data.id].scale;
             projectProvider.appletMap[data.id].scale = 1.0;
             projectProvider.currentTargetPosition = stackOffset;
             projectProvider.changeItemListPosition(
                 itemId: data.id, newId: null);
 
+            projectProvider.scaleChange =
+                projectProvider.appletMap[data.id].scale / _scaleChange;
+
+            print('changescale ${projectProvider.scaleChange}');
             List<Key> childrenList =
                 Provider.of<Project>(context, listen: false)
                     .getAllChildren(data.key);
@@ -62,7 +67,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
                       .scale = projectProvider
                           .appletMap[projectProvider.getIdFromKey(element)]
                           .scale *
-                      3;
+                      projectProvider.scaleChange;
                 }
               });
             }
