@@ -36,6 +36,7 @@ class _WindowWidgetState extends State<WindowWidget>
   static GlobalKey sizedBoxKey = GlobalKey();
   var _projectProvider;
   var _crudProvider;
+  var _itemScale;
 
   @override
   void initState() {
@@ -64,8 +65,6 @@ class _WindowWidgetState extends State<WindowWidget>
   var _pointerMoving = false;
   var _pointerUp = false;
 
-  var _itemScale;
-
   double _stackScale;
   Offset _stackOffset;
 
@@ -89,10 +88,16 @@ class _WindowWidgetState extends State<WindowWidget>
 
     id = _projectProvider.getIdFromKey(widget.key);
 
-    _stackScale = _projectProvider.stackScale;
-    _itemScale = _projectProvider.appletMap[id].scale;
-    _stackOffset = _projectProvider.stackOffset;
+    Key _windowTargetKey = _projectProvider.getActualTargetKey(widget.key);
+    String _windowTargetId = _projectProvider.getIdFromKey(_windowTargetKey);
+    double _windowTargetScale =
+        _projectProvider.appletMap[_windowTargetId].scale;
+    print('$id, $_windowTargetScale');
 
+    _stackScale = _projectProvider.stackScale;
+
+_itemScale = _projectProvider.appletMap[id].scale;
+    _stackOffset = _projectProvider.stackOffset;
 
 //animation
     _animation() {
@@ -294,11 +299,12 @@ class _WindowWidgetState extends State<WindowWidget>
             double _dragItemTargetScale =
                 _projectProvider.appletMap[_dragItemTargetId].scale;
             _projectProvider.appletMap[data.id].scale =
-                _dragItemTargetScale * 0.3;
+               _dragItemTargetScale * 0.3;
 
-          /*  List<Key> childrenList =
-                Provider.of<Project>(context).getAllChildren(data.id);
-            if (childrenList != null) {
+            List<Key> childrenList =
+                Provider.of<Project>(context, listen: false)
+                    .getAllChildren(data.key);
+              if (childrenList != null) {
               childrenList.forEach((element) {
                 Key _dragItemTargetKey =
                     _projectProvider.getActualTargetKey(element);
@@ -306,11 +312,14 @@ class _WindowWidgetState extends State<WindowWidget>
                     _projectProvider.getIdFromKey(_dragItemTargetKey);
                 double _dragItemTargetScale =
                     _projectProvider.appletMap[_dragItemTargetId].scale;
+
                 _projectProvider
-                    .appletMap[_projectProvider.getIdFromKey(element)]
-                    .scale = _dragItemTargetScale * 0.3;
+                        .appletMap[_projectProvider.getIdFromKey(element)]
+                        .scale =
+                    _projectProvider.appletMap[data.id].scale *
+                        0.3;
               });
-            }*/
+            }
 
             return true;
           } else {

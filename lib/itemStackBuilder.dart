@@ -43,6 +43,29 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             projectProvider.currentTargetPosition = stackOffset;
             projectProvider.changeItemListPosition(
                 itemId: data.id, newId: null);
+
+            List<Key> childrenList =
+                Provider.of<Project>(context, listen: false)
+                    .getAllChildren(data.key);
+            if (childrenList != null) {
+              childrenList.forEach((element) {
+                if (element != null) {
+                  Key _dragItemTargetKey =
+                      projectProvider.getActualTargetKey(element);
+                  String _dragItemTargetId =
+                      projectProvider.getIdFromKey(_dragItemTargetKey);
+                  double _dragItemTargetScale =
+                      projectProvider.appletMap[_dragItemTargetId].scale;
+
+                  projectProvider
+                      .appletMap[projectProvider.getIdFromKey(element)]
+                      .scale = projectProvider
+                          .appletMap[projectProvider.getIdFromKey(element)]
+                          .scale *
+                      3;
+                }
+              });
+            }
             return true;
           } else {
             return false;
@@ -60,10 +83,11 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
     var projectProvider = Provider.of<Project>(context);
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
-        List childIdList = projectProvider.appletMap[null].childIds;
+    List childIdList = projectProvider.appletMap[null].childIds;
 
-    List<GlobalKey> childKeyList = projectProvider.appletMap[null].childIds.map((e) => projectProvider.getGlobalKeyFromId(e)).toList();
-
+    List<GlobalKey> childKeyList = projectProvider.appletMap[null].childIds
+        .map((e) => projectProvider.getGlobalKeyFromId(e))
+        .toList();
 
     for (int i = 0; i < childIdList.length; i++) {
       if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {

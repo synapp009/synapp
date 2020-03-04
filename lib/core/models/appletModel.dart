@@ -33,6 +33,7 @@ class Applet {
   GlobalKey key;
   Offset position;
   double scale;
+  double targetScale;
   List<String> childIds;
   Color color;
   String type;
@@ -50,6 +51,7 @@ class Applet {
       this.type,
       this.size,
       this.fixed,
+      this.targetScale,
       this.selected}){selected = false;}
 
   List<Key> _childKeysFromSnapshotChildIdsToKeys(

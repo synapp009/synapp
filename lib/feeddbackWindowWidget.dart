@@ -20,6 +20,15 @@ class FeedbackWindowWidget extends StatelessWidget {
     var stackScale = appletProvider.notifier.value.row0[0];
 
     var itemScale = appletProvider.appletMap[id].scale;
+
+       Key _windowTargetKey = appletProvider.getActualTargetKey(appletProvider.getKeyFromId(id));
+    String _windowTargetId = appletProvider.getIdFromKey(_windowTargetKey);
+    double _windowTargetScale =
+        appletProvider.appletMap[_windowTargetId].scale;
+    print('$id, $_windowTargetScale');
+
+ 
+            
     var childList =
         appletProvider.getAllChildren(appletProvider.getKeyFromId(id));
  
