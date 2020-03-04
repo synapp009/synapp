@@ -47,9 +47,7 @@ class Project with ChangeNotifier {
     leaveApplet = false;
   }
 
-  Map<String, Applet> get getStructureMap => appletMap;
-
-  static Map<String, Applet> getAppletMap(List<dynamic> snapshot, String id) {
+  static Map<String, Applet> getAppletMap(List<dynamic> snapshot) {
     Map<String, Applet> tempMap = {};
 
     if (snapshot != null) {
@@ -72,10 +70,10 @@ class Project with ChangeNotifier {
     return tempMap;
   }
 
-  static Map<String, List<Arrow>> getJsonMap(Map<dynamic, dynamic> snapshot) {
+  static Map<String, List<Arrow>> getArrowMap(Map<dynamic, dynamic> snapshot) {
     Map<String, List<Arrow>> tempMap = {};
 
-    if (snapshot.length > 1) {
+    if (!snapshot.toString().contains("null")) {
       snapshot.forEach((key, value) {
         tempMap[key] = [];
         value.forEach((dat) => tempMap[key].add(Arrow.fromMap(dat)));
@@ -91,8 +89,8 @@ class Project with ChangeNotifier {
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
         description = snapshot['description'] ?? '',
-        appletMap = getAppletMap(snapshot['appletList'], snapshot['id']) ?? {},
-        arrowMap = getJsonMap(snapshot['arrowMap']) ?? {};
+        appletMap = getAppletMap(snapshot['appletList']) ?? {},
+        arrowMap = getArrowMap(snapshot['arrowMap']) ?? {};
 
   /*tempMap = appletMap.map((k, v) {
         String tempK = k.toString();
@@ -113,14 +111,16 @@ class Project with ChangeNotifier {
     Map<String, dynamic> arrowJsonMap = {};
 
     if (arrowMap != null) {
-      if (arrowMap.length > 1) {
+      if (arrowMap.length > 0) {
         arrowMap.forEach((key, value) {
           var tempList = [];
           value.forEach((element) {
             var tempArrow = element.toJson();
             tempList.add(tempArrow);
           });
-          arrowJsonMap[key] = tempList;
+          if (key != null) {
+            arrowJsonMap[key] = tempList;
+          }
         });
       } else {
         arrowJsonMap['null'] = null;
@@ -158,10 +158,6 @@ class Project with ChangeNotifier {
 
   Offset stackOffset = Offset(0, 0);
   Offset generalStackOffset = Offset(0, 0);
-
-  Map<String, List<Arrow>> get getArrowMap => arrowMap;
-
-  Map<String, dynamic> get getappletMap => appletMap;
 
   updateProvider(Project data, statusHeight) {
     id = data.id;
@@ -385,10 +381,8 @@ class Project with ChangeNotifier {
     appletMap[itemId].childIds.forEach((element) {
       todoList.add(getKeyFromId(element));
     });
-print(todoList);
     while (todoList.length > 0) {
       count++;
-      print(count);
       tempList.clear();
       todoList.forEach((todoKey) => {
             todoId = getIdFromKey(todoKey),
@@ -1015,7 +1009,6 @@ print(todoList);
   }
 
   hitTest(key, position, context) {
-    print('hittest');
     //checks if position of a context layes in a box and gives out the key of the box
     Size displaySize = MediaQuery.of(context).size;
 
@@ -1063,8 +1056,8 @@ print(todoList);
             {
               appletMap[idFromKey].selected = true,
               //targetList = getAllTargets(k),
-              targetList
-                  .forEach((targetKey) => appletMap[getIdFromKey(targetKey)].selected = false)
+              targetList.forEach((targetKey) =>
+                  appletMap[getIdFromKey(targetKey)].selected = false)
             }
           else
             {

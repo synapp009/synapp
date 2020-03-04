@@ -14,7 +14,6 @@ class ArrowWidget extends StatelessWidget {
   ArrowWidget(this.originKey, this.targetKey);
   @override
   Widget build(BuildContext context) {
-
     var sector;
     Arrow tempArrow;
     var projectProvider = Provider.of<Project>(context);

@@ -303,9 +303,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 _dragItemTargetScale * 0.3;
             _projectProvider.scaleChange =
                 _projectProvider.appletMap[data.id].scale / _scaleChange;
-            print(
-                '_projectProvider.appletMap[data.id].scale ${_projectProvider.appletMap[data.id].scale}');
-            print('change ${_projectProvider.scaleChange}');
+
             List<Key> childrenList =
                 Provider.of<Project>(context, listen: false)
                     .getAllChildren(data.key);

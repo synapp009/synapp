@@ -48,7 +48,6 @@ class _HomeViewState extends State<HomeView> {
 
         leading: new IconButton(
           onPressed: () {
-
             crudProvider.updateProject(projectProvider, widget.project.id);
             //projectProvider.appletMap.clear();
             Navigator.pop(context);

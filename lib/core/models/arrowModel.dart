@@ -12,7 +12,7 @@ class Arrow {
 
   Arrow.fromMap(Map snapshot)
       : target = snapshot["target"],
-        arrowed = snapshot["arrowed"],
+        arrowed = snapshot["arrowed"] == "true",
         position = Offset((snapshot["positionDx"] as num).toDouble(),
             (snapshot["positionDy"] as num).toDouble()),
         size = (snapshot["size"] as num).toDouble(),
@@ -21,7 +21,7 @@ class Arrow {
   toJson() {
     return {
       "target": target,
-      "arrowd": arrowed.toString(),
+      "arrowed": arrowed.toString(),
       "positionDx": position.dx,
       "positionDy": position.dy,
       "size": size,

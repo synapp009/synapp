@@ -90,7 +90,7 @@ class BottomSheetApp {
         isScrollControlled:
             true, //bottomsheet goes full screen, if bottomsheet has a scrollable widget such as a listview as a child.
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(30.0),topRight: Radius.circular(30.0)), 
         ),
         context: context,
         builder: (BuildContext context) {
