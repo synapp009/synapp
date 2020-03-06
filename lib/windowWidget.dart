@@ -38,6 +38,9 @@ class _WindowWidgetState extends State<WindowWidget>
   var _crudProvider;
   var _itemScale;
 
+  var offsetChange = Offset(0, 0);
+  var _scaleActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -319,8 +322,9 @@ class _WindowWidgetState extends State<WindowWidget>
                 _projectProvider
                     .appletMap[_projectProvider.getIdFromKey(element)]
                     .scale = _projectProvider
-                    .appletMap[_projectProvider.getIdFromKey(element)]
-                    .scale * _projectProvider.scaleChange;
+                        .appletMap[_projectProvider.getIdFromKey(element)]
+                        .scale *
+                    _projectProvider.scaleChange;
               });
             }
 
@@ -371,9 +375,17 @@ class _WindowWidgetState extends State<WindowWidget>
 
   Widget get _animatedButtonUI => Transform.scale(
         scale: _scale,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          overflow: Overflow.clip,
+          //crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Visibility(
+              visible: _projectProvider.appletMap[id].selected ? true : false,
+              child: Container(
+                  width: _projectProvider.appletMap[id].size.width + 20.0,
+                  height: _projectProvider.appletMap[id].size.height + 20.0,
+                  color: Colors.transparent),
+            ),
             /*  SizedBox(
                   width: _projectProvider.appletMap[id].size.width *
                       _itemScale,
@@ -398,17 +410,78 @@ class _WindowWidgetState extends State<WindowWidget>
               width: _projectProvider.appletMap[id].size.width * _itemScale,
               child: Material(
                 shape: SuperellipseShape(
-                    side: BorderSide(
-                        color: _projectProvider.appletMap[id].selected
-                            ? Colors.black
-                            : Colors.transparent,
-                        width: 1 * _itemScale),
-                    borderRadius: BorderRadius.circular(28 * _itemScale)),
+                  side: BorderSide(
+                      color: _projectProvider.appletMap[id].selected
+                          ? Colors.black54
+                          : Colors.transparent,
+                      width: 3.0 * _itemScale),
+                  borderRadius: BorderRadius.circular(28 * _itemScale),
+                ),
                 //margin: EdgeInsets.all(0),
                 color: _projectProvider.appletMap[id].selected
                     ? _tonedColor(_projectProvider.appletMap[id].color)
                     : _projectProvider.appletMap[id].color,
                 child: WindowStackBuilder(id),
+              ),
+            ),
+            Visibility(
+              visible: _projectProvider.appletMap[id].selected ? true : false,
+              child: Transform.translate(
+                offset: Offset(
+                  (_projectProvider.appletMap[id].size.width - 20.0) *
+                      _itemScale,
+                  (_projectProvider.appletMap[id].size.height - 20.0) *
+                      _itemScale,
+                ),
+                child: Transform.rotate(
+                  angle: 340,
+                  child: Material(
+                    color: Colors.transparent,
+                    shape: CircleBorder(),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(100.0),
+                      onTap: () {
+                        
+                      },
+                      onLongPress: () {
+                        
+                      },
+                      child: GestureDetector(
+                        onTapDown: (details){
+                          setState(() {
+                          _scaleActive = true;
+                        });
+                        },
+                        onLongPressEnd: (details) {
+                          offsetChange = Offset(0, 0);
+                          setState(() {
+                            _scaleActive = false;
+                          });
+                        },
+                        onLongPress: () {},
+                        onLongPressMoveUpdate:
+                            (LongPressMoveUpdateDetails details) {
+                          var offsetDelta =
+                              details.offsetFromOrigin - offsetChange;
+                          offsetChange = details.offsetFromOrigin;
+                          setState(() {
+                            _projectProvider.appletMap[id].size = Size(
+                                _projectProvider.appletMap[id].size.width +
+                                    offsetDelta.dx/_itemScale,
+                                _projectProvider.appletMap[id].size.height +
+                                    offsetDelta.dy/_itemScale);
+                          });
+                          _projectProvider.notifyListeners();
+                        },
+                        child: Icon(
+                          Icons.play_circle_filled,
+                          color: _scaleActive ? Colors.black : Colors.black54,
+                          size: 40.0 * _itemScale,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

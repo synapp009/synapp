@@ -22,8 +22,8 @@ class WindowStackBuilder extends StatelessWidget {
         child: Container(
           height: projectProvider.appletMap[id].size.height,
           width: projectProvider.appletMap[id].size.width,
-          //child: Text(
-              //'${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),
+          child: Text(
+              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),
         ),
       ),
       //TextField(maxLines:40),
