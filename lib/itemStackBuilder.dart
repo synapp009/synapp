@@ -47,7 +47,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
 
             projectProvider.scaleChange =
                 projectProvider.appletMap[data.id].scale / _scaleChange;
-            projectProvider.appletMap[data.id].size = projectProvider.appletMap[data.id].size*projectProvider.scaleChange;
+
             if (data.type == "WindowApplet") {
               List<Key> childrenList =
                   Provider.of<Project>(context, listen: false)
