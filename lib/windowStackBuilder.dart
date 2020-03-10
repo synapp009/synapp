@@ -16,14 +16,14 @@ class WindowStackBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
-    return Stack(overflow: Overflow.visible, children: [
+    return Stack(overflow: Overflow.clip, children: [
       FittedBox(
         fit: BoxFit.scaleDown,
         child: Container(
           height: projectProvider.appletMap[id].size.height,
           width: projectProvider.appletMap[id].size.width,
-          child: Text(
-              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),
+          /* child: Text(
+              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),*/
         ),
       ),
       //TextField(maxLines:40),
@@ -38,13 +38,15 @@ class WindowStackBuilder extends StatelessWidget {
     var stackItemDraggable;
 
     List childIdList = projectProvider.appletMap[id].childIds;
-    List childKeyList = projectProvider.appletMap[id].childIds.map((e) => projectProvider.getKeyFromId(e)).toList();
+    List childKeyList = projectProvider.appletMap[id].childIds
+        .map((e) => projectProvider.getKeyFromId(e))
+        .toList();
     for (int i = 0; i < childIdList.length; i++) {
       if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
       } else if (projectProvider.appletMap[childIdList[i]].type ==
           "TextApplet") {
-        stackItemDraggable = TextboxWidget(id: childIdList[i]);
+        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
       } else {
         stackItemDraggable = Container(height: 0, width: 0);
       }

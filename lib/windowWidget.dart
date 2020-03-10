@@ -288,25 +288,25 @@ class _WindowWidgetState extends State<WindowWidget>
       }, onWillAccept: (dynamic data) {
         _projectProvider.leaveApplet = false;
         //true if window changes target
-        if (data.type == "WindowApplet") {
-          if (_projectProvider.appletMap[id].key != data.key &&
-              !_projectProvider.appletMap[data.id].childIds.contains(id) &&
-              //!_projectProvider.appletMap[null].childIds.contains(id) &&
-              !_projectProvider.appletMap[id].childIds.contains(id)) {
-            _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
-            Key _dragItemTargetKey =
-                _projectProvider.getActualTargetKey(data.key);
-            String _dragItemTargetId =
-                _projectProvider.getIdFromKey(_dragItemTargetKey);
-            double _dragItemTargetScale =
-                _projectProvider.appletMap[_dragItemTargetId].scale;
 
-            double _scaleChange = _projectProvider.appletMap[data.id].scale;
-            _projectProvider.appletMap[data.id].scale =
-                _dragItemTargetScale * 0.3;
-            _projectProvider.scaleChange =
-                _projectProvider.appletMap[data.id].scale / _scaleChange;
+        if (_projectProvider.appletMap[id].key != data.key &&
+            //!_projectProvider.appletMap[null].childIds.contains(id) &&
+            !_projectProvider.appletMap[id].childIds.contains(id)) {
+          _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+          Key _dragItemTargetKey =
+              _projectProvider.getActualTargetKey(data.key);
+          String _dragItemTargetId =
+              _projectProvider.getIdFromKey(_dragItemTargetKey);
+          double _dragItemTargetScale =
+              _projectProvider.appletMap[_dragItemTargetId].scale;
 
+          double _scaleChange = _projectProvider.appletMap[data.id].scale;
+          _projectProvider.appletMap[data.id].scale =
+              _dragItemTargetScale * 0.3;
+          _projectProvider.scaleChange =
+              _projectProvider.appletMap[data.id].scale / _scaleChange;
+
+          if (data.type == "WindowApplet") {
             List<Key> childrenList =
                 Provider.of<Project>(context, listen: false)
                     .getAllChildren(data.key);
@@ -318,7 +318,6 @@ class _WindowWidgetState extends State<WindowWidget>
                     _projectProvider.getIdFromKey(_dragItemTargetKey);
                 double _dragItemTargetScale =
                     _projectProvider.appletMap[_dragItemTargetId].scale;
-
                 _projectProvider
                     .appletMap[_projectProvider.getIdFromKey(element)]
                     .scale = _projectProvider
@@ -327,45 +326,62 @@ class _WindowWidgetState extends State<WindowWidget>
                     _projectProvider.scaleChange;
               });
             }
+          } else if (data.type == "TextApplet") {
+            _projectProvider.appletMap[data.id].scale = _itemScale;
 
-            return true;
-          } else {
-            return false;
+            _timer = new Timer(Duration(milliseconds: 1000), () {
+              _projectProvider.appletMap[id].selected = true;
+              setState(() {
+                _timer = new Timer(Duration(milliseconds: 2000), () {
+                  setState(() {
+                    _projectProvider.appletMap[id].selected = false;
+                  });
+                });
+              });
+            });
           }
+
+          return true;
         } else {
+          return false;
+        }
+        /*else {
           //if for example textboxWidget
+          if (_projectProvider.appletMap[id].key != data.key  &&
+              //!_projectProvider.appletMap[null].childIds.contains(id) &&
+              !_projectProvider.appletMap[id].childIds.contains(id)) {
+            _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+            _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+            Key _dragItemTargetKey =
+                _projectProvider.getActualTargetKey(data.key);
+            String _dragItemTargetId =
+                _projectProvider.getIdFromKey(_dragItemTargetKey);
+            double _dragItemTargetScale =
+                _projectProvider.appletMap[_dragItemTargetId].scale;
 
           // _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
           Key _targetKey = _projectProvider.getActualTargetKey(data.id);
           double _targetScale = _projectProvider.appletMap[data.id].scale;
           _projectProvider.appletMap[data.id].scale = _targetScale;
 
-          _projectProvider.appletMap[data.id].scale = _itemScale;
-
-          _timer = new Timer(Duration(milliseconds: 1000), () {
-            _projectProvider.appletMap[id].selected = true;
-            setState(() {
-              _timer = new Timer(Duration(milliseconds: 2000), () {
-                setState(() {
-                  _projectProvider.appletMap[id].selected = false;
-                });
-              });
-            });
-          });
-
-          return true;
-        }
+            return true;
+          } else {
+            return false;
+          }
+        }*/
       }, onLeave: (dynamic data) {
         _projectProvider.appletMap[id].selected = false;
         // _projectProvider.leaveApplet = true;
       }, onAccept: (dynamic data) {
         if (data.type == 'TextApplet') {
-          _projectProvider.appletMap[data.key].scale = _itemScale;
+          _projectProvider.appletMap[data.id].scale = _itemScale;
           if (_projectProvider.appletMap[id].selected == true) {
-            _projectProvider.appletMap[data.key].fixed = true;
-            _projectProvider.appletMap[data.key].position = Offset(10, 10);
+            _projectProvider.appletMap[data.id].fixed = true;
+            _projectProvider.appletMap[data.id].position = Offset(10, 10);
+            _projectProvider.appletMap[data.id].size =
+                _projectProvider.appletMap[id].size * 0.9;
           } else {
-            _projectProvider.appletMap[data.key].fixed = false;
+            _projectProvider.appletMap[data.id].fixed = false;
           }
           _projectProvider.appletMap[id].selected = false;
         }
@@ -382,8 +398,10 @@ class _WindowWidgetState extends State<WindowWidget>
             Visibility(
               visible: _projectProvider.appletMap[id].selected ? true : false,
               child: Container(
-                  width: _projectProvider.appletMap[id].size.width + 20.0,
-                  height: _projectProvider.appletMap[id].size.height + 20.0,
+                  width: _projectProvider.appletMap[id].size.width +
+                      20.0 / _stackScale,
+                  height: _projectProvider.appletMap[id].size.height +
+                      20.0 / _stackScale,
                   color: Colors.transparent),
             ),
             /*  SizedBox(
@@ -412,7 +430,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 shape: SuperellipseShape(
                   side: BorderSide(
                       color: _projectProvider.appletMap[id].selected
-                          ? Colors.black54
+                          ? Colors.grey[900]
                           : Colors.transparent,
                       width: 3.0 * _itemScale),
                   borderRadius: BorderRadius.circular(28 * _itemScale),
@@ -434,49 +452,110 @@ class _WindowWidgetState extends State<WindowWidget>
                       _itemScale,
                 ),
                 child: Transform.rotate(
-                  angle: 340,
+                  angle: _scaleActive ? 0 : 340,
                   child: Material(
-                    color: Colors.transparent,
+                    color: _scaleActive ? Colors.black87 : Colors.black87,
                     shape: CircleBorder(),
                     child: InkWell(
+                      highlightColor: Colors.transparent,
                       borderRadius: BorderRadius.circular(100.0),
-                      onTap: () {
-                        
-                      },
-                      onLongPress: () {
-                        
-                      },
+                      onTap: () {},
+                      onLongPress: () {},
                       child: GestureDetector(
-                        onTapDown: (details){
+                        onTap: () {
+                          print("horst");
                           setState(() {
-                          _scaleActive = true;
-                        });
+                            _scaleActive = !_scaleActive;
+                            print(_scaleActive);
+                          });
+                        },
+                        onTapDown: (details) {
+                          setState(() {
+                            // _scaleActive = true;
+                          });
                         },
                         onLongPressEnd: (details) {
                           offsetChange = Offset(0, 0);
                           setState(() {
-                            _scaleActive = false;
+                            //_scaleActive = false;
                           });
                         },
-                        onLongPress: () {},
+                        onLongPress: () {
+                          print('ho');
+                          setState(() {
+                            //_scaleActive = true;
+                          });
+                        },
+                        onLongPressStart: (details) {},
+                        onPanUpdate: (details) {},
                         onLongPressMoveUpdate:
                             (LongPressMoveUpdateDetails details) {
-                          var offsetDelta =
-                              details.offsetFromOrigin - offsetChange;
-                          offsetChange = details.offsetFromOrigin;
-                          setState(() {
-                            _projectProvider.appletMap[id].size = Size(
-                                _projectProvider.appletMap[id].size.width +
-                                    offsetDelta.dx/_itemScale,
-                                _projectProvider.appletMap[id].size.height +
-                                    offsetDelta.dy/_itemScale);
-                          });
+                          Offset offsetDelta =
+                              details.offsetFromOrigin / _stackScale -
+                                  offsetChange;
+                          offsetChange = details.offsetFromOrigin / _stackScale;
+                          print(_projectProvider.appletMap[id].size);
+                          if (!_scaleActive) {
+                            setState(() {
+                              _projectProvider.appletMap[id].size = Size(
+                                  _projectProvider.appletMap[id].size.width >
+                                          40 * _itemScale
+                                      ? _projectProvider
+                                              .appletMap[id].size.width +
+                                          offsetDelta.dx / _itemScale
+                                      : _projectProvider
+                                              .appletMap[id].size.width +
+                                          1 * _itemScale,
+                                  _projectProvider.appletMap[id].size.height >
+                                          40 * _itemScale
+                                      ? _projectProvider
+                                              .appletMap[id].size.height +
+                                          offsetDelta.dy / _itemScale
+                                      : _projectProvider
+                                              .appletMap[id].size.width +
+                                          1 * _itemScale);
+                            });
+                          } else {
+                            var _ratioQuotient =
+                                _projectProvider.appletMap[id].size.width /
+                                    _projectProvider.appletMap[id].size.height;
+                                    final Size originSize = _projectProvider.appletMap[id].size;
+                                    final double originScale = _itemScale;
+                             _projectProvider.appletMap[id].size = Size(
+                                _projectProvider.appletMap[id].size.width >
+                                        40 * _itemScale
+                                    ? _projectProvider
+                                            .appletMap[id].size.width +
+                                        offsetDelta.dx / _itemScale
+                                    : _projectProvider
+                                            .appletMap[id].size.width +
+                                         _itemScale,
+                                _projectProvider.appletMap[id].size.height >
+                                        40 * _itemScale
+                                    ? _projectProvider
+                                            .appletMap[id].size.height +
+                                        (offsetDelta.dx *_ratioQuotient) / _itemScale
+                                    : _projectProvider
+                                            .appletMap[id].size.width +
+                                         _itemScale);
+                                _itemScale =  (offsetDelta.dx / originSize.width) *_itemScale; 
+                            print('offsetchange $offsetChange');
+                          print('offsetdelta $offsetDelta');
+                          }
+
                           _projectProvider.notifyListeners();
+                          _projectProvider.updateArrowToKeyMap(
+                              _projectProvider.appletMap[id].key,
+                              _dragStarted,
+                              _projectProvider.appletMap[id].key);
                         },
-                        child: Icon(
-                          Icons.play_circle_filled,
-                          color: _scaleActive ? Colors.black : Colors.black54,
-                          size: 40.0 * _itemScale,
+                        child: Transform.scale(
+                          scale: 0.7,
+                          child: Icon(
+                            _scaleActive ? Icons.zoom_out_map : Icons.play_arrow,
+                            color: Colors.white,
+                            size: 40.0 * _itemScale,
+                          ),
                         ),
                       ),
                     ),

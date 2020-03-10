@@ -29,7 +29,7 @@ List<String> _childIdsSnapshotDynamicToList(List<dynamic> snapshot) {
 }
 
 class Applet {
-   String id;
+  String id;
   GlobalKey key;
   Offset position;
   double scale;
@@ -40,6 +40,7 @@ class Applet {
   Size size;
   bool fixed;
   bool selected;
+  String content;
 
   Applet(
       {this.childIds,
@@ -52,7 +53,10 @@ class Applet {
       this.size,
       this.fixed,
       this.targetScale,
-      this.selected}){selected = false;}
+      this.selected,
+      this.content}) {
+    selected = false;
+  }
 
   List<Key> _childKeysFromSnapshotChildIdsToKeys(
       Map<dynamic, dynamic> snapshot) {}
@@ -67,7 +71,6 @@ class Applet {
     return tempList;
   }
 
-
   Applet.fromMap(Map snapshot)
       : //key = Key(snapshot['id']) ?? null,
         id = snapshot['id'],
@@ -77,8 +80,11 @@ class Applet {
         color = _getColorFromString(snapshot['color']) ?? null,
         scale = (snapshot['scale'] as num).toDouble() ?? null,
         childIds = _childIdsSnapshotDynamicToList(snapshot['childIds']) ?? null,
-        type = snapshot['type'] ?? null;
-        //childKeys = _getChildKeys(snapshot['childIds']);
+        type = snapshot['type'] ?? null,
+        fixed = snapshot['fixed'] == "true",
+        content = snapshot['content'] ?? '';
+
+  //childKeys = _getChildKeys(snapshot['childIds']);
 
   //childKeys = childKeysFromSnapshotChildIdsToKeys( snapshot) ?? null;
 
@@ -86,12 +92,13 @@ class Applet {
     return {
       //"key": key.toString(),
       "id": id,
-
+      "content": content,
       "positionDx": position.dx,
       "positionDy": position.dy,
       "scale": scale,
       "childIds": childIds,
       "type": type,
+      "fixed": fixed.toString(),
       "color": color.toString(),
     };
   }
@@ -109,8 +116,6 @@ class WindowApplet extends Applet {
   bool fixed;
   bool selected;
 
-  //String id;
-
   static final IconData iconData = Icons.crop_din;
   static final String label = 'Box';
   String type = 'WindowApplet';
@@ -127,7 +132,7 @@ class WindowApplet extends Applet {
       this.fixed,
       this.selected,
       type})
-      : super(scale: scale, type: type,selected:selected,key:key);
+      : super(scale: scale, type: type, selected: selected, key: key);
 
   WindowApplet.fromMap(Map snapshot)
       : //key = Key(snapshot['id']) ?? null,
@@ -174,8 +179,8 @@ class TextApplet extends Applet {
   Size size;
   double scale;
   bool selected;
-
-  // String id;
+  String id;
+  Offset position;
 
   static final IconData iconData = Icons.text_fields;
   static final String label = 'Text';
@@ -189,11 +194,11 @@ class TextApplet extends Applet {
     this.fixed,
     this.selected,
     type,
-    id,
+    this.id,
     key,
     this.size,
-    position,
-    scale,
+    this.position,
+    this.scale,
   }) : super(
             size: size,
             key: key,
@@ -201,21 +206,27 @@ class TextApplet extends Applet {
             scale: scale,
             id: id,
             type: type,
-            selected:selected);
+            selected: selected,
+            content: content);
 
   TextApplet.fromMap(Map snapshot)
       : color = _getColorFromString(snapshot['color']) ?? '',
         title = snapshot['title'] ?? '',
+        id = snapshot['id'],
         textSize = snapshot['textSize'] ?? '',
         content = snapshot['content'] ?? '',
-        fixed = snapshot['fixed'] ?? '',
-        scale = (snapshot['scale'] as num).toDouble() ?? null,
+        fixed = snapshot['fixed'] == "true",
+        scale = (snapshot['scale'] as num).toDouble() ?? 0,
         size = Size((snapshot['sizeWidth'] as num).toDouble(),
                 (snapshot['sizeHeight'] as num).toDouble()) ??
-            null;
+            null,
+        position = Offset((snapshot['positionDx'] as num).toDouble(),
+                (snapshot['positionDy'] as num).toDouble()) ??
+            Offset(null, null);
 
   toJson() {
     return {
+      "id": id,
       "color": color.toString(),
       "title": title,
       "textSize": textSize,
@@ -224,9 +235,9 @@ class TextApplet extends Applet {
       "type": type,
       "sizeHeight": size.height,
       "sizeWidth": size.width,
-      "scale" : scale
+      "scale": scale,
+      "positionDx": position.dx,
+      "positionDy": position.dy,
     };
   }
-
-  
 }

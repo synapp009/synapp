@@ -232,8 +232,8 @@ class Project with ChangeNotifier {
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
 
     if (appletMap[null] == null) {
-      appletMap[null] = WindowApplet(
-        childIds: [],
+      appletMap[null] = Applet(
+        childIds: [id],
       );
     }
 
@@ -265,7 +265,7 @@ class Project with ChangeNotifier {
     return tempList;
   }
 
-  Map<Key, Applet> createappletMap(Project project) {
+  Map<Key, Applet> createAppletMap(Project project) {
     Map<Key, Applet> tempMap = {};
     project.appletMap.forEach((String id, Applet applet) {});
 
@@ -305,10 +305,12 @@ class Project with ChangeNotifier {
     String textboxId = uuid.v4();
 
     if (appletMap[null] == null) {
-      appletMap[null] = TextApplet();
+      appletMap[null] = Applet(childIds: [textboxId]);
     }
     appletMap[null].childIds.add(textboxId);
     appletMap[textboxId] = TextApplet(
+      type: "TextApplet",
+      id:textboxId,
         key: textboxKey,
         size: Size(100, 40),
         position: Offset(200, 100),
@@ -345,9 +347,10 @@ class Project with ChangeNotifier {
     return tempHeight;
   }
 
-  getTargetScale(scaleKey) {
+  double getTargetScale(Key scaleKey) {
     var targetKey = getActualTargetKey(scaleKey);
-    var tempScale = appletMap[targetKey].scale;
+
+    var tempScale = appletMap[getIdFromKey(targetKey)].scale;
     return tempScale;
   }
 
@@ -376,13 +379,11 @@ class Project with ChangeNotifier {
     List<Key> todoList = [];
     List<Key> doneList = [];
     String todoId;
-    int count = 0;
 
     appletMap[itemId].childIds.forEach((element) {
       todoList.add(getKeyFromId(element));
     });
     while (todoList.length > 0) {
-      count++;
       tempList.clear();
       todoList.forEach((todoKey) => {
             todoId = getIdFromKey(todoKey),
@@ -415,7 +416,6 @@ class Project with ChangeNotifier {
     while (tempKey != null) {
       tempList.add(tempKey);
       tempKey = getActualTargetKey(tempKey);
-      print('tempKey $tempKey');
     }
     return tempList;
   }
@@ -730,7 +730,6 @@ class Project with ChangeNotifier {
 
   connectAndUnselect(Key itemKey) {
     String itemId = getIdFromKey(itemKey);
-    print(itemKey);
     //connects two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
     Offset positionOfTarget;
     String targetId;
@@ -779,6 +778,7 @@ class Project with ChangeNotifier {
     GlobalKey tempKey;
     appletMap.forEach((key, value) {
       if (value.id == itemId) {
+        
         tempKey = value.key;
       }
     });
@@ -1076,7 +1076,6 @@ class Project with ChangeNotifier {
               !childrenAreSelected(k))
             {
               appletMap[idFromKey].selected = true,
-
             }
           else
             {

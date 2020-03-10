@@ -15,10 +15,10 @@ class FeedbackTextboxWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final projectProvider = Provider.of<Project>(context);
-
+    var itemId = projectProvider.getIdFromKey(itemKey);
     var stackScale = projectProvider.notifier.value.row0[0];
-    var textBox = projectProvider.appletMap[itemKey] as TextApplet;
-    var itemScale = projectProvider.appletMap[itemKey].scale;
+    var textBox = projectProvider.appletMap[itemId] as TextApplet;
+    var itemScale = projectProvider.appletMap[itemId].scale;
     var initialValue = textBox.content;
     var targetScale = projectProvider.getTargetScale(itemKey);
     return Transform.translate(

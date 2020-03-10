@@ -17,13 +17,13 @@ class ArrowWidget extends StatelessWidget {
     var sector;
     Arrow tempArrow;
     var projectProvider = Provider.of<Project>(context);
-        var originId = projectProvider.getIdFromKey(originKey);
-        var targetId = projectProvider.getIdFromKey(targetKey);
+    var originId = projectProvider.getIdFromKey(originKey);
+    var targetId = projectProvider.getIdFromKey(targetKey);
 
     double originScale = projectProvider.appletMap[originId].scale;
     double targetScale = projectProvider.appletMap[targetId].scale;
     var stackScale = projectProvider.stackScale;
-    
+
     projectProvider.arrowMap[originId].forEach((Arrow k) => {
           if (k.target == targetId) {tempArrow = k}
         });
@@ -61,14 +61,14 @@ class ArrowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = Colors.black
+      ..color = Colors.grey[900]
       ..style = PaintingStyle.fill
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = 1.0 * targetScale;
 
     Paint paintArrow = Paint()
-      ..color = Colors.black
+      ..color = Colors.grey[900]
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -77,9 +77,9 @@ class ArrowPainter extends CustomPainter {
     Path path = Path();
     Path pathArrow = Path();
     canvas.drawCircle(Offset(0, size.height / 2), 3 * originScale,
-        paint..color = Colors.black);
+        paint..color = Colors.grey[900]);
     canvas.drawCircle(Offset(size.width, size.height / 2), 3 * targetScale,
-        paint..color = Colors.black);
+        paint..color = Colors.grey[900]);
     path.moveTo(0, (size.height / 2) - (1 * originScale));
     path.lineTo(size.width, (size.height / 2) - (1 * targetScale));
     path.lineTo(size.width, (size.height / 2) + (1 * targetScale));
@@ -87,9 +87,9 @@ class ArrowPainter extends CustomPainter {
     path.lineTo(0, (size.height / 2) - (1 * originScale));
 
     path.close();
-    canvas.drawPath(path, paint..color = Colors.black);
+    canvas.drawPath(path, paint..color = Colors.grey[900]);
 
-   /* pathArrow.moveTo(size.width - 0.1 * targetScale, (size.height / 2));
+    /* pathArrow.moveTo(size.width - 0.1 * targetScale, (size.height / 2));
     pathArrow.lineTo(size.width, (size.height / 2));
     pathArrow = ArrowPath.make(tipLength: 7 * targetScale, path: pathArrow);
     canvas.drawPath(pathArrow, paintArrow..color = Colors.black);*/
@@ -97,7 +97,7 @@ class ArrowPainter extends CustomPainter {
     //Text of the arrow
     textSpan = TextSpan(
         //text: '...',
-        style: TextStyle(color: Colors.black, fontSize: 16 / stackScale));
+        style: TextStyle(color: Colors.grey[900], fontSize: 16 / stackScale));
     textPainter = TextPainter(
       text: textSpan,
       textAlign: TextAlign.center,

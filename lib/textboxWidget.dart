@@ -10,33 +10,33 @@ import 'fitTextField.dart';
 import 'data.dart';
 
 class TextboxWidget extends StatefulWidget {
-  final String id;
-  TextboxWidget({this.id}) ;
+  TextboxWidget({GlobalKey key}) : super(key: key);
 
   @override
-  _TextboxWidgetState createState() => _TextboxWidgetState(id);
+  _TextboxWidgetState createState() => _TextboxWidgetState();
 }
 
 class _TextboxWidgetState extends State<TextboxWidget> {
-  final String id;
-  _TextboxWidgetState(this.id);
-
   var pointerDownOffset = Offset(0, 0);
   var pointerUpOffset = Offset(0, 0);
   var onDragEndOffset;
   var pointerMoving = false;
   var absorbing = true;
+  var projectProvider;
 
   Timer _timer;
-  GlobalKey feedbackKey = GlobalKey();
+  GlobalKey feedbackKey = new GlobalKey();
   @override
   Widget build(BuildContext context) {
-    var projectProvider = Provider.of<Project>(context);
-    var key = projectProvider.getKeyFromId(id);
-    TextApplet textBox = projectProvider.appletMap[key];
-    var initialValue = textBox.content;
-    double itemScale = projectProvider.appletMap[key].scale;
-    Offset boxPosition = projectProvider.appletMap[widget.key].position;
+    projectProvider = Provider.of<Project>(context);
+    var id = projectProvider.getIdFromKey(widget.key);
+    var key = widget.key;
+
+
+    var initialValue = projectProvider.appletMap[id].content;
+    double itemScale = projectProvider.appletMap[id].scale;
+    print('itemsclae $itemScale');
+    Offset boxPosition = projectProvider.appletMap[id].position;
     return Positioned(
       top: boxPosition.dy * itemScale,
       left: boxPosition.dx * itemScale,
@@ -74,14 +74,14 @@ class _TextboxWidgetState extends State<TextboxWidget> {
             dragAnchor: DragAnchor.pointer,
             onDragCompleted: () {
               //position if textbox gets conected to a window
-              if (textBox.fixed == true &&
+              if (projectProvider.appletMap[id].fixed == true &&
                   projectProvider.getActualTargetKey(key) != null) {
                 boxPosition = projectProvider
-                    .appletMap[projectProvider.getActualTargetKey(key)]
+                    .appletMap[projectProvider.getIdFromKey(projectProvider.getActualTargetKey(key))]
                     .position;
               } else {
                 setState(() {
-                  projectProvider.appletMap[widget.key].position =
+                  projectProvider.appletMap[id].position =
                       projectProvider.itemDropPosition(
                           key, pointerDownOffset, pointerUpOffset);
                 });
@@ -89,7 +89,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
             },
             onDraggableCanceled: (vel, off) {
               setState(() {
-                projectProvider.appletMap[widget.key].position = projectProvider
+                projectProvider.appletMap[id].position = projectProvider
                     .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
               });
               projectProvider.stackSizeChange(id, feedbackKey, off);
@@ -107,7 +107,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
               absorbing: absorbing,
               child: Transform.scale(
                 alignment: Alignment.topLeft,
-                scale: projectProvider.getTargetScale(key),
+                scale: projectProvider.appletMap[id].scale,
                 child: FitTextField(
                   initialValue: initialValue,
                   itemKey: key,
@@ -115,8 +115,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                 ),
               ),
             ),
-            data: projectProvider.appletMap[key] as dynamic
-            ),
+            data: projectProvider.appletMap[id] as dynamic),
       ),
     );
   }

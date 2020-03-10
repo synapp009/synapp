@@ -23,6 +23,9 @@ class StackAnimator extends StatelessWidget {
       //sets the boundaries of the visable part of the screen
       // and the maximum scale to zoom out
 
+      //set here the scale rate property you want
+      var scaleRate = 0.3;
+
       var maxScale;
       var maxScaleWidth;
       var maxScaleHeight;
@@ -133,9 +136,10 @@ class StackAnimator extends StatelessWidget {
                   .height +
               projectProvider.headerHeight()));
 
+      
       maxScale =
-          maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth;
-
+         ( maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth)*scaleRate;
+      
       if (projectProvider.appletMap[null].childIds.length > 1) {
         if (projectProvider.stackScale < maxScale) {
           notifier.value.setEntry(0, 0, maxScale);

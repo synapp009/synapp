@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:random_color/random_color.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:synapp/stackAnimator.dart';
+import 'package:synapp/windowWidget.dart';
 
 import 'core/models/appletModel.dart';
 import 'core/models/projectModel.dart';
@@ -109,6 +110,7 @@ class BottomSheetApp {
                     return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                         //Container(height:20,width:20,child:WindowWidget()),
                           RawMaterialButton(
                             key: _apps[index].itemKey,
                             onPressed: () {

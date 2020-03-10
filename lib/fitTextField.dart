@@ -47,10 +47,9 @@ class FitTextFieldState extends State<FitTextField> {
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
     Key actualTargetKey = projectProvider.getActualTargetKey(widget.itemKey);
-
-    var textBox = projectProvider.appletMap[widget.itemKey] as TextApplet;
+    String id = projectProvider.getIdFromKey(widget.itemKey);
+    var textBox = projectProvider.appletMap[id];
     bool isFixed = textBox.fixed;
-
     // Use TextPainter to calculate the width of our text
     TextSpan ts = new TextSpan(style: textStyle, text: txt.text);
     // List<LineMetrics> lines = tp.computeLineMetrics();
@@ -73,11 +72,14 @@ class FitTextFieldState extends State<FitTextField> {
         key: widget.feedbackKey,
         width: actualTargetKey == null
             ? textWidth * widget.itemScale
-            : projectProvider.appletMap[actualTargetKey].size
-                .width -20 , // textWidth * widget.itemScale
+            : projectProvider.appletMap[id].size.width -
+                20, // textWidth * widget.itemScale
         child: FittedBox(
           child: Container(
-            width: actualTargetKey == null ? textWidth : projectProvider.appletMap[actualTargetKey].size.width -20, //projectProvider.appletMap[projectProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
+            width: actualTargetKey == null
+                ? textWidth
+                : projectProvider.appletMap[id].size.width -
+                    20, //projectProvider.appletMap[projectProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
             //decoration: new BoxDecoration(color: color),
 
             child: TextField(

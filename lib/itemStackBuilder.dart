@@ -34,7 +34,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
         },
         onWillAccept: (dynamic data) {
           if (projectProvider.appletMap[null].id != data.id &&
-              !projectProvider.appletMap[data.id].childIds.contains(null) &&
+              //!projectProvider.appletMap[data.id].childIds.contains(null)  &&
               !projectProvider.leaveApplet &&
               !projectProvider.appletMap[null].childIds.contains(data.id)) {
             var stackOffset = Offset(projectProvider.notifier.value.row0.a,
@@ -47,32 +47,34 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
 
             projectProvider.scaleChange =
                 projectProvider.appletMap[data.id].scale / _scaleChange;
+            projectProvider.appletMap[data.id].size = projectProvider.appletMap[data.id].size*projectProvider.scaleChange;
+            if (data.type == "WindowApplet") {
+              List<Key> childrenList =
+                  Provider.of<Project>(context, listen: false)
+                      .getAllChildren(data.key);
+              if (childrenList != null) {
+                childrenList.forEach((element) {
+                  if (element != null) {
+                    Key _dragItemTargetKey =
+                        projectProvider.getActualTargetKey(element);
+                    String _dragItemTargetId =
+                        projectProvider.getIdFromKey(_dragItemTargetKey);
+                    double _dragItemTargetScale =
+                        projectProvider.appletMap[_dragItemTargetId].scale;
 
-            List<Key> childrenList =
-                Provider.of<Project>(context, listen: false)
-                    .getAllChildren(data.key);
-            if (childrenList != null) {
-              childrenList.forEach((element) {
-                if (element != null) {
-                  Key _dragItemTargetKey =
-                      projectProvider.getActualTargetKey(element);
-                  String _dragItemTargetId =
-                      projectProvider.getIdFromKey(_dragItemTargetKey);
-                  double _dragItemTargetScale =
-                      projectProvider.appletMap[_dragItemTargetId].scale;
-
-                  projectProvider
-                      .appletMap[projectProvider.getIdFromKey(element)]
-                      .scale = projectProvider
-                          .appletMap[projectProvider.getIdFromKey(element)]
-                          .scale *
-                      projectProvider.scaleChange;
-                }
-              });
+                    projectProvider
+                        .appletMap[projectProvider.getIdFromKey(element)]
+                        .scale = projectProvider
+                            .appletMap[projectProvider.getIdFromKey(element)]
+                            .scale *
+                        projectProvider.scaleChange;
+                  }
+                });
+              }
             }
             return true;
           } else {
-            return false;
+            return true;
           }
         },
         onLeave: (dynamic data) {},
@@ -88,7 +90,6 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
     List childIdList = projectProvider.appletMap[null].childIds;
-
     List<GlobalKey> childKeyList = projectProvider.appletMap[null].childIds
         .map((e) => projectProvider.getGlobalKeyFromId(e))
         .toList();
@@ -98,7 +99,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
         stackItemDraggable = WindowWidget(key: childKeyList[i]);
       } else if (projectProvider.appletMap[childIdList[i]].type ==
           "TextApplet") {
-        stackItemDraggable = TextboxWidget(id: childIdList[i]);
+        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
       } else {
         stackItemDraggable = Container(width: 0, height: 0);
       }
