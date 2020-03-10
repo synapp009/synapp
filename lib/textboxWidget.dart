@@ -35,7 +35,6 @@ class _TextboxWidgetState extends State<TextboxWidget> {
 
     var initialValue = projectProvider.appletMap[id].content;
     double itemScale = projectProvider.appletMap[id].scale;
-    print('itemsclae $itemScale');
     Offset boxPosition = projectProvider.appletMap[id].position;
     return Positioned(
       top: boxPosition.dy * itemScale,

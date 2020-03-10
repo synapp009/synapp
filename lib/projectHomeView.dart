@@ -10,8 +10,8 @@ import 'core/models/projectModel.dart';
 import 'data.dart';
 
 class MyHome extends StatefulWidget {
-final id;
-MyHome(this.id);
+  final id;
+  MyHome(this.id);
   @override
   _MyHomeState createState() => _MyHomeState();
 }
@@ -76,7 +76,11 @@ class _MyHomeState extends State<MyHome> {
           ],
         ),
       ),
-      body: StackAnimator(widget.id),
+      body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(new FocusNode()); //remove focus
+          },
+          child: StackAnimator(widget.id)),
     );
   }
 }
@@ -91,7 +95,8 @@ class BottomSheetApp {
         isScrollControlled:
             true, //bottomsheet goes full screen, if bottomsheet has a scrollable widget such as a listview as a child.
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(30.0),topRight: Radius.circular(30.0)), 
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30.0), topRight: Radius.circular(30.0)),
         ),
         context: context,
         builder: (BuildContext context) {
@@ -110,7 +115,7 @@ class BottomSheetApp {
                     return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                         //Container(height:20,width:20,child:WindowWidget()),
+                          //Container(height:20,width:20,child:WindowWidget()),
                           RawMaterialButton(
                             key: _apps[index].itemKey,
                             onPressed: () {
@@ -155,5 +160,4 @@ ListTile _createTile(BuildContext context, String name, IconData icon,
   );
 }
 
-_action1() {
-}
+_action1() {}

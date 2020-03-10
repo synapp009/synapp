@@ -40,7 +40,6 @@ class _WindowWidgetState extends State<WindowWidget>
 
   var offsetChange = Offset(0, 0);
   var _scaleActive = false;
-
   @override
   void initState() {
     super.initState();
@@ -70,6 +69,10 @@ class _WindowWidgetState extends State<WindowWidget>
 
   double _stackScale;
   Offset _stackOffset;
+  double originScale;
+  Offset originPosition;
+  Map<Key, Offset> childrenOriginPosition = {};
+  Map<Key, double> childrenOriginScale = {};
 
   Map<Key, List<Key>> hasArrowToKeyMap = {};
   String id;
@@ -84,11 +87,67 @@ class _WindowWidgetState extends State<WindowWidget>
     return tempColor;
   }
 
+  void changeChildrenScale(key, scaleChange) {
+    List<Key> childrenList =
+        Provider.of<Project>(context, listen: false).getAllChildren(key);
+    if (childrenList != null) {
+      childrenList.forEach((element) {
+        Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
+        String _dragItemTargetId =
+            _projectProvider.getIdFromKey(_dragItemTargetKey);
+        double _dragItemTargetScale =
+            _projectProvider.appletMap[_dragItemTargetId].scale;
+        _projectProvider.appletMap[_projectProvider.getIdFromKey(element)]
+            .scale = _projectProvider
+                .appletMap[_projectProvider.getIdFromKey(element)].scale *
+            scaleChange;
+      });
+    }
+  }
+
+  void changeChildrenScaleAndPosition(key, offsetFromOriginDX, scaleChange) {
+    List<Key> childrenList =
+        Provider.of<Project>(context, listen: false).getAllChildren(key);
+    if (childrenList != null) {
+      childrenList.forEach((element) {
+        Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
+        String _dragItemTargetId =
+            _projectProvider.getIdFromKey(_dragItemTargetKey);
+        double _dragItemTargetScale =
+            _projectProvider.appletMap[_dragItemTargetId].scale;
+        _projectProvider
+            .appletMap[_projectProvider.getIdFromKey(element)].scale = (1 -
+                (-offsetFromOriginDX /
+                    _projectProvider.appletMap[_dragItemTargetId].size.width)) *
+            childrenOriginScale[element];
+
+        _projectProvider
+                .appletMap[_projectProvider.getIdFromKey(element)].scale *
+            scaleChange;
+      });
+    }
+  }
+
+  void changeChildrenPosition(key, scaleChange, changeMap) {
+    List<Key> childrenList =
+        Provider.of<Project>(context, listen: false).getAllChildren(key);
+    print('childlist $childrenList');
+    print('scalechange $scaleChange');
+    if (childrenList != null) {
+      childrenList.forEach((element) => _projectProvider
+              .appletMap[_projectProvider.getIdFromKey(element)].position =
+          changeMap[element] *
+              (scaleChange *
+                  _projectProvider
+                      .appletMap[_projectProvider.getIdFromKey(element)]
+                      .scale));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     _projectProvider = Provider.of<Project>(context);
     _crudProvider = Provider.of<CRUDModel>(context);
-
     id = _projectProvider.getIdFromKey(widget.key);
 
     Key _windowTargetKey = _projectProvider.getActualTargetKey(widget.key);
@@ -185,6 +244,7 @@ class _WindowWidgetState extends State<WindowWidget>
             _controller.reverse();
 
             //set if Pointer is Moving with threshold
+
             if ((event.localPosition.dx - _pointerDownOffset.dx).abs() >
                     100 / _itemScale ||
                 (event.localPosition.dy - _pointerDownOffset.dy).abs() >
@@ -307,25 +367,7 @@ class _WindowWidgetState extends State<WindowWidget>
               _projectProvider.appletMap[data.id].scale / _scaleChange;
 
           if (data.type == "WindowApplet") {
-            List<Key> childrenList =
-                Provider.of<Project>(context, listen: false)
-                    .getAllChildren(data.key);
-            if (childrenList != null) {
-              childrenList.forEach((element) {
-                Key _dragItemTargetKey =
-                    _projectProvider.getActualTargetKey(element);
-                String _dragItemTargetId =
-                    _projectProvider.getIdFromKey(_dragItemTargetKey);
-                double _dragItemTargetScale =
-                    _projectProvider.appletMap[_dragItemTargetId].scale;
-                _projectProvider
-                    .appletMap[_projectProvider.getIdFromKey(element)]
-                    .scale = _projectProvider
-                        .appletMap[_projectProvider.getIdFromKey(element)]
-                        .scale *
-                    _projectProvider.scaleChange;
-              });
-            }
+            changeChildrenScale(data.key, _projectProvider.scaleChange);
           } else if (data.type == "TextApplet") {
             _projectProvider.appletMap[data.id].scale = _itemScale;
 
@@ -395,13 +437,19 @@ class _WindowWidgetState extends State<WindowWidget>
           overflow: Overflow.clip,
           //crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+//Container around the box so scale/resize icon can be presse
             Visibility(
-              visible: _projectProvider.appletMap[id].selected ? true : false,
+              visible:
+                  _projectProvider.appletMap[id].selected && !_pointerMoving
+                      ? true
+                      : false,
               child: Container(
-                  width: _projectProvider.appletMap[id].size.width +
-                      20.0 / _stackScale,
-                  height: _projectProvider.appletMap[id].size.height +
-                      20.0 / _stackScale,
+                  width: (_projectProvider.appletMap[id].size.width +
+                          20.0 / _stackScale) *
+                      _itemScale,
+                  height: (_projectProvider.appletMap[id].size.height +
+                          20.0 / _stackScale) *
+                      _itemScale,
                   color: Colors.transparent),
             ),
             /*  SizedBox(
@@ -442,6 +490,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 child: WindowStackBuilder(id),
               ),
             ),
+            //The Icon to scale nd resize the box
             Visibility(
               visible: _projectProvider.appletMap[id].selected ? true : false,
               child: Transform.translate(
@@ -454,36 +503,52 @@ class _WindowWidgetState extends State<WindowWidget>
                 child: Transform.rotate(
                   angle: _scaleActive ? 0 : 340,
                   child: Material(
-                    color: _scaleActive ? Colors.black87 : Colors.black87,
+                    color: Colors.grey[900],
                     shape: CircleBorder(),
+                   
                     child: InkWell(
-                      highlightColor: Colors.transparent,
+                      //highlightColor: Colors.tran,
                       borderRadius: BorderRadius.circular(100.0),
                       onTap: () {},
                       onLongPress: () {},
                       child: GestureDetector(
                         onTap: () {
-                          print("horst");
                           setState(() {
+                            _pointerMoving = false;
                             _scaleActive = !_scaleActive;
-                            print(_scaleActive);
                           });
                         },
                         onTapDown: (details) {
                           setState(() {
+                            _pointerMoving = true;
                             // _scaleActive = true;
                           });
                         },
-                        onLongPressEnd: (details) {
-                          offsetChange = Offset(0, 0);
-                          setState(() {
-                            //_scaleActive = false;
+                        onLongPress: () {
+                          originScale = _itemScale;
+                          originPosition =
+                              _projectProvider.appletMap[id].position;
+
+                          List<Key> childrenList =
+                              Provider.of<Project>(context, listen: false)
+                                  .getAllChildren(
+                                      _projectProvider.getKeyFromId(id));
+
+                          childrenList.forEach((element) {
+                            childrenOriginPosition[element] = _projectProvider
+                                .appletMap[
+                                    _projectProvider.getIdFromKey(element)]
+                                .position;
+                            childrenOriginScale[element] = _projectProvider
+                                .appletMap[
+                                    _projectProvider.getIdFromKey(element)]
+                                .scale;
                           });
                         },
-                        onLongPress: () {
-                          print('ho');
+                        onLongPressEnd: (details) {
                           setState(() {
-                            //_scaleActive = true;
+                            _pointerMoving = false;
+                            offsetChange = Offset(0, 0);
                           });
                         },
                         onLongPressStart: (details) {},
@@ -494,7 +559,6 @@ class _WindowWidgetState extends State<WindowWidget>
                               details.offsetFromOrigin / _stackScale -
                                   offsetChange;
                           offsetChange = details.offsetFromOrigin / _stackScale;
-                          print(_projectProvider.appletMap[id].size);
                           if (!_scaleActive) {
                             setState(() {
                               _projectProvider.appletMap[id].size = Size(
@@ -516,31 +580,28 @@ class _WindowWidgetState extends State<WindowWidget>
                                           1 * _itemScale);
                             });
                           } else {
-                            var _ratioQuotient =
-                                _projectProvider.appletMap[id].size.width /
-                                    _projectProvider.appletMap[id].size.height;
-                                    final Size originSize = _projectProvider.appletMap[id].size;
-                                    final double originScale = _itemScale;
-                             _projectProvider.appletMap[id].size = Size(
-                                _projectProvider.appletMap[id].size.width >
-                                        40 * _itemScale
-                                    ? _projectProvider
-                                            .appletMap[id].size.width +
-                                        offsetDelta.dx / _itemScale
-                                    : _projectProvider
-                                            .appletMap[id].size.width +
-                                         _itemScale,
-                                _projectProvider.appletMap[id].size.height >
-                                        40 * _itemScale
-                                    ? _projectProvider
-                                            .appletMap[id].size.height +
-                                        (offsetDelta.dx *_ratioQuotient) / _itemScale
-                                    : _projectProvider
-                                            .appletMap[id].size.width +
-                                         _itemScale);
-                                _itemScale =  (offsetDelta.dx / originSize.width) *_itemScale; 
-                            print('offsetchange $offsetChange');
-                          print('offsetdelta $offsetDelta');
+                            final Size originSize =
+                                _projectProvider.appletMap[id].size;
+
+                            _projectProvider.appletMap[id].scale = (1 -
+                                    (-details.offsetFromOrigin.dx /
+                                        originSize.width)) *
+                                originScale;
+
+                            var scaleChange = originScale /
+                                _projectProvider.appletMap[id].scale;
+
+                            changeChildrenScaleAndPosition(
+                                _projectProvider.getKeyFromId(id),
+                                details.offsetFromOrigin.dx,
+                                scaleChange);
+
+                            _projectProvider.appletMap[id].position =
+                                originPosition * scaleChange;
+
+                            /* _projectProvider.appletMap[id].scale =
+                                (originSize.width / offsetChange.dx) *
+                                    originScale;*/
                           }
 
                           _projectProvider.notifyListeners();
@@ -552,7 +613,9 @@ class _WindowWidgetState extends State<WindowWidget>
                         child: Transform.scale(
                           scale: 0.7,
                           child: Icon(
-                            _scaleActive ? Icons.zoom_out_map : Icons.play_arrow,
+                            _scaleActive
+                                ? Icons.zoom_out_map
+                                : Icons.play_arrow,
                             color: Colors.white,
                             size: 40.0 * _itemScale,
                           ),
