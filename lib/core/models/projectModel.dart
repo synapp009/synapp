@@ -44,7 +44,6 @@ class Project with ChangeNotifier {
     //selectedMap = Constants.initializeSelectedMap(appletMap);
     notifier = Constants.initializeNotifier(notifier);
     stackSize = null;
-    leaveApplet = false;
   }
 
   static Map<String, Applet> getAppletMap(List<dynamic> snapshot) {
@@ -148,8 +147,10 @@ class Project with ChangeNotifier {
   double statusBarHeight;
   double maxScale;
   Offset maxOffset;
-  bool leaveApplet;
   double scaleChange = 1.0;
+  bool textFieldFocus = false;
+  bool pointerMoving = false;
+
 
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
@@ -158,6 +159,8 @@ class Project with ChangeNotifier {
 
   Offset stackOffset = Offset(0, 0);
   Offset generalStackOffset = Offset(0, 0);
+
+  String chosenId;
 
   updateProvider(Project data, statusHeight) {
     id = data.id;
@@ -213,20 +216,19 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  createNewApp(type, GlobalKey itemKey) {
-    RenderBox itemBox = itemKey.currentContext.findRenderObject();
-    Offset appPosition = itemBox.globalToLocal(Offset.zero);
-    if (type.toString().contains('WindowApplet')) {
-      createNewWindow(appPosition);
-    } else if (type.toString().contains('TextApplet')) {
-      createNewTextBox(appPosition);
+  createNewApp(type, GlobalKey itemKey, GlobalKey newAppKey, String id) {
+    //RenderBox itemBox = itemKey.currentContext.findRenderObject();
+    //Offset appPosition = itemBox.globalToLocal(Offset.zero);
+    if (type == "WindowApplet") {
+      createNewWindow(newAppKey, id);
+    } else if (type == 'TextApplet') {
+      createNewTextBox(newAppKey, id);
     }
+    print(appletMap);
   }
 
-  createNewWindow(appPosition) {
-    Key windowKey = new GlobalKey();
-    var uuid = Uuid();
-    String id = uuid.v4();
+  createNewWindow(newAppKey, id) {
+    //Key windowKey = new GlobalKey();
 
     Color color = new RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
@@ -236,21 +238,20 @@ class Project with ChangeNotifier {
         childIds: [id],
       );
     }
-
-    appletMap[null].childIds.add(id);
+    //appletMap[null].childIds.add(id);
     appletMap[id] = WindowApplet(
         type: 'WindowApplet',
-        key: windowKey,
+        key: newAppKey,
         id: id,
         size: Size(130, 130),
         position: Offset(200, 100),
         color: color,
         title: 'Title',
         childIds: [],
-        scale: 1.0,
+        scale: 0.3,
         selected: false);
 
-    notifyListeners();
+//    notifyListeners();
   }
 
   List<Key> getChildKeysFromId(List<String> childIds) {
@@ -299,30 +300,28 @@ class Project with ChangeNotifier {
     return tempMap;
   }
 
-  createNewTextBox(appPosition) {
-    Key textboxKey = new GlobalKey();
-    var uuid = Uuid();
-    String textboxId = uuid.v4();
-
+  createNewTextBox(newAppKey, id) {
     if (appletMap[null] == null) {
-      appletMap[null] = Applet(childIds: [textboxId]);
+      appletMap[null] = Applet(childIds: [id]);
     }
-    appletMap[null].childIds.add(textboxId);
-    appletMap[textboxId] = TextApplet(
-      type: "TextApplet",
-      id:textboxId,
-        key: textboxKey,
-        size: Size(100, 40),
+
+    appletMap[id] = TextApplet(
+        type: "TextApplet",
+        id: id,
+        key: newAppKey,
+        size: Size(100, 10),
         position: Offset(200, 100),
         color: Colors.black,
         title: 'Title',
         content: '',
+        fixed:false,
         //bool expanded;
         scale: 1.0,
         textSize: 16);
-
-    notifyListeners();
+    //notifyListeners();
   }
+
+
 
   void onlySelectThis(String key) {
     appletMap.forEach((k, v) => {
@@ -354,6 +353,13 @@ class Project with ChangeNotifier {
     return tempScale;
   }
 
+  unselectAll(){
+    appletMap.forEach((key, value) {
+      value.selected = false;
+    });
+    notifyListeners();
+  }
+
   Offset getPositionOfRenderBox(GlobalKey targetKey) {
     //with expensive RenderedBox, --> maybe better options?
     Offset tempPosition;
@@ -379,7 +385,6 @@ class Project with ChangeNotifier {
     List<Key> todoList = [];
     List<Key> doneList = [];
     String todoId;
-
     appletMap[itemId].childIds.forEach((element) {
       todoList.add(getKeyFromId(element));
     });
@@ -778,7 +783,6 @@ class Project with ChangeNotifier {
     GlobalKey tempKey;
     appletMap.forEach((key, value) {
       if (value.id == itemId) {
-        
         tempKey = value.key;
       }
     });

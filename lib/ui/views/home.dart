@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:synapp/commonComponents/customCard.dart';
 import 'package:synapp/core/models/projectModel.dart';
@@ -67,7 +68,10 @@ class _HomePageState extends State<HomePage> {
                 return new Text('Error: ${snapshot.error}');
               switch (snapshot.connectionState) {
                 case ConnectionState.waiting:
-                  return new Text('Loading...');
+                  return new SpinKitRotatingCircle(
+                    color: Colors.white,
+                    size: 50.0,
+                  );
                 default:
                   projects = snapshot.data.documents
                       .map((doc) => Project.fromMap(doc.data, doc.documentID))
@@ -130,8 +134,7 @@ class _HomePageState extends State<HomePage> {
                           name: taskTitleInputController.text,
                           description: taskDescripInputController.text,
                           appletMap: {},
-                          arrowMap: {}
-                          );
+                          arrowMap: {});
 
                       Provider.of<CRUDModel>(context, listen: false)
                           .addProject(project)

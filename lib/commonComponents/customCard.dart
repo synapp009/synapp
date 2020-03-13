@@ -5,8 +5,8 @@ import 'package:synapp/core/constants.dart';
 import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
-import 'package:synapp/projectHome.dart';
-import '../data.dart';
+import 'package:synapp/ui/views/projectHome.dart';
+
 
 class CustomCard extends StatelessWidget {
   CustomCard({@required this.projectDetails});

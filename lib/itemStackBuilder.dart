@@ -8,7 +8,6 @@ import 'textboxWidget.dart';
 
 import 'windowWidget.dart';
 import 'arrowWidget.dart';
-import 'data.dart';
 
 class ItemStackBuilder extends StatefulWidget {
   final id;
@@ -30,12 +29,18 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             //color: Colors.green,
             width: projectProvider.stackSize.width,
             height: projectProvider.stackSize.height,
+            child: GestureDetector(
+              onTap: () {
+         //remove focus
+                projectProvider.unselectAll();
+              },
+            ),
           );
         },
         onWillAccept: (dynamic data) {
           if (projectProvider.appletMap[null].id != data.id &&
               //!projectProvider.appletMap[data.id].childIds.contains(null)  &&
-              !projectProvider.leaveApplet &&
+
               !projectProvider.appletMap[null].childIds.contains(data.id)) {
             var stackOffset = Offset(projectProvider.notifier.value.row0.a,
                 projectProvider.notifier.value.row1.a);
@@ -78,7 +83,22 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
           }
         },
         onLeave: (dynamic data) {},
-        onAccept: (dynamic data) {},
+        onAccept: (dynamic data) {
+
+        if (data.type == 'TextApplet') {
+          projectProvider.appletMap[data.id].scale = 1.0;
+          if (projectProvider.appletMap[null].selected == true) {
+            projectProvider.appletMap[data.id].fixed = true;
+            projectProvider.appletMap[data.id].position = Offset(10, 10);
+            projectProvider.appletMap[data.id].size =
+                projectProvider.appletMap[null].size * 0.9;
+          } else {
+            projectProvider.appletMap[data.id].fixed = false;
+          }
+          projectProvider.appletMap[null].selected = false;
+        }
+
+        },
       ),
       ...stackItems(context),
       ...arrowItems(context),

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
-import 'core/models/appletModel.dart';
+import 'package:synapp/windowWidget.dart';
 import 'core/models/projectModel.dart';
-import 'windowStackBuilder.dart';
-
-import 'data.dart';
 
 class FeedbackWindowWidget extends StatelessWidget {
   final String id;
@@ -18,23 +15,11 @@ class FeedbackWindowWidget extends StatelessWidget {
     final appletProvider = Provider.of<Project>(context);
     var window = appletProvider.appletMap[id];
     var stackScale = appletProvider.notifier.value.row0[0];
-
     var itemScale = appletProvider.appletMap[id].scale;
 
-       Key _windowTargetKey = appletProvider.getActualTargetKey(appletProvider.getKeyFromId(id));
-    String _windowTargetId = appletProvider.getIdFromKey(_windowTargetKey);
-    double _windowTargetScale =
-        appletProvider.appletMap[_windowTargetId].scale;
-
- 
-            
-    var childList =
-        appletProvider.getAllChildren(appletProvider.getKeyFromId(id));
- 
     Size animationOffseter = Size(
         (appletProvider.appletMap[id].size.width / 2) * 0.1,
         (appletProvider.appletMap[id].size.width / 2) * 0.1);
-
     return Transform.translate(
       offset: Offset(
           ((-pointerDownOffset.dx - animationOffseter.width) *

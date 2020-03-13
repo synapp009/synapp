@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 import 'core/models/arrowModel.dart';
 import 'core/models/projectModel.dart';
 
-import 'data.dart';
-
 class ArrowWidget extends StatelessWidget {
   final GlobalKey originKey;
   final GlobalKey targetKey;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+
 import 'home.dart';
 
 class SplashPage extends StatefulWidget {
@@ -16,7 +18,6 @@ class _SplashPageState extends State<SplashPage> {
     FirebaseAuth.instance
         .currentUser()
         .then((currentUser) => {
-       
               if (currentUser == null)
                 {Navigator.pushNamed(context, '/login')}
               else
@@ -48,7 +49,10 @@ class _SplashPageState extends State<SplashPage> {
     return Scaffold(
       body: Center(
         child: Container(
-          child: Text("Loading..."),
+          child: new SpinKitRing(
+            color: Color(0xff875AFF),
+            size: 50.0,
+          ),
         ),
       ),
     );

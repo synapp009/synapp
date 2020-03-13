@@ -7,12 +7,11 @@ import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:synapp/itemStackBuilder.dart';
+import 'package:synapp/textboxWidget.dart';
 
 import 'core/models/appletModel.dart';
 import 'core/models/projectModel.dart';
-import 'data.dart';
 
-import 'windowStackBuilder.dart';
 import 'feeddbackWindowWidget.dart';
 
 class WindowWidget extends StatefulWidget {
@@ -65,6 +64,7 @@ class _WindowWidgetState extends State<WindowWidget>
   var _pointerUpOffset = Offset(0, 0);
   var _onDragEndOffset;
   var _pointerMoving = false;
+  var _scalePointerMoving = false;
   var _pointerUp = false;
 
   double _stackScale;
@@ -131,8 +131,6 @@ class _WindowWidgetState extends State<WindowWidget>
   void changeChildrenPosition(key, scaleChange, changeMap) {
     List<Key> childrenList =
         Provider.of<Project>(context, listen: false).getAllChildren(key);
-    print('childlist $childrenList');
-    print('scalechange $scaleChange');
     if (childrenList != null) {
       childrenList.forEach((element) => _projectProvider
               .appletMap[_projectProvider.getIdFromKey(element)].position =
@@ -162,14 +160,18 @@ class _WindowWidgetState extends State<WindowWidget>
 
 //animation
     _animation() {
-      _controller.forward();
-      _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
-        setState(() {
-          _projectProvider.appletMap[id].selected =
-              _projectProvider.appletMap[id].selected ? false : true;
-          _controller.reverse();
+      if (!_projectProvider.textFieldFocus) {
+        _controller.forward();
+        _timer = new Timer(Duration(milliseconds: _isTapped ? 200 : 100), () {
+          setState(() {
+            _projectProvider.appletMap[id].selected =
+                _projectProvider.appletMap[id].selected ? false : true;
+            _controller.reverse();
+          });
         });
-      });
+      }
+      _projectProvider.textFieldFocus =
+          _projectProvider.textFieldFocus ? false : false;
     }
 
     if (id == _projectProvider.actualItemKey && !_pointerMoving && !_isTapped) {
@@ -341,18 +343,19 @@ class _WindowWidgetState extends State<WindowWidget>
                   child:
                       FeedbackWindowWidget(id, _pointerDownOffset, feedbackKey),
                 ),
-                child: _animatedButtonUI,
+                child: Visibility(
+                    visible: _projectProvider.chosenId == id ? false : true,
+                    child: _animatedButtonUI),
                 data: _projectProvider.appletMap[id]),
           ),
         );
       }, onWillAccept: (dynamic data) {
-        _projectProvider.leaveApplet = false;
         //true if window changes target
-
         if (_projectProvider.appletMap[id].key != data.key &&
             //!_projectProvider.appletMap[null].childIds.contains(id) &&
             !_projectProvider.appletMap[id].childIds.contains(id)) {
           _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+
           Key _dragItemTargetKey =
               _projectProvider.getActualTargetKey(data.key);
           String _dragItemTargetId =
@@ -371,16 +374,6 @@ class _WindowWidgetState extends State<WindowWidget>
           } else if (data.type == "TextApplet") {
             _projectProvider.appletMap[data.id].scale = _itemScale;
 
-            _timer = new Timer(Duration(milliseconds: 1000), () {
-              _projectProvider.appletMap[id].selected = true;
-              setState(() {
-                _timer = new Timer(Duration(milliseconds: 2000), () {
-                  setState(() {
-                    _projectProvider.appletMap[id].selected = false;
-                  });
-                });
-              });
-            });
           }
 
           return true;
@@ -413,7 +406,6 @@ class _WindowWidgetState extends State<WindowWidget>
         }*/
       }, onLeave: (dynamic data) {
         _projectProvider.appletMap[id].selected = false;
-        // _projectProvider.leaveApplet = true;
       }, onAccept: (dynamic data) {
         if (data.type == 'TextApplet') {
           _projectProvider.appletMap[data.id].scale = _itemScale;
@@ -439,10 +431,10 @@ class _WindowWidgetState extends State<WindowWidget>
           children: [
 //Container around the box so scale/resize icon can be presse
             Visibility(
-              visible:
-                  _projectProvider.appletMap[id].selected && !_pointerMoving
-                      ? true
-                      : false,
+              visible: _projectProvider.appletMap[id].selected &&
+                      !_scalePointerMoving
+                  ? true
+                  : false,
               child: Container(
                   width: (_projectProvider.appletMap[id].size.width +
                           20.0 / _stackScale) *
@@ -503,9 +495,10 @@ class _WindowWidgetState extends State<WindowWidget>
                 child: Transform.rotate(
                   angle: _scaleActive ? 0 : 340,
                   child: Material(
-                    color: Colors.grey[900],
-                    shape: CircleBorder(),
-                   
+                    borderRadius: new BorderRadius.circular(30.0),
+
+                    color: Colors.black54,
+                    //shape: CircleBorder(),
                     child: InkWell(
                       //highlightColor: Colors.tran,
                       borderRadius: BorderRadius.circular(100.0),
@@ -514,7 +507,7 @@ class _WindowWidgetState extends State<WindowWidget>
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            _pointerMoving = false;
+                            _scalePointerMoving = false;
                             _scaleActive = !_scaleActive;
                           });
                         },
@@ -629,4 +622,52 @@ class _WindowWidgetState extends State<WindowWidget>
           ],
         ),
       );
+}
+
+class WindowStackBuilder extends StatelessWidget {
+  final String id;
+
+  WindowStackBuilder(this.id);
+
+  @override
+  Widget build(BuildContext context) {
+    var projectProvider = Provider.of<Project>(context);
+    return Stack(overflow: Overflow.visible, children: [
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Container(
+          height: projectProvider.appletMap[id].size.height,
+          width: projectProvider.appletMap[id].size.width,
+          /* child: Text(
+              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),*/
+        ),
+      ),
+      //TextField(maxLines:40),
+      ...stackItems(context)
+    ]);
+  }
+
+  List<Widget> stackItems(BuildContext context) {
+    List<Widget> stackItemsList = [];
+    var projectProvider = Provider.of<Project>(context);
+
+    var stackItemDraggable;
+
+    List childIdList = projectProvider.appletMap[id].childIds;
+    List childKeyList = projectProvider.appletMap[id].childIds
+        .map((e) => projectProvider.getKeyFromId(e))
+        .toList();
+    for (int i = 0; i < childIdList.length; i++) {
+      if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
+        stackItemDraggable = WindowWidget(key: childKeyList[i]);
+      } else if (projectProvider.appletMap[childIdList[i]].type ==
+          "TextApplet") {
+        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+      } else {
+        stackItemDraggable = Container(height: 0, width: 0);
+      }
+      stackItemsList.add(stackItemDraggable);
+    }
+    return stackItemsList;
+  }
 }

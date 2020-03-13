@@ -5,7 +5,6 @@ import 'package:synapp/ui/router.dart';
 
 import 'core/models/projectModel.dart';
 import 'core/viewmodels/CRUDModel.dart';
-import 'data.dart';
 
 void main() {
   setupLocator();
