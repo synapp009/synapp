@@ -49,7 +49,7 @@ class _SplashPageState extends State<SplashPage> {
     return Scaffold(
       body: Center(
         child: Container(
-          child: new SpinKitRing(
+          child: new SpinKitDoubleBounce(
             color: Color(0xff875AFF),
             size: 50.0,
           ),
