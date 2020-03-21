@@ -71,6 +71,7 @@ class _WindowWidgetState extends State<WindowWidget>
   Offset _stackOffset;
   double originScale;
   Offset originPosition;
+  Size originSize;
   Map<Key, Offset> childrenOriginPosition = {};
   Map<Key, double> childrenOriginScale = {};
 
@@ -113,17 +114,14 @@ class _WindowWidgetState extends State<WindowWidget>
         Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
         String _dragItemTargetId =
             _projectProvider.getIdFromKey(_dragItemTargetKey);
-        double _dragItemTargetScale =
-            _projectProvider.appletMap[_dragItemTargetId].scale;
-        _projectProvider
-            .appletMap[_projectProvider.getIdFromKey(element)].scale = (1 -
+
+        var tempScale = (1 -
                 (-offsetFromOriginDX /
                     _projectProvider.appletMap[_dragItemTargetId].size.width)) *
             childrenOriginScale[element];
 
-        _projectProvider
-                .appletMap[_projectProvider.getIdFromKey(element)].scale *
-            scaleChange;
+        _projectProvider.appletMap[_projectProvider.getIdFromKey(element)]
+            .scale = tempScale;
       });
     }
   }
@@ -373,7 +371,6 @@ class _WindowWidgetState extends State<WindowWidget>
             changeChildrenScale(data.key, _projectProvider.scaleChange);
           } else if (data.type == "TextApplet") {
             _projectProvider.appletMap[data.id].scale = _itemScale;
-
           }
 
           return true;
@@ -429,20 +426,19 @@ class _WindowWidgetState extends State<WindowWidget>
           overflow: Overflow.clip,
           //crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-//Container around the box so scale/resize icon can be presse
+//Container around the box so scale/resize icon can be pressed
             Visibility(
               visible: _projectProvider.appletMap[id].selected &&
                       !_scalePointerMoving
                   ? true
                   : false,
               child: Container(
-                  width: (_projectProvider.appletMap[id].size.width +
-                          20.0 / _stackScale) *
+                  width: (_projectProvider.appletMap[id].size.width + (20.0)) *
                       _itemScale,
-                  height: (_projectProvider.appletMap[id].size.height +
-                          20.0 / _stackScale) *
-                      _itemScale,
-                  color: Colors.transparent),
+                  height:
+                      (_projectProvider.appletMap[id].size.height + (20.0)) *
+                          _itemScale,
+                  color: Colors.green),
             ),
             /*  SizedBox(
                   width: _projectProvider.appletMap[id].size.width *
@@ -482,19 +478,19 @@ class _WindowWidgetState extends State<WindowWidget>
                 child: WindowStackBuilder(id),
               ),
             ),
-            //The Icon to scale nd resize the box
+            //The Icon to scale and resize the box
             Visibility(
               visible: _projectProvider.appletMap[id].selected ? true : false,
               child: Transform.translate(
                 offset: Offset(
-                  (_projectProvider.appletMap[id].size.width - 20.0) *
-                      _itemScale,
-                  (_projectProvider.appletMap[id].size.height - 20.0) *
-                      _itemScale,
+                  (_projectProvider.appletMap[id].size.width*
+                      _itemScale - 20.0),
+                  (_projectProvider.appletMap[id].size.height *
+                      _itemScale - 20.0) ,
                 ),
-                child: Transform.rotate(
-                  angle: _scaleActive ? 0 : 340,
-                  child: Material(
+                child: Transform.scale(
+                  scale:1.0*_itemScale,
+                                  child: Material(
                     borderRadius: new BorderRadius.circular(30.0),
 
                     color: Colors.black54,
@@ -502,115 +498,121 @@ class _WindowWidgetState extends State<WindowWidget>
                     child: InkWell(
                       //highlightColor: Colors.tran,
                       borderRadius: BorderRadius.circular(100.0),
-                      onTap: () {},
+                      onTap: () {
+                        print('tap');
+                      },
                       onLongPress: () {},
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _scalePointerMoving = false;
-                            _scaleActive = !_scaleActive;
-                          });
-                        },
-                        onTapDown: (details) {
-                          setState(() {
-                            _pointerMoving = true;
-                            // _scaleActive = true;
-                          });
-                        },
-                        onLongPress: () {
-                          originScale = _itemScale;
-                          originPosition =
-                              _projectProvider.appletMap[id].position;
-
-                          List<Key> childrenList =
-                              Provider.of<Project>(context, listen: false)
-                                  .getAllChildren(
-                                      _projectProvider.getKeyFromId(id));
-
-                          childrenList.forEach((element) {
-                            childrenOriginPosition[element] = _projectProvider
-                                .appletMap[
-                                    _projectProvider.getIdFromKey(element)]
-                                .position;
-                            childrenOriginScale[element] = _projectProvider
-                                .appletMap[
-                                    _projectProvider.getIdFromKey(element)]
-                                .scale;
-                          });
-                        },
-                        onLongPressEnd: (details) {
-                          setState(() {
-                            _pointerMoving = false;
-                            offsetChange = Offset(0, 0);
-                          });
-                        },
-                        onLongPressStart: (details) {},
-                        onPanUpdate: (details) {},
-                        onLongPressMoveUpdate:
-                            (LongPressMoveUpdateDetails details) {
-                          Offset offsetDelta =
-                              details.offsetFromOrigin / _stackScale -
-                                  offsetChange;
-                          offsetChange = details.offsetFromOrigin / _stackScale;
-                          if (!_scaleActive) {
+                      child: Transform.translate(
+                        offset: Offset(0, 0),
+                        child: GestureDetector(
+                          onTap: () {
                             setState(() {
-                              _projectProvider.appletMap[id].size = Size(
-                                  _projectProvider.appletMap[id].size.width >
-                                          40 * _itemScale
-                                      ? _projectProvider
-                                              .appletMap[id].size.width +
-                                          offsetDelta.dx / _itemScale
-                                      : _projectProvider
-                                              .appletMap[id].size.width +
-                                          1 * _itemScale,
-                                  _projectProvider.appletMap[id].size.height >
-                                          40 * _itemScale
-                                      ? _projectProvider
-                                              .appletMap[id].size.height +
-                                          offsetDelta.dy / _itemScale
-                                      : _projectProvider
-                                              .appletMap[id].size.width +
-                                          1 * _itemScale);
+                              _scalePointerMoving = false;
+                              _scaleActive = !_scaleActive;
                             });
-                          } else {
-                            final Size originSize =
-                                _projectProvider.appletMap[id].size;
+                          },
+                          onTapDown: (details) {
+                            setState(() {
+                              _pointerMoving = true;
+                              // _scaleActive = true;
+                            });
+                          },
+                          onLongPress: () {
+                            originScale = _itemScale;
+                            originPosition =
+                                _projectProvider.appletMap[id].position;
+                            originSize = _projectProvider.appletMap[id].size;
+                            print('childlist');
+                            List<Key> childrenList =
+                                Provider.of<Project>(context, listen: false)
+                                    .getAllChildren(
+                                        _projectProvider.getKeyFromId(id));
 
-                            _projectProvider.appletMap[id].scale = (1 -
-                                    (-details.offsetFromOrigin.dx /
-                                        originSize.width)) *
-                                originScale;
+                            childrenList.forEach((element) {
+                              childrenOriginPosition[element] = _projectProvider
+                                  .appletMap[
+                                      _projectProvider.getIdFromKey(element)]
+                                  .position;
+                              childrenOriginScale[element] = _projectProvider
+                                  .appletMap[
+                                      _projectProvider.getIdFromKey(element)]
+                                  .scale;
+                            });
+                          },
+                          onLongPressEnd: (details) {
+                            setState(() {
+                              _pointerMoving = false;
+                              offsetChange = Offset(0, 0);
+                            });
+                          },
+                          onLongPressStart: (details) {},
+                          onPanUpdate: (details) {},
+                          onLongPressMoveUpdate:
+                              (LongPressMoveUpdateDetails details) {
+                            Offset offsetDelta =
+                                details.offsetFromOrigin / _stackScale -
+                                    offsetChange;
+                            offsetChange = details.offsetFromOrigin / _stackScale;
+                            if (!_scaleActive) {
+                              setState(() {
+                                _projectProvider.appletMap[id].size = Size(
+                                    _projectProvider.appletMap[id].size.width >
+                                            40 * _itemScale
+                                        ? _projectProvider
+                                                .appletMap[id].size.width +
+                                            offsetDelta.dx / _itemScale
+                                        : _projectProvider
+                                                .appletMap[id].size.width +
+                                            1 * _itemScale,
+                                    _projectProvider.appletMap[id].size.height >
+                                            40 * _itemScale
+                                        ? _projectProvider
+                                                .appletMap[id].size.height +
+                                            offsetDelta.dy / _itemScale
+                                        : _projectProvider
+                                                .appletMap[id].size.width +
+                                            1 * _itemScale);
+                              });
+                            } else {
+                              if (details.offsetFromOrigin.dx + originSize.width >
+                                  40) {
+                                _projectProvider.appletMap[id].scale = (1 -
+                                        (-details.offsetFromOrigin.dx /
+                                            originSize.width)) *
+                                    originScale;
+                                print(
+                                  details.offsetFromOrigin.dx,
+                                );
+                                var scaleChange = originScale /
+                                    _projectProvider.appletMap[id].scale;
+                                changeChildrenScaleAndPosition(
+                                    _projectProvider.getKeyFromId(id),
+                                    details.offsetFromOrigin.dx,
+                                    scaleChange);
 
-                            var scaleChange = originScale /
-                                _projectProvider.appletMap[id].scale;
+                                _projectProvider.appletMap[id].position =
+                                    originPosition * scaleChange;
+                              }
+                            }
 
-                            changeChildrenScaleAndPosition(
-                                _projectProvider.getKeyFromId(id),
-                                details.offsetFromOrigin.dx,
-                                scaleChange);
-
-                            _projectProvider.appletMap[id].position =
-                                originPosition * scaleChange;
-
-                            /* _projectProvider.appletMap[id].scale =
-                                (originSize.width / offsetChange.dx) *
-                                    originScale;*/
-                          }
-
-                          _projectProvider.notifyListeners();
-                          _projectProvider.updateArrowToKeyMap(
-                              _projectProvider.appletMap[id].key,
-                              _dragStarted,
-                              _projectProvider.appletMap[id].key);
-                        },
-                        child: Transform.scale(
-                          scale: 0.7,
-                          child: Icon(
-                            _scaleActive
-                                ? Icons.zoom_out_map
-                                : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 40.0 * _itemScale,
+                            _projectProvider.notifyListeners();
+                            _projectProvider.updateArrowToKeyMap(
+                                _projectProvider.appletMap[id].key,
+                                _dragStarted,
+                                _projectProvider.appletMap[id].key);
+                          },
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: Transform.rotate(
+                              angle: _scaleActive ? 0 : 340,
+                              child: Icon(
+                                _scaleActive
+                                    ? Icons.zoom_out_map
+                                    : Icons.play_arrow,
+                                color: Colors.white,
+                                size: 40.0 ,
+                              ),
+                            ),
                           ),
                         ),
                       ),

@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:synapp/commonComponents/customCard.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
+import 'package:zefyr/zefyr.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title, this.uid})
@@ -56,39 +57,42 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(5.0),
-          child: StreamBuilder<QuerySnapshot>(
-            stream: crudProvider.fetchProjectsAsStream(),
-            //Firestore.instance.collection("projects").snapshots(),
-            builder:
-                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (snapshot.hasError)
-                return new Text('Error: ${snapshot.error}');
-              switch (snapshot.connectionState) {
-                case ConnectionState.waiting:
-                  return new SpinKitRotatingCircle(
-                    color: Colors.white,
-                    size: 50.0,
-                  );
-                default:
-                  projects = snapshot.data.documents
-                      .map((doc) => Project.fromMap(doc.data, doc.documentID))
-                      .toList();
-                  return new ListView.builder(
-                      itemCount: projects.length,
-                      itemBuilder: (buildContext, index) =>
-                          CustomCard(projectDetails: projects[index]));
-              }
-            },
+      body: Scaffold(
+        resizeToAvoidBottomPadding: true,
+        body: ZefyrScaffold(
+          child: Container(
+            padding: const EdgeInsets.all(5.0),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: crudProvider.fetchProjectsAsStream(),
+              //Firestore.instance.collection("projects").snapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasError)
+                  return new Text('Error: ${snapshot.error}');
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return new SpinKitRotatingCircle(
+                      color: Colors.white,
+                      size: 50.0,
+                    );
+                  default:
+                    projects = snapshot.data.documents
+                        .map((doc) => Project.fromMap(doc.data, doc.documentID))
+                        .toList();
+                    return new ListView.builder(
+                        itemCount: projects.length,
+                        itemBuilder: (buildContext, index) =>
+                            CustomCard(projectDetails: projects[index]));
+                }
+              },
+            ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showDialog,
-        tooltip: 'Add',
-        child: Icon(Icons.add),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showDialog,
+          tooltip: 'Add',
+          child: Icon(Icons.add),
+        ),
       ),
     );
   }

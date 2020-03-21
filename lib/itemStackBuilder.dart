@@ -31,7 +31,12 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             height: projectProvider.stackSize.height,
             child: GestureDetector(
               onTap: () {
-         //remove focus
+                //remove focus
+                FocusScopeNode currentFocus = FocusScope.of(context);
+
+                if (!currentFocus.hasPrimaryFocus) {
+                  currentFocus.unfocus();
+                }
                 projectProvider.unselectAll();
               },
             ),
@@ -84,20 +89,18 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
         },
         onLeave: (dynamic data) {},
         onAccept: (dynamic data) {
-
-        if (data.type == 'TextApplet') {
-          projectProvider.appletMap[data.id].scale = 1.0;
-          if (projectProvider.appletMap[null].selected == true) {
-            projectProvider.appletMap[data.id].fixed = true;
-            projectProvider.appletMap[data.id].position = Offset(10, 10);
-            projectProvider.appletMap[data.id].size =
-                projectProvider.appletMap[null].size * 0.9;
-          } else {
-            projectProvider.appletMap[data.id].fixed = false;
+          if (data.type == 'TextApplet') {
+            projectProvider.appletMap[data.id].scale = 1.0;
+            if (projectProvider.appletMap[null].selected == true) {
+              projectProvider.appletMap[data.id].fixed = true;
+              projectProvider.appletMap[data.id].position = Offset(10, 10);
+              projectProvider.appletMap[data.id].size =
+                  projectProvider.appletMap[null].size * 0.9;
+            } else {
+              projectProvider.appletMap[data.id].fixed = false;
+            }
+            projectProvider.appletMap[null].selected = false;
           }
-          projectProvider.appletMap[null].selected = false;
-        }
-
         },
       ),
       ...stackItems(context),

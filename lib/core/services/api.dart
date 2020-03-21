@@ -31,32 +31,23 @@ class Api {
     return ref.document(id).delete();
   }
 
-   Future<void>  addDocument(Map data) async {
+  Future<void> addDocument(Map data) async {
     var doc = await ref.add(data);
     var id = doc.documentID;
     var tempData = data;
     tempData["id"] = id;
     ref.document(id).updateData(tempData);
-    
+
     //.then((result) => addAppletMap(data, result.documentID));
   }
-
-
 
   Future<void> updateDocument(Map data, String id) {
     return ref.document(id).updateData(data);
   }
 
   Future<void> updateApplet(
-      String projectId, Applet applet, String appletId) async {
-    var snapshots =
-        ref.document(projectId).collection('appletList').where((element) => element.data.containsValue(appletId)).getDocuments();
-
-
-    /*.forEach((document) async {
-      document.reference.updateData(<String, dynamic>{
-         
-      });
-    });*/
+      String projectId, Map data, String appletId) async {
+    return ref.document(projectId).collection('appletList').document(appletId).updateData(data);
+  
   }
 }

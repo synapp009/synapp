@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:synapp/locator.dart';
 import 'package:synapp/ui/router.dart';
 
-import 'core/models/projectModel.dart';
 import 'core/viewmodels/CRUDModel.dart';
 
 void main() {

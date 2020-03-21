@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:provider/provider.dart';
 import 'package:synapp/core/constants.dart';
+import 'package:zefyr/zefyr.dart';
 import 'core/models/projectModel.dart';
 import 'itemStackBuilder.dart';
 
@@ -186,33 +187,36 @@ class StackAnimator extends StatelessWidget {
       }
     }
 
-    return MatrixGestureDetector(
-      onMatrixUpdate: (m, tm, sm, rm) {
-        //notifier.value = m;
+    return ZefyrScaffold(
+            
+          child: MatrixGestureDetector(
+        onMatrixUpdate: (m, tm, sm, rm) {
+          //notifier.value = m;
 
-        projectProvider.stackScale = notifier.value.row0[0];
-        projectProvider.stackOffset =
-            Offset(notifier.value.row0.a, notifier.value.row1.a);
+          projectProvider.stackScale = notifier.value.row0[0];
+          projectProvider.stackOffset =
+              Offset(notifier.value.row0.a, notifier.value.row1.a);
 
-        notifier.value = m;
-        setMaxScaleAndOffset(context);
-      },
-      shouldRotate: false,
-      child: Stack(children: [
-        Container(color: Colors.transparent),
-        Positioned(
-          top: projectProvider.generalStackOffset.dy,
-          left: projectProvider.generalStackOffset.dx,
-          child: AnimatedBuilder(
-              animation: projectProvider.notifier,
-              builder: (context, child) {
-                return Transform(
-                  transform: projectProvider.notifier.value,
-                  child: ItemStackBuilder(id),
-                );
-              }),
-        ),
-      ]),
+          notifier.value = m;
+          setMaxScaleAndOffset(context);
+        },
+        shouldRotate: false,
+        child: Stack(children: [
+          Container(color: Colors.transparent),
+          Positioned(
+            top: projectProvider.generalStackOffset.dy,
+            left: projectProvider.generalStackOffset.dx,
+            child: AnimatedBuilder(
+                animation: projectProvider.notifier,
+                builder: (context, child) {
+                  return Transform(
+                    transform: projectProvider.notifier.value,
+                    child: ItemStackBuilder(id),
+                  );
+                }),
+          ),
+        ]),
+      ),
     );
   }
 }

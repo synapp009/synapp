@@ -1,10 +1,18 @@
 import 'dart:async';
 
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quill_delta/quill_delta.dart';
 import 'package:synapp/core/models/projectModel.dart';
+import 'package:synapp/core/viewmodels/CRUDModel.dart';
+import 'package:zefyr/zefyr.dart';
 import 'core/models/appletModel.dart';
 import 'feedbackTextboxWidget.dart';
+
+// change: add these two lines to imports section at the top of the file
+import 'dart:convert'; // access to jsonEncode()
+import 'dart:io'; // access to File and Directory classes
 
 class TextboxWidget extends StatefulWidget {
   TextboxWidget({GlobalKey key}) : super(key: key);
@@ -36,7 +44,6 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   GlobalKey feedbackKey = new GlobalKey();
   @override
   Widget build(BuildContext context) {
-    print('focus ${_focusNode.hasFocus}');
     projectProvider = Provider.of<Project>(context);
     var key = widget.key;
     Key actualTargetKey = projectProvider.getActualTargetKey(key);
@@ -53,7 +60,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
           absorbing = true;
         },
         onPointerDown: (PointerDownEvent event) {
-         // FocusScope.of(context).requestFocus(new FocusNode());
+          // FocusScope.of(context).requestFocus(new FocusNode());
 
           if (projectProvider.firstItem) {
             projectProvider.actualItemKey = key;
@@ -77,7 +84,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
         onPointerMove: (PointerMoveEvent event) {
           absorbing = true;
           projectProvider.pointerMoving = true;
-         /* _timer = new Timer(Duration(milliseconds: 100), () {
+          /* _timer = new Timer(Duration(milliseconds: 100), () {
             projectProvider.pointerMoving = false;
 
             _timer = new Timer(Duration(milliseconds: 1000), () {
@@ -95,9 +102,8 @@ class _TextboxWidgetState extends State<TextboxWidget> {
           });*/
         },
         child: LongPressDraggable(
-            onDragStarted: () {
-              print('drag');
-            },
+            maxSimultaneousDrags: _focusNode.hasFocus ? 0 : 1,
+            onDragStarted: () {},
             dragAnchor: DragAnchor.pointer,
             onDragCompleted: () {
               //position if textbox gets conected to a window
@@ -126,9 +132,9 @@ class _TextboxWidgetState extends State<TextboxWidget> {
             feedback: ListenableProvider<Project>.value(
               value: Provider.of<Project>(context),
               child: Material(
-                color: Colors.transparent,
-                child:
-                    FeedbackTextboxWidget(id, feedbackKey, pointerDownOffset),
+                child: Container(height: 50, width: 50),
+                /* child:
+                    FeedbackTextboxWidget(id, feedbackKey, pointerDownOffset),*/
               ),
             ),
             child: AbsorbPointer(
@@ -186,6 +192,12 @@ class FitTextField extends StatefulWidget {
 class FitTextFieldState extends State<FitTextField> {
   TextEditingController txt = TextEditingController();
 
+  /// Allows to control the editor and the document.
+  ZefyrController _controller;
+
+  /// Zefyr editor like any other input field requires a focus node.
+  FocusNode _focusNode;
+
   // We will use this text style for the TextPainter used to calculate the width
   // and for the TextField so that we calculate the correct size for the text
   // we are actually displaying
@@ -194,6 +206,16 @@ class FitTextFieldState extends State<FitTextField> {
     super.initState();
     // Set the text in the TextField to our initialValue
     txt.text = widget.initialValue;
+    final document = _loadDocument();
+    _controller = ZefyrController(document);
+
+    _focusNode = widget.myFocusNode;
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        _saveDocument(context);
+      }
+    });
+    _controller.addListener(() {});
   }
 
   @override
@@ -201,74 +223,227 @@ class FitTextFieldState extends State<FitTextField> {
     var projectProvider = Provider.of<Project>(context);
     var id = projectProvider.getIdFromKey(widget.itemKey);
     var textBox = projectProvider.appletMap[id];
+    var size = projectProvider.appletMap[id].size;
+    var position = projectProvider.appletMap[id].position;
+    ZefyrImageDelegate _imageDelegate;
+
+    _saveDocument(context);
+    final editor =
+        //ZefyrView(document: _controller.document);
+
+        ZefyrEditor(
+      //height: projectProvider.appletMap[id].size.height, // set the editor's height
+      /*decoration: new InputDecoration(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(3)),
+          borderSide: BorderSide(width: 2.0, color: Colors.grey[900]),
+        ),
+      ),*/
+
+      controller: _controller,
+      focusNode: _focusNode,
+      autofocus: false,
+      imageDelegate: _imageDelegate,
+      physics: ClampingScrollPhysics(),
+    );
+    final form = editor;
+
     bool isFixed = textBox.fixed;
     var actualTargetId = projectProvider.getIdFromKey(widget.actualTargetKey);
 
     var targetScale = projectProvider.appletMap[actualTargetId].scale;
-    // Use TextPainter to calculate the width of our text
-    TextSpan ts = new TextSpan(style: textStyle, text: txt.text);
-    // List<LineMetrics> lines = tp.computeLineMetrics();
-    TextPainter tp = new TextPainter(
-        text: ts, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
-    tp.layout();
-
-    // We will use this width for the container wrapping our TextField
-    var textWidth = tp.width;
-
-    // Enforce a minimum width
-    if (textWidth < widget.minWidth) {
-      textWidth = widget.minWidth;
-    } else {
-      textWidth = textWidth;
-    }
-
-    return Container(
-      key: widget.feedbackKey,
-      width: widget.actualTargetKey == null
-          ? textWidth * widget.itemScale
-          : projectProvider
-              .appletMap[id].size.width, // textWidth * widget.itemScale
-      child: FittedBox(
-        child: Container(
-          width: widget.actualTargetKey == null
-              ? textWidth
-              : projectProvider.appletMap[id].size
-                  .width, //projectProvider.appletMap[projectProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
-          //decoration: new BoxDecoration(color: color),
-
-          child: TextField(
-            readOnly: true,
-            cursorColor: Colors.grey[900],
-            enabled: false,
-            //readOnly: true,
-            focusNode: widget.myFocusNode,
-            keyboardType: TextInputType.multiline,
-            autofocus: false,
-            minLines: isFixed ? 6 : 1,
-            maxLines: isFixed ? 6 : null,
-            decoration: InputDecoration(
-              contentPadding: EdgeInsets.only(left: 1, right: -5),
-              hintText: 'Text',
-              border: InputBorder.none,
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                    width: 1 * widget.itemScale,
-                    color: Colors.grey[900],
-                    style: isFixed ? BorderStyle.none : BorderStyle.solid),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(3),
+    //textWidth = 400;
+    return Stack(
+      overflow: Overflow.clip,
+      children: [
+        Container(
+          height: size.height + 40.0,
+          width: size.width + 40.0,
+        ),
+        Transform.translate(
+          offset: Offset(20, 20),
+          child: DottedBorder(
+            color: _focusNode.hasFocus ? Colors.grey[900] : Colors.transparent,
+            borderType: BorderType.RRect,
+            //radius: Radius.circular(5),
+            padding: EdgeInsets.all(0),
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: Container(
+                //key: widget.feedbackKey,
+                width: widget.actualTargetKey == null
+                    ? projectProvider.appletMap[id].size.width *
+                        widget.itemScale
+                    : projectProvider.appletMap[id].size
+                        .width, // textWidth * widget.itemScale
+                height: widget.actualTargetKey == null
+                    ? projectProvider.appletMap[id].size.height *
+                        widget.itemScale
+                    : projectProvider.appletMap[id].size.height,
+                child: Container(
+                  width: widget.actualTargetKey == null
+                      ? projectProvider.appletMap[id].size.width
+                      : projectProvider.appletMap[id].size
+                          .width, //projectProvider.appletMap[projectProvider.getActualTargetKey(widget.itemKey)].size.width, //TODO: autosize width still not perfect
+                  //decoration: new BoxDecoration(color: color),
+                  height: widget.actualTargetKey == null
+                      ? projectProvider.appletMap[id].size.height
+                      : projectProvider.appletMap[id].size.height,
+                  //color: Colors.transparent,
+                  child: form,
                 ),
               ),
             ),
-            style: textStyle,
-            controller: txt,
-            onChanged: (text) {
-              textBox.content = txt.text;
+          ),
+        ),
+        ...scaleContainer(
+            context: context,
+            position: position,
+            size: size,
+            textBoxId: id,
+            selected: _focusNode.hasFocus),
+      ],
+    );
+  }
 
-              // Tells the framework to redraw the widget
-              // The widget will redraw with a new width
-              setState(() {});
+  /// Loads the document to be edited in Zefyr.
+  NotusDocument _loadDocument() {
+    // For simplicity we hardcode a simple document with one line of text
+    // saying "Zefyr Quick Start".
+    // (Note that delta must always end with newline.)
+    final Delta delta = Delta()..insert(widget.initialValue);
+    return NotusDocument.fromDelta(delta);
+  }
+
+  // change: add after _loadDocument()
+
+  void _saveDocument(BuildContext context) {
+    var projectProvider = Provider.of<Project>(context, listen: false);
+    var appletId = projectProvider.getIdFromKey(widget.itemKey);
+    TextApplet tempApp = projectProvider.appletMap[appletId];
+    // Notus documents can be easily serialized to JSON by passing to
+    // `jsonEncode` directly
+    final contents = jsonEncode(_controller.document);
+    // For this example we save our document to a temporary file.
+    final file = File(Directory.systemTemp.path + "/quick_start.json");
+
+    // And show a snack bar on success.
+    /*file.writeAsString(contents).then((_) {
+      //Scaffold.of(context).showSnackBar(SnackBar(content: Text("Saved.")));
+    });*/
+    Provider.of<CRUDModel>(context, listen: false)
+        .updateApplet(projectProvider.id, tempApp, appletId);
+  }
+}
+
+List<Widget> scaleContainer(
+    {BuildContext context,
+    Offset position,
+    Size size,
+    String textBoxId,
+    bool selected}) {
+  List<Widget> scaleContainerList = [];
+  for (int i = 0; i < 8; i++) {
+    scaleContainerList.add(ScaleContainer(
+        size: size,
+        i: i,
+        position: position,
+        selected: selected,
+        textBoxId: textBoxId));
+  }
+  return scaleContainerList;
+}
+
+class ScaleContainer extends StatelessWidget {
+  ScaleContainer(
+      {this.position, this.size, this.textBoxId, this.selected, this.i});
+
+  final int i;
+
+  final Offset position;
+  final Size size;
+  final String textBoxId;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    //List<int> indexList = Iterable<int>.generate(8).toList();
+    var projectProvider = Provider.of<Project>(context);
+    var itemProvider = projectProvider.appletMap[textBoxId];
+    var itemScale = projectProvider.appletMap[textBoxId].scale;
+    var itemSize = projectProvider.appletMap[textBoxId].size;
+    var itemPosition = projectProvider.appletMap[textBoxId].position;
+    var originTextBoxPosition = projectProvider.originTextBoxPosition;
+    var originTextBoxSize = projectProvider.originTextBoxSize;
+
+    List<Offset> positionList = [
+      Offset(0, 0),
+      Offset(0 + size.width / 2, 0),
+      Offset(0 + size.width, 0),
+      Offset(0 + size.width, 0 + size.height / 2),
+      Offset(0 + size.width, 0 + size.height),
+      Offset(0 + size.width / 2, 0 + size.height),
+      Offset(0, 0 + size.height),
+      Offset(0, 0 + size.height / 2)
+    ];
+
+    return Visibility(
+      visible: selected ? true : false,
+      child: Positioned(
+        left: positionList[i].dx,
+        top: positionList[i].dy,
+        child: Listener(
+          onPointerDown: (event) {
+            projectProvider.originTextBoxPosition = itemPosition;
+            projectProvider.originTextBoxSize = itemSize;
+          },
+          onPointerMove: (event) {
+            print(itemSize - event.delta);
+
+            /*print((originTextBoxSize.height +
+                    (originTextBoxPosition.dy - event.position.dy)));*/
+
+            projectProvider.scaleTextBox(i, textBoxId, event);
+          },
+          child: GestureDetector(
+            onPanDown: (details) {
+              print('down');
             },
+            onTap: () {
+              print('tapp');
+            },
+            onPanStart: (details) {
+              // originPosition = projectProvider.appletMap[textBoxId].position;
+            },
+            onPanUpdate: (details) {
+              //projectProvider.notifyListeners();
+            },
+            child: Container(
+              height: 40,
+              width: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(20),
+                ),
+              ),
+              child: Container(
+                height: 20,
+                width: 20,
+                decoration: BoxDecoration(
+                  color: Colors.white70,
+                  border: Border.all(
+                      style: BorderStyle.solid,
+                      color: Colors.grey[900],
+                      width: 0.5),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(20),
+                  ),
+                ),
+                //color: Colors.green,
+              ),
+            ),
           ),
         ),
       ),
