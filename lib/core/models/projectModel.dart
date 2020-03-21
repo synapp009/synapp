@@ -3,10 +3,8 @@ import 'dart:math';
 import 'package:angles/angles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:random_color/random_color.dart';
-import 'package:synapp/core/viewmodels/CRUDModel.dart';
-import 'package:uuid/uuid.dart';
+
 
 import '../constants.dart';
 import 'appletModel.dart';
@@ -107,6 +105,7 @@ class Project with ChangeNotifier {
       );
     }
 
+
     Map<String, dynamic> arrowJsonMap = {};
 
     if (arrowMap != null) {
@@ -125,6 +124,7 @@ class Project with ChangeNotifier {
         arrowJsonMap['null'] = null;
       }
     }
+
 
     return {
       "id": id,
@@ -150,7 +150,8 @@ class Project with ChangeNotifier {
   double scaleChange = 1.0;
   bool textFieldFocus = false;
   bool pointerMoving = false;
-
+  Offset originTextBoxPosition;
+  Size originTextBoxSize;
 
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
@@ -224,7 +225,6 @@ class Project with ChangeNotifier {
     } else if (type == 'TextApplet') {
       createNewTextBox(newAppKey, id);
     }
-    print(appletMap);
   }
 
   createNewWindow(newAppKey, id) {
@@ -309,19 +309,17 @@ class Project with ChangeNotifier {
         type: "TextApplet",
         id: id,
         key: newAppKey,
-        size: Size(100, 10),
+        size: Size(100, 60),
         position: Offset(200, 100),
         color: Colors.black,
         title: 'Title',
-        content: '',
-        fixed:false,
+        content: 'Enter Text\n',
+        fixed: false,
         //bool expanded;
         scale: 1.0,
         textSize: 16);
     //notifyListeners();
   }
-
-
 
   void onlySelectThis(String key) {
     appletMap.forEach((k, v) => {
@@ -353,10 +351,124 @@ class Project with ChangeNotifier {
     return tempScale;
   }
 
-  unselectAll(){
+  unselectAll() {
     appletMap.forEach((key, value) {
       value.selected = false;
     });
+    notifyListeners();
+  }
+
+  void scaleTextBox(int i, String textBoxId, PointerMoveEvent details) {
+   
+    if (i == 0) {
+      appletMap[textBoxId].position = Offset(
+        appletMap[textBoxId].size.width - details.delta.dx > 40
+            ? appletMap[textBoxId].position.dx + details.delta.dx
+            : appletMap[textBoxId].position.dx,
+        appletMap[textBoxId].size.height - details.delta.dy > 40
+            ? appletMap[textBoxId].position.dy + details.delta.dy
+            : appletMap[textBoxId].position.dy,
+      );
+      appletMap[textBoxId].size = Size(
+        appletMap[textBoxId].size.width +
+            (appletMap[textBoxId].size.width - details.delta.dx > 40
+                ? -details.delta.dx
+                : 0),
+        appletMap[textBoxId].size.height +
+            (appletMap[textBoxId].size.height - details.delta.dy > 40
+                ? -details.delta.dy
+                : 0),
+      );
+
+      // i = 6 or 7
+    } else if (i == 6 || i == 7) {
+      appletMap[textBoxId].position = Offset(
+          appletMap[textBoxId].position.dx +
+              (appletMap[textBoxId].size.width - details.delta.dx > 40
+                  ? details.delta.dx
+                  : 0),
+          appletMap[textBoxId].position.dy);
+      if (i == 6) {
+        appletMap[textBoxId].size = Size(
+            appletMap[textBoxId].size.width +
+                (appletMap[textBoxId].size.width - details.delta.dx > 40
+                    ? -details.delta.dx
+                    : 0),
+            appletMap[textBoxId].size.height +
+                (appletMap[textBoxId].size.height + details.delta.dy > 40
+                    ? details.delta.dy
+                    : 0));
+        //i = 7
+      } else if (i == 7) {
+        appletMap[textBoxId].size = Size(
+            appletMap[textBoxId].size.width -
+                (appletMap[textBoxId].size.width - details.delta.dx > 40
+                    ? (details.delta.dx)
+                    : 0),
+            appletMap[textBoxId].size.height);
+      }
+    } else if (i == 1 || i == 5) {
+      if (i == 5) {
+        appletMap[textBoxId].size = Size(
+            appletMap[textBoxId].size.width,
+            appletMap[textBoxId].size.height +
+                (appletMap[textBoxId].size.height + details.delta.dy > 40
+                    ? (details.delta.dy)
+                    : 0));
+      } else if (i == 1) {
+        appletMap[textBoxId].position = Offset(
+          appletMap[textBoxId].position.dx,
+          appletMap[textBoxId].position.dy +
+              (appletMap[textBoxId].size.height - details.delta.dy > 40
+                  ? details.delta.dy
+                  : 0),
+        );
+
+        appletMap[textBoxId].size = Size(
+            appletMap[textBoxId].size.width,
+            appletMap[textBoxId].size.height -
+                (appletMap[textBoxId].size.height - details.delta.dy > 40
+                    ? (details.delta.dy)
+                    : 0));
+      }
+    } else if (i == 2) {
+      appletMap[textBoxId].position = Offset(
+        appletMap[textBoxId].position.dx,
+        appletMap[textBoxId].position.dy +
+            (appletMap[textBoxId].position.dy + details.position.dy > 40
+                ? (appletMap[textBoxId].size.height - details.delta.dy > 40
+                    ? details.delta.dy
+                    : 0)
+                : 0),
+      );
+      appletMap[textBoxId].size = Size(
+        appletMap[textBoxId].size.width +
+            (appletMap[textBoxId].size.width + details.delta.dx > 40
+                ? details.delta.dx
+                : 0),
+        appletMap[textBoxId].size.height +
+            (appletMap[textBoxId].size.height - details.delta.dy > 40
+                ? -details.delta.dy
+                : 0),
+      );
+    } else if (i == 3) {
+      appletMap[textBoxId].size = Size(
+          appletMap[textBoxId].size.width +
+              (appletMap[textBoxId].size.width + details.delta.dx > 40
+                  ? (details.delta.dx)
+                  : 0),
+          appletMap[textBoxId].size.height);
+    } else if (i == 4) {
+      appletMap[textBoxId].size = Size(
+          appletMap[textBoxId].size.width +
+              (appletMap[textBoxId].size.width + details.delta.dx > 40
+                  ? details.delta.dx
+                  : 0),
+          appletMap[textBoxId].size.height +
+              (appletMap[textBoxId].size.height + details.delta.dy > 40
+                  ? details.delta.dy
+                  : 0));
+    }
     notifyListeners();
   }
 
