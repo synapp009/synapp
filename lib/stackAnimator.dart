@@ -11,8 +11,8 @@ class StackAnimator extends StatelessWidget {
   StackAnimator(this.id);
   @override
   Widget build(BuildContext context) {
-    var projectProvider = Provider.of<Project>(context);
 
+    var projectProvider = Provider.of<Project>(context);
     Size displaySize = MediaQuery.of(context).size;
     ValueNotifier<Matrix4> notifier;
     if (projectProvider.notifier == null) {

@@ -15,7 +15,7 @@ class Constants {
       null: Applet(
           color: null,
           type: '',
-          id: '',
+          id: 'null‚',
           key: null,
           position: Offset(0, 0),
           scale: 1.0,

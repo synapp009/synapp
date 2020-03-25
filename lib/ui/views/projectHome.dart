@@ -48,7 +48,7 @@ class _HomeViewState extends State<HomeView> {
         leading: new IconButton(
           onPressed: () {
             print('provider $projectProvider');
-            crudProvider.updateProject(projectProvider, widget.project.id);
+            crudProvider.updateProject(projectProvider, widget.project.projectId);
             //projectProvider.appletMap.clear();
             Navigator.pop(context);
           },
@@ -59,7 +59,7 @@ class _HomeViewState extends State<HomeView> {
       body: GestureDetector(
         onTap:() =>
             FocusScope.of(context).requestFocus(new FocusNode()),
-        child: MyHome(widget.project.id),
+        child: MyHome(widget.project.projectId),
       ),
     );
   }

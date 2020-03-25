@@ -77,12 +77,15 @@ class _HomePageState extends State<HomePage> {
                     );
                   default:
                     projects = snapshot.data.documents
-                        .map((doc) => Project.fromMap(doc.data, doc.documentID))
+                        .map(
+                          (doc) => Project.fromMap(doc, doc.documentID),
+                        )
                         .toList();
                     return new ListView.builder(
-                        itemCount: projects.length,
-                        itemBuilder: (buildContext, index) =>
-                            CustomCard(projectDetails: projects[index]));
+                      itemCount: projects.length,
+                      itemBuilder: (buildContext, index) =>
+                          CustomCard(projectDetails: projects[index]),
+                    );
                 }
               },
             ),

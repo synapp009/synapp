@@ -332,7 +332,7 @@ class FitTextFieldState extends State<FitTextField> {
       //Scaffold.of(context).showSnackBar(SnackBar(content: Text("Saved.")));
     });*/
     Provider.of<CRUDModel>(context, listen: false)
-        .updateApplet(projectProvider.id, tempApp, appletId);
+        .updateApplet(projectProvider.projectId, tempApp, appletId);
   }
 }
 

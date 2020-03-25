@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 Color _getColorFromString(String snapshot) {
@@ -71,18 +72,20 @@ class Applet {
     return tempList;
   }
 
-  Applet.fromMap(Map snapshot)
+  getIdFromMap(Map<String, dynamic> snapshot) {}
+  Applet.fromMap(DocumentSnapshot snapshot)
       : //key = Key(snapshot['id']) ?? null,
-        id = snapshot['id'],
-        position = Offset((snapshot['positionDx'] as num).toDouble(),
-                (snapshot['positionDy'] as num).toDouble()) ??
+        id = snapshot.documentID == null ? null : snapshot.documentID,
+        position = Offset((snapshot.data['positionDx'] as num).toDouble(),
+                (snapshot.data['positionDy'] as num).toDouble()) ??
             Offset(null, null),
-        color = _getColorFromString(snapshot['color']) ?? null,
-        scale = (snapshot['scale'] as num).toDouble() ?? null,
-        childIds = _childIdsSnapshotDynamicToList(snapshot['childIds']) ?? null,
-        type = snapshot['type'] ?? null,
-        fixed = snapshot['fixed'] == "true",
-        content = snapshot['content'] ?? '';
+        color = _getColorFromString(snapshot.data['color']) ?? null,
+        scale = (snapshot.data['scale'] as num).toDouble() ?? null,
+        childIds =
+            _childIdsSnapshotDynamicToList(snapshot.data['childIds']) ?? null,
+        type = snapshot.data['type'] ?? null,
+        fixed = snapshot.data['fixed'] == "true",
+        content = snapshot.data['content'] ?? '';
 
   //childKeys = _getChildKeys(snapshot['childIds']);
 
@@ -213,7 +216,7 @@ class TextApplet extends Applet {
       : color = _getColorFromString(snapshot['color']) ?? '',
         title = snapshot['title'] ?? '',
         id = snapshot['id'],
-        textSize = snapshot['textSize'] ?? '',
+        textSize = (snapshot['textSize'] as num).toDouble(),
         content = snapshot['content'] ?? '',
         fixed = snapshot['fixed'] == "true",
         scale = (snapshot['scale'] as num).toDouble() ?? 0,

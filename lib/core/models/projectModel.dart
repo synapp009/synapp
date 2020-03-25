@@ -3,18 +3,22 @@ import 'dart:math';
 import 'package:angles/angles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:random_color/random_color.dart';
+import 'package:synapp/core/services/api.dart';
+import 'package:synapp/core/viewmodels/CRUDModel.dart';
 
-
+import '../../locator.dart';
 import '../constants.dart';
 import 'appletModel.dart';
 import 'arrowModel.dart';
 
 class Project with ChangeNotifier {
-  String id;
+  String projectId;
   String name;
   String description;
   String img;
+  static String projectIdStatic;
   //Key key;
 
   //structure Map contains all the provider data of the Applets of a project
@@ -29,13 +33,14 @@ class Project with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
 
   Project(
-      {this.id,
+      {this.projectId,
       //this.key,
       this.name,
       this.img,
       this.appletMap,
       this.arrowMap,
       this.description}) {
+    projectIdStatic = this.projectId;
     appletMap = Constants.initializeAppletMap(appletMap);
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
@@ -44,25 +49,38 @@ class Project with ChangeNotifier {
     stackSize = null;
   }
 
-  static Map<String, Applet> getAppletMap(List<dynamic> snapshot) {
+  static Map<String, Applet> getAppletMap(
+      String projectId, List<dynamic> snapshot) {
+    Api _api = locator<Api>();
     Map<String, Applet> tempMap = {};
 
-    if (snapshot != null) {
-      snapshot.forEach((dynamic appletDraft) {
-        dynamic tempApplet;
-        var tempId;
-        if (appletDraft.toString().contains('WindowApplet')) {
-          tempApplet = WindowApplet.fromMap(appletDraft);
-        } else if (appletDraft.toString().contains('TextApplet')) {
-          tempApplet = TextApplet.fromMap(appletDraft);
-        } else {
-          tempApplet = Applet.fromMap(appletDraft);
-        }
-        tempId = tempApplet.id == "" ? null : tempApplet.id;
-
-        tempMap[tempId] = tempApplet;
+    /*Firestore.instance
+        .collection('projects')
+        .document(projectId)
+        .collection('applets')
+        .snapshots()
+        .listen((snapshot) {
+      snapshot.documents.forEach((doc) {
+        tempMap[doc.documentID] = Applet.fromMap(doc.data);
       });
-    }
+    });*/
+
+    //return Project.fromMap(doc.data, doc.documentID);
+
+    snapshot.forEach((dynamic appletDraft) {
+      dynamic tempApplet;
+      var tempId;
+      if (appletDraft.toString().contains('WindowApplet')) {
+        tempApplet = WindowApplet.fromMap(appletDraft);
+      } else if (appletDraft.toString().contains('TextApplet')) {
+        tempApplet = TextApplet.fromMap(appletDraft);
+      } else {
+        tempApplet = Applet.fromMap(appletDraft);
+      }
+      tempId = tempApplet.id == "" ? null : tempApplet.id;
+
+      tempMap[tempId] = tempApplet;
+    });
 
     return tempMap;
   }
@@ -81,12 +99,12 @@ class Project with ChangeNotifier {
   }
 
   Project.fromMap(Map snapshot, String id)
-      : id = snapshot['id'] ?? '',
+      : projectId = snapshot['id'] ?? '',
         //key = Key(snapshot['key']) ?? null,
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
         description = snapshot['description'] ?? '',
-        appletMap = getAppletMap(snapshot['appletList']) ?? {},
+        appletMap = getAppletMap(snapshot['id'], snapshot['appletList']) ?? {},
         arrowMap = getArrowMap(snapshot['arrowMap']) ?? {};
 
   /*tempMap = appletMap.map((k, v) {
@@ -103,8 +121,16 @@ class Project with ChangeNotifier {
       appletMap.forEach(
         (k, Applet v) => appletList.add(v.toJson()),
       );
-    }
 
+      /*appletMap.forEach((k, Applet v) => {
+            Firestore.instance
+                .collection('projects')
+                .document(projectId)
+                .collection('appletList')
+                .document(k)
+                .updateData(v.toJson())
+          });*/
+    }
 
     Map<String, dynamic> arrowJsonMap = {};
 
@@ -125,9 +151,8 @@ class Project with ChangeNotifier {
       }
     }
 
-
     return {
-      "id": id,
+      "id": projectId,
       "name": name,
       "img": img,
       "appletList": appletList,
@@ -157,14 +182,13 @@ class Project with ChangeNotifier {
 
   Key actualItemKey;
   bool firstItem = true;
+  var chosenId;
 
   Offset stackOffset = Offset(0, 0);
   Offset generalStackOffset = Offset(0, 0);
 
-  String chosenId;
-
   updateProvider(Project data, statusHeight) {
-    id = data.id;
+    projectId = data.projectId;
     name = data.name;
     description = data.description;
     img = data.img;
@@ -217,32 +241,33 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  createNewApp(type, GlobalKey itemKey, GlobalKey newAppKey, String id) {
+  createNewApp(
+      type, GlobalKey itemKey, GlobalKey newAppKey, BuildContext context) {
     //RenderBox itemBox = itemKey.currentContext.findRenderObject();
     //Offset appPosition = itemBox.globalToLocal(Offset.zero);
     if (type == "WindowApplet") {
-      createNewWindow(newAppKey, id);
+      createNewWindow(newAppKey, context);
     } else if (type == 'TextApplet') {
-      createNewTextBox(newAppKey, id);
+      createNewTextBox(newAppKey, context);
     }
   }
 
-  createNewWindow(newAppKey, id) {
+  createNewWindow(newAppKey, context) {
     //Key windowKey = new GlobalKey();
-
+    var appletId;
     Color color = new RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
 
-    if (appletMap[null] == null) {
+    /*if (appletMap[null] == null) {
       appletMap[null] = Applet(
         childIds: [id],
       );
-    }
+    }*/
     //appletMap[null].childIds.add(id);
-    appletMap[id] = WindowApplet(
+    // appletMap[id]
+    var newApplet = WindowApplet(
         type: 'WindowApplet',
         key: newAppKey,
-        id: id,
         size: Size(130, 130),
         position: Offset(200, 100),
         color: color,
@@ -250,7 +275,39 @@ class Project with ChangeNotifier {
         childIds: [],
         scale: 0.3,
         selected: false);
+    var data = newApplet.toJson();
 
+    Firestore.instance
+        .collection("projects")
+        .document(projectId)
+        .collection("applets")
+        .add(data)
+        .then((v) {
+      var id = v.documentID;
+      var tempData = data;
+      tempData["id"] = id;
+
+      Firestore.instance
+          .collection("projects")
+          .document(projectId)
+          .collection("applets")
+          .document(v.documentID)
+          .updateData(tempData);
+      newApplet.id = id;
+      appletMap[id] = newApplet;
+    });
+    //var id = doc.documentID;
+    //print('new app id $id');
+    //var tempData = data;
+    //tempData["id"] = id;
+    /* Firestore.instance
+        .collection("projects")
+        .document(projectId)
+        .collection("applets")
+        .document(id)
+        .updateData(tempData);
+    newApplet.id = id;
+    appletMap[id] = newApplet;*/
 //    notifyListeners();
   }
 
@@ -359,7 +416,6 @@ class Project with ChangeNotifier {
   }
 
   void scaleTextBox(int i, String textBoxId, PointerMoveEvent details) {
-   
     if (i == 0) {
       appletMap[textBoxId].position = Offset(
         appletMap[textBoxId].size.width - details.delta.dx > 40
