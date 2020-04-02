@@ -71,14 +71,15 @@ class _HomePageState extends State<HomePage> {
                   return new Text('Error: ${snapshot.error}');
                 switch (snapshot.connectionState) {
                   case ConnectionState.waiting:
-                    return new SpinKitRotatingCircle(
-                      color: Colors.white,
+                    return new SpinKitDoubleBounce(
+                      color: Color(0xff875AFF),
                       size: 50.0,
                     );
+
                   default:
                     projects = snapshot.data.documents
                         .map(
-                          (doc) => Project.fromMap(doc, doc.documentID),
+                          (doc) => Project.fromMap(doc.data, doc.documentID),
                         )
                         .toList();
                     return new ListView.builder(

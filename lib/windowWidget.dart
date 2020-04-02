@@ -6,13 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
-import 'package:synapp/itemStackBuilder.dart';
 import 'package:synapp/textboxWidget.dart';
 
-import 'core/models/appletModel.dart';
 import 'core/models/projectModel.dart';
 
-import 'feeddbackWindowWidget.dart';
+import 'feedbackWindowWidget.dart';
 
 class WindowWidget extends StatefulWidget {
   WindowWidget({GlobalKey key}) : super(key: key);
@@ -33,16 +31,15 @@ class _WindowWidgetState extends State<WindowWidget>
 
   static GlobalKey feedbackKey = GlobalKey();
   static GlobalKey sizedBoxKey = GlobalKey();
-  var _projectProvider;
+
   var _crudProvider;
   var _itemScale;
-
+  var _projectProvider;
   var offsetChange = Offset(0, 0);
   var _scaleActive = false;
   @override
   void initState() {
     super.initState();
-
     //Animation Widget  controller gets bigger when tapp and dragged and smaller when dropped
     _controller = AnimationController(
       vsync: this,
@@ -72,6 +69,7 @@ class _WindowWidgetState extends State<WindowWidget>
   double originScale;
   Offset originPosition;
   Size originSize;
+  String originId;
   Map<Key, Offset> childrenOriginPosition = {};
   Map<Key, double> childrenOriginScale = {};
 
@@ -89,8 +87,8 @@ class _WindowWidgetState extends State<WindowWidget>
   }
 
   void changeChildrenScale(key, scaleChange) {
-    List<Key> childrenList =
-        Provider.of<Project>(context, listen: false).getAllChildren(key);
+    List<Key> childrenList = Provider.of<Project>(context, listen: false)
+        .getAllChildren(itemKey: key);
     if (childrenList != null) {
       childrenList.forEach((element) {
         Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
@@ -107,8 +105,8 @@ class _WindowWidgetState extends State<WindowWidget>
   }
 
   void changeChildrenScaleAndPosition(key, offsetFromOriginDX, scaleChange) {
-    List<Key> childrenList =
-        Provider.of<Project>(context, listen: false).getAllChildren(key);
+    List<Key> childrenList = Provider.of<Project>(context, listen: false)
+        .getAllChildren(itemKey: key);
     if (childrenList != null) {
       childrenList.forEach((element) {
         Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
@@ -127,8 +125,8 @@ class _WindowWidgetState extends State<WindowWidget>
   }
 
   void changeChildrenPosition(key, scaleChange, changeMap) {
-    List<Key> childrenList =
-        Provider.of<Project>(context, listen: false).getAllChildren(key);
+    List<Key> childrenList = Provider.of<Project>(context, listen: false)
+        .getAllChildren(itemKey: key);
     if (childrenList != null) {
       childrenList.forEach((element) => _projectProvider
               .appletMap[_projectProvider.getIdFromKey(element)].position =
@@ -145,12 +143,6 @@ class _WindowWidgetState extends State<WindowWidget>
     _projectProvider = Provider.of<Project>(context);
     _crudProvider = Provider.of<CRUDModel>(context);
     id = _projectProvider.getIdFromKey(widget.key);
-
-    Key _windowTargetKey = _projectProvider.getActualTargetKey(widget.key);
-    String _windowTargetId = _projectProvider.getIdFromKey(_windowTargetKey);
-    double _windowTargetScale =
-        _projectProvider.appletMap[_windowTargetId].scale;
-
     _stackScale = _projectProvider.stackScale;
 
     _itemScale = _projectProvider.appletMap[id].scale;
@@ -294,19 +286,27 @@ class _WindowWidgetState extends State<WindowWidget>
                 onDragEnd: (DraggableDetails details) {
                   // _projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
-                    setState(() {
-                      _dragStarted = false;
-                      _projectProvider.updateArrowToKeyMap(
-                          _projectProvider.appletMap[id].key,
-                          _dragStarted,
-                          _projectProvider.appletMap[id].key);
-                      _projectProvider.hasArrowToKeyMap.clear();
-                    });
+                    //setState(() {
+                    _projectProvider.targetId = id;
+                    _dragStarted = false;
+                    _projectProvider.updateArrowToKeyMap(
+                        _projectProvider.appletMap[id].key,
+                        _dragStarted,
+                        _projectProvider.appletMap[id].key);
+                    _projectProvider.hasArrowToKeyMap.clear();
+                    //});
                   });
                 },
                 onDragStarted: () {
                   HapticFeedback.mediumImpact();
                   setState(() {
+                    _projectProvider.appletMap[id].onChange = true;
+                    _projectProvider.originId =
+                        _projectProvider.getActualTargetId(id);
+                    _projectProvider.changeItemDropPosition(
+                        _projectProvider.appletMap[id],
+                        _pointerDownOffset,
+                        _pointerUpOffset);
                     _timer = new Timer(Duration(milliseconds: 200), () {
                       _dragStarted = true;
 
@@ -318,20 +318,28 @@ class _WindowWidgetState extends State<WindowWidget>
                   });
                 },
                 onDragCompleted: () {
+                  _projectProvider.appletMap[id].onChange = false;
+
                   setState(() {
-                    _projectProvider.appletMap[id].position =
-                        _projectProvider.itemDropPosition(
-                            widget.key, _pointerDownOffset, _pointerUpOffset);
+                    _projectProvider.stackSizeChange(
+                        feedbackKey, _pointerUpOffset);
+
+                    _projectProvider.changeItemDropPosition(
+                        _projectProvider.appletMap[id],
+                        _pointerDownOffset,
+                        _pointerUpOffset);
                   });
                   //_crudProvider.updateApplet(_projectProvider.id, _projectProvider.appletMap[id], id);
                 },
                 onDraggableCanceled: (vel, Offset off) {
                   setState(() {
-                    _projectProvider.appletMap[id].position =
-                        _projectProvider.itemDropPosition(
-                            widget.key, _pointerDownOffset, _pointerUpOffset);
+                    _projectProvider.stackSizeChange(feedbackKey, off);
 
-                    _projectProvider.stackSizeChange(id, feedbackKey, off);
+                    _projectProvider.appletMap[id].onChange = false;
+                    _projectProvider.changeItemDropPosition(
+                        _projectProvider.appletMap[id],
+                        _pointerDownOffset,
+                        _pointerUpOffset);
                   });
                 },
                 dragAnchor: DragAnchor.pointer,
@@ -351,8 +359,9 @@ class _WindowWidgetState extends State<WindowWidget>
         //true if window changes target
         if (_projectProvider.appletMap[id].key != data.key &&
             //!_projectProvider.appletMap[null].childIds.contains(id) &&
-            !_projectProvider.appletMap[id].childIds.contains(id)) {
-          _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
+            !_projectProvider.appletMap[id].childIds.contains(data.id)) {
+          _projectProvider.changeItemListPosition(
+              itemId: data.id, newId: id, applet: data);
 
           Key _dragItemTargetKey =
               _projectProvider.getActualTargetKey(data.key);
@@ -404,6 +413,8 @@ class _WindowWidgetState extends State<WindowWidget>
       }, onLeave: (dynamic data) {
         _projectProvider.appletMap[id].selected = false;
       }, onAccept: (dynamic data) {
+        _projectProvider.updateApplet(data, id, _projectProvider.originId);
+
         if (data.type == 'TextApplet') {
           _projectProvider.appletMap[data.id].scale = _itemScale;
           if (_projectProvider.appletMap[id].selected == true) {
@@ -458,24 +469,27 @@ class _WindowWidgetState extends State<WindowWidget>
                   ),
                 ),*/
 
-            SizedBox(
-              //key: widget.key,
-              height: _projectProvider.appletMap[id].size.height * _itemScale,
-              width: _projectProvider.appletMap[id].size.width * _itemScale,
-              child: Material(
-                shape: SuperellipseShape(
-                  side: BorderSide(
-                      color: _projectProvider.appletMap[id].selected
-                          ? Colors.grey[900]
-                          : Colors.transparent,
-                      width: 3.0 * _itemScale),
-                  borderRadius: BorderRadius.circular(28 * _itemScale),
+            Opacity(
+              opacity: _projectProvider.appletMap[id].onChange ? 0.7 : 1,
+              child: SizedBox(
+                //key: widget.key,
+                height: _projectProvider.appletMap[id].size.height * _itemScale,
+                width: _projectProvider.appletMap[id].size.width * _itemScale,
+                child: Material(
+                  shape: SuperellipseShape(
+                    side: BorderSide(
+                        color: _projectProvider.appletMap[id].selected
+                            ? Colors.grey[900]
+                            : Colors.transparent,
+                        width: 3.0 * _itemScale),
+                    borderRadius: BorderRadius.circular(28 * _itemScale),
+                  ),
+                  //margin: EdgeInsets.all(0),
+                  color: _projectProvider.appletMap[id].selected
+                      ? _tonedColor(_projectProvider.appletMap[id].color)
+                      : _projectProvider.appletMap[id].color,
+                  child: WindowStackBuilder(id),
                 ),
-                //margin: EdgeInsets.all(0),
-                color: _projectProvider.appletMap[id].selected
-                    ? _tonedColor(_projectProvider.appletMap[id].color)
-                    : _projectProvider.appletMap[id].color,
-                child: WindowStackBuilder(id),
               ),
             ),
             //The Icon to scale and resize the box
@@ -483,14 +497,14 @@ class _WindowWidgetState extends State<WindowWidget>
               visible: _projectProvider.appletMap[id].selected ? true : false,
               child: Transform.translate(
                 offset: Offset(
-                  (_projectProvider.appletMap[id].size.width*
-                      _itemScale - 20.0),
-                  (_projectProvider.appletMap[id].size.height *
-                      _itemScale - 20.0) ,
+                  (_projectProvider.appletMap[id].size.width * _itemScale -
+                      20.0),
+                  (_projectProvider.appletMap[id].size.height * _itemScale -
+                      20.0),
                 ),
                 child: Transform.scale(
-                  scale:1.0*_itemScale,
-                                  child: Material(
+                  scale: 1.0 * _itemScale,
+                  child: Material(
                     borderRadius: new BorderRadius.circular(30.0),
 
                     color: Colors.black54,
@@ -498,9 +512,7 @@ class _WindowWidgetState extends State<WindowWidget>
                     child: InkWell(
                       //highlightColor: Colors.tran,
                       borderRadius: BorderRadius.circular(100.0),
-                      onTap: () {
-                        print('tap');
-                      },
+                      onTap: () {},
                       onLongPress: () {},
                       child: Transform.translate(
                         offset: Offset(0, 0),
@@ -522,11 +534,11 @@ class _WindowWidgetState extends State<WindowWidget>
                             originPosition =
                                 _projectProvider.appletMap[id].position;
                             originSize = _projectProvider.appletMap[id].size;
-                            print('childlist');
                             List<Key> childrenList =
                                 Provider.of<Project>(context, listen: false)
                                     .getAllChildren(
-                                        _projectProvider.getKeyFromId(id));
+                                        itemKey:
+                                            _projectProvider.getKeyFromId(id));
 
                             childrenList.forEach((element) {
                               childrenOriginPosition[element] = _projectProvider
@@ -552,7 +564,8 @@ class _WindowWidgetState extends State<WindowWidget>
                             Offset offsetDelta =
                                 details.offsetFromOrigin / _stackScale -
                                     offsetChange;
-                            offsetChange = details.offsetFromOrigin / _stackScale;
+                            offsetChange =
+                                details.offsetFromOrigin / _stackScale;
                             if (!_scaleActive) {
                               setState(() {
                                 _projectProvider.appletMap[id].size = Size(
@@ -574,15 +587,14 @@ class _WindowWidgetState extends State<WindowWidget>
                                             1 * _itemScale);
                               });
                             } else {
-                              if (details.offsetFromOrigin.dx + originSize.width >
+                              if (details.offsetFromOrigin.dx +
+                                      originSize.width >
                                   40) {
                                 _projectProvider.appletMap[id].scale = (1 -
                                         (-details.offsetFromOrigin.dx /
                                             originSize.width)) *
                                     originScale;
-                                print(
-                                  details.offsetFromOrigin.dx,
-                                );
+
                                 var scaleChange = originScale /
                                     _projectProvider.appletMap[id].scale;
                                 changeChildrenScaleAndPosition(
@@ -610,7 +622,7 @@ class _WindowWidgetState extends State<WindowWidget>
                                     ? Icons.zoom_out_map
                                     : Icons.play_arrow,
                                 color: Colors.white,
-                                size: 40.0 ,
+                                size: 40.0,
                               ),
                             ),
                           ),
@@ -640,8 +652,8 @@ class WindowStackBuilder extends StatelessWidget {
         child: Container(
           height: projectProvider.appletMap[id].size.height,
           width: projectProvider.appletMap[id].size.width,
-          /* child: Text(
-              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),*/
+          child: Text(
+              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),
         ),
       ),
       //TextField(maxLines:40),

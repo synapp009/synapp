@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:random_color/random_color.dart';
 import 'package:synapp/core/services/api.dart';
+import 'package:synapp/core/services/localization.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
 
 import '../../locator.dart';
@@ -32,6 +33,10 @@ class Project with ChangeNotifier {
 
   ValueNotifier<Matrix4> notifier;
 
+  Api _api = locator<Api>();
+
+  Localization localization;
+
   Project(
       {this.projectId,
       //this.key,
@@ -41,7 +46,7 @@ class Project with ChangeNotifier {
       this.arrowMap,
       this.description}) {
     projectIdStatic = this.projectId;
-    appletMap = Constants.initializeAppletMap(appletMap);
+    appletMap = Constants.initializeAppletMap();
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
     //selectedMap = Constants.initializeSelectedMap(appletMap);
@@ -49,9 +54,125 @@ class Project with ChangeNotifier {
     stackSize = null;
   }
 
+  Project.fromMap(Map snapshot, String id)
+      : projectId = snapshot['id'] ?? '',
+        //key = Key(snapshot['key']) ?? null,
+        name = snapshot['name'] ?? '',
+        img = snapshot['img'] ?? '',
+        description = snapshot['description'] ?? '',
+        //appletMap = getAppletMap(snapshot['id'], snapshot['appletList']) ?? {},
+        arrowMap = getArrowMap(snapshot['arrowMap']) ?? {};
+
+  /*tempMap = appletMap.map((k, v) {
+        String tempK = k.toString();
+        dynamic tempV = v.toJson();
+        Map tempMap;
+        return tempMap[tempK] = tempV;
+      }),*/
+
+  toJson() {
+    /*appletMap.forEach((k, Applet v) => {
+            Firestore.instance
+                .collection('projects')
+                .document(projectId)
+                .collection('appletList')
+                .document(k)
+                .updateData(v.toJson())
+          });*/
+
+    Map<String, dynamic> arrowJsonMap = {};
+    if (arrowMap != null) {
+      if (arrowMap.length > 0) {
+        arrowMap.forEach((key, value) {
+          var tempList = [];
+          value.forEach((element) {
+            var tempArrow = element.toJson();
+            tempList.add(tempArrow);
+          });
+          if (key != null) {
+            arrowJsonMap[key] = tempList;
+          }
+        });
+      } else {
+        arrowJsonMap['null'] = null;
+      }
+    }
+
+    return {
+      "id": projectId,
+      "name": name,
+      "img": img,
+      //"appletList": appletList,
+      "arrowMap": arrowJsonMap,
+      "description": description
+    };
+  }
+
+  static bool mapContainsOnChange(Map<String, Applet> map) {
+    bool contains = false;
+    map.forEach((s, a) => contains = a.onChange ? true : false);
+    return contains;
+  }
+
+  Project update(Map<String, Applet> updatedAppletMap) {
+    if (appletMap == null) {
+      appletMap = {};
+    }
+
+    if (updatedAppletMap != null) {
+      /*updatedAppletMap.forEach(
+        (k, v) => print('updated map $k,${v.childIds}'),
+      );*/
+      updatedAppletMap.forEach((k, v) {
+        appletMap.update(k, (a) {
+          a.key = (a.key == null ? new GlobalKey() : a.key);
+          a.position = (a.position == updatedAppletMap[k].position
+                  ? a.position
+                  : updatedAppletMap[k].position) ??
+              Offset(0, 0);
+          a.scale = (a.scale == updatedAppletMap[k].scale
+              ? a.scale
+              : updatedAppletMap[k].scale);
+          a.childIds = (a.childIds == updatedAppletMap[k].childIds
+              ? a.childIds
+              : updatedAppletMap[k].childIds);
+          a.color = (a.color == updatedAppletMap[k].color
+              ? a.color
+              : updatedAppletMap[k].color);
+          a.size = (a.size == updatedAppletMap[k].size
+              ? a.size
+              : updatedAppletMap[k].size);
+          a.fixed = (a.fixed == updatedAppletMap[k].fixed
+              ? a.fixed
+              : updatedAppletMap[k].fixed);
+          a.content = (a.content == updatedAppletMap[k].content
+              ? a.content
+              : updatedAppletMap[k].content);
+          a.onChange = (a.onChange == updatedAppletMap[k].onChange
+              ? a.onChange
+              : updatedAppletMap[k].onChange);
+          return a;
+        }, ifAbsent: () {
+          var tempApplet = v;
+          tempApplet.key = new GlobalKey();
+          tempApplet.id = v.id;
+          return tempApplet;
+        });
+      });
+    }
+    //check qif appletMap is onChange
+    int containsOnChange = 0;
+    appletMap.forEach((s, a) {
+      containsOnChange = a.onChange ? containsOnChange + 1 : containsOnChange;
+    });
+    if (containsOnChange == 0) {
+      notifyListeners();
+    }
+    return this;
+  }
+
   static Map<String, Applet> getAppletMap(
       String projectId, List<dynamic> snapshot) {
-    Api _api = locator<Api>();
     Map<String, Applet> tempMap = {};
 
     /*Firestore.instance
@@ -98,69 +219,6 @@ class Project with ChangeNotifier {
     return tempMap;
   }
 
-  Project.fromMap(Map snapshot, String id)
-      : projectId = snapshot['id'] ?? '',
-        //key = Key(snapshot['key']) ?? null,
-        name = snapshot['name'] ?? '',
-        img = snapshot['img'] ?? '',
-        description = snapshot['description'] ?? '',
-        appletMap = getAppletMap(snapshot['id'], snapshot['appletList']) ?? {},
-        arrowMap = getArrowMap(snapshot['arrowMap']) ?? {};
-
-  /*tempMap = appletMap.map((k, v) {
-        String tempK = k.toString();
-        dynamic tempV = v.toJson();
-        Map tempMap;
-        return tempMap[tempK] = tempV;
-      }),*/
-
-  toJson() {
-    List<dynamic> appletList = [];
-
-    if (appletMap != null) {
-      appletMap.forEach(
-        (k, Applet v) => appletList.add(v.toJson()),
-      );
-
-      /*appletMap.forEach((k, Applet v) => {
-            Firestore.instance
-                .collection('projects')
-                .document(projectId)
-                .collection('appletList')
-                .document(k)
-                .updateData(v.toJson())
-          });*/
-    }
-
-    Map<String, dynamic> arrowJsonMap = {};
-
-    if (arrowMap != null) {
-      if (arrowMap.length > 0) {
-        arrowMap.forEach((key, value) {
-          var tempList = [];
-          value.forEach((element) {
-            var tempArrow = element.toJson();
-            tempList.add(tempArrow);
-          });
-          if (key != null) {
-            arrowJsonMap[key] = tempList;
-          }
-        });
-      } else {
-        arrowJsonMap['null'] = null;
-      }
-    }
-
-    return {
-      "id": projectId,
-      "name": name,
-      "img": img,
-      "appletList": appletList,
-      "arrowMap": arrowJsonMap,
-      "description": description
-    };
-  }
-
   Matrix4 matrix = Matrix4.identity();
 
   Size stackSize;
@@ -178,32 +236,22 @@ class Project with ChangeNotifier {
   Offset originTextBoxPosition;
   Size originTextBoxSize;
 
+  String originId;
+  String targetId;
+
   Map<Key, List<Key>> hasArrowToKeyMap = {};
 
   Key actualItemKey;
+  GlobalKey backgroundStackKey;
   bool firstItem = true;
   var chosenId;
 
   Offset stackOffset = Offset(0, 0);
   Offset generalStackOffset = Offset(0, 0);
 
-  updateProvider(Project data, statusHeight) {
-    projectId = data.projectId;
-    name = data.name;
-    description = data.description;
-    img = data.img;
-    appletMap = data.appletMap;
-    arrowMap = data.arrowMap;
-    //selectedMap = Constants.initializeSelectedMap(appletMap);
-    statusBarHeight = statusHeight;
-
-    data.appletMap.forEach((key, value) {
-      value.key = null;
-    });
-  }
-
   String getIdFromKey(Key itemKey) {
-    var itemId;
+    //print('appletmap $appletMap');
+    String itemId;
     appletMap.forEach((key, value) {
       if (value.key == (itemKey)) {
         itemId = key;
@@ -213,10 +261,14 @@ class Project with ChangeNotifier {
     return itemId;
   }
 
-  void changeItemListPosition({String itemId, String newId}) {
+  void changeItemListPosition(
+      {@required String itemId,
+      @required String newId,
+      @required Applet applet}) {
     //String itemId = getIdFromKey(itemId);
     Key itemKey = getKeyFromId(itemId);
     Key newKey = getKeyFromId(newId);
+
     appletMap.forEach((String id, Applet v) => {
           if (
           //v.toString().contains('WindowApplet') &&
@@ -232,7 +284,6 @@ class Project with ChangeNotifier {
 
     appletMap[newId].childIds.add(itemId);
 
-    appletMap.forEach((key, value) {});
     notifyListeners();
   }
 
@@ -241,8 +292,8 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  createNewApp(
-      type, GlobalKey itemKey, GlobalKey newAppKey, BuildContext context) {
+  /* createNewApp(
+      type,  GlobalKey newAppKey, BuildContext context) {
     //RenderBox itemBox = itemKey.currentContext.findRenderObject();
     //Offset appPosition = itemBox.globalToLocal(Offset.zero);
     if (type == "WindowApplet") {
@@ -250,10 +301,10 @@ class Project with ChangeNotifier {
     } else if (type == 'TextApplet') {
       createNewTextBox(newAppKey, context);
     }
-  }
+  }*/
 
-  createNewWindow(newAppKey, context) {
-    //Key windowKey = new GlobalKey();
+  WindowApplet createNewWindow() {
+    Key windowKey = new GlobalKey();
     var appletId;
     Color color = new RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
@@ -265,50 +316,17 @@ class Project with ChangeNotifier {
     }*/
     //appletMap[null].childIds.add(id);
     // appletMap[id]
-    var newApplet = WindowApplet(
+    return WindowApplet(
         type: 'WindowApplet',
-        key: newAppKey,
+        key: windowKey,
         size: Size(130, 130),
         position: Offset(200, 100),
         color: color,
         title: 'Title',
         childIds: [],
         scale: 0.3,
-        selected: false);
-    var data = newApplet.toJson();
-
-    Firestore.instance
-        .collection("projects")
-        .document(projectId)
-        .collection("applets")
-        .add(data)
-        .then((v) {
-      var id = v.documentID;
-      var tempData = data;
-      tempData["id"] = id;
-
-      Firestore.instance
-          .collection("projects")
-          .document(projectId)
-          .collection("applets")
-          .document(v.documentID)
-          .updateData(tempData);
-      newApplet.id = id;
-      appletMap[id] = newApplet;
-    });
-    //var id = doc.documentID;
-    //print('new app id $id');
-    //var tempData = data;
-    //tempData["id"] = id;
-    /* Firestore.instance
-        .collection("projects")
-        .document(projectId)
-        .collection("applets")
-        .document(id)
-        .updateData(tempData);
-    newApplet.id = id;
-    appletMap[id] = newApplet;*/
-//    notifyListeners();
+        selected: false,
+        onChange: true);
   }
 
   List<Key> getChildKeysFromId(List<String> childIds) {
@@ -327,45 +345,14 @@ class Project with ChangeNotifier {
     Map<Key, Applet> tempMap = {};
     project.appletMap.forEach((String id, Applet applet) {});
 
-    /*Key tempKey;
-      if (applet.id == "") {
-        tempMap[null] = applet;
-        tempKey = null;
-        if (tempMap[null].childKeys == null) {
-          tempMap[null].childKeys = [];
-        }
-      } else {
-        tempKey = new GlobalKey();
-      }
-      applet.key = tempKey;
-      if (!tempMap[null].childKeys.contains(tempKey) &&
-          tempMap[null].childIds.contains(applet.id)) {
-        tempMap[null].childKeys.add(tempKey);
-      }
-
-      selectedMap[tempKey] = false;
-
-      tempMap[tempKey] = applet;
-    });
-
-    tempMap.forEach((Key key, Applet applet) {
-      if (key != null) {
-        applet.childKeys = getChildKeysFromId(applet.childIds);
-      }
-    });*/
-
     return tempMap;
   }
 
-  createNewTextBox(newAppKey, id) {
-    if (appletMap[null] == null) {
-      appletMap[null] = Applet(childIds: [id]);
-    }
-
-    appletMap[id] = TextApplet(
+  TextApplet createNewTextBox() {
+    return TextApplet(
         type: "TextApplet",
-        id: id,
-        key: newAppKey,
+        //id: id,
+        //key: newAppKey,
         size: Size(100, 60),
         position: Offset(200, 100),
         color: Colors.black,
@@ -374,7 +361,8 @@ class Project with ChangeNotifier {
         fixed: false,
         //bool expanded;
         scale: 1.0,
-        textSize: 16);
+        textSize: 16,
+        onChange: true);
     //notifyListeners();
   }
 
@@ -392,7 +380,17 @@ class Project with ChangeNotifier {
           if (v.type == 'WindowApplet' && v.childIds.contains(tempId))
             {targetId = k}
         });
+
     return getKeyFromId(targetId);
+  }
+
+  String getActualTargetId(String id) {
+    String targetId;
+    appletMap.forEach((k, Applet v) => {
+          if (v.childIds.contains(id)) {targetId = k}
+        });
+
+    return targetId;
   }
 
   double headerHeight() {
@@ -546,8 +544,14 @@ class Project with ChangeNotifier {
     }
   }
 
-  List<Key> getAllChildren(Key itemKey) {
-    String itemId = getIdFromKey(itemKey);
+  List<Key> getAllChildren({Key itemKey, Applet applet}) {
+    String itemId;
+    if (itemKey != null) {
+      itemId = getIdFromKey(itemKey);
+    } else {
+      itemId = applet.id;
+    }
+
     List<Key> tempList = [];
     List<Key> childList = [];
     List<Key> todoList = [];
@@ -701,9 +705,11 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  Offset itemDropPosition(GlobalKey id, pointerDownOffset, pointerUpOffset) {
-    var itemScale = appletMap[getIdFromKey(id)].scale;
-    var dropKey = id;
+  void changeItemDropPosition(
+      Applet applet, pointerDownOffset, pointerUpOffset) {
+    var itemScale = applet.scale;
+    var dropKey = applet.key;
+    var id = applet.id;
     var targetKey = getActualTargetKey(dropKey);
     var targetOffset = getPositionOfRenderBox(targetKey);
     var itemHeaderOffset = 0;
@@ -714,14 +720,16 @@ class Project with ChangeNotifier {
       itemHeaderOffset = 20;
     }
 
+    appletMap[id].position = Offset(
+      ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
+          pointerDownOffset.dx),
+      ((pointerUpOffset.dy - targetOffset.dy - headerHeight()) /
+              itemScale /
+              stackScale -
+          pointerDownOffset.dy),
+    );
+    updateApplet(applet, targetId, originId);
     notifyListeners();
-    return Offset(
-        ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
-            pointerDownOffset.dx),
-        ((pointerUpOffset.dy - targetOffset.dy - headerHeight()) /
-                itemScale /
-                stackScale -
-            pointerDownOffset.dy));
   }
 
   Size sizeOfRenderBox(GlobalKey itemKey) {
@@ -957,58 +965,86 @@ class Project with ChangeNotifier {
     return tempKey;
   }
 
-  void stackSizeChange(String key, GlobalKey feedbackKey, position) {
+  void stackSizeChange(GlobalKey objectKey, Offset position) {
     Offset offsetChange;
-    RenderBox itemBox = feedbackKey.currentContext.findRenderObject();
-    var itemSize = itemBox.size;
+    var itemSize;
+    RenderBox itemBox;
+    RenderBox _backgroundStackRenderBox;
+    Offset _backgroundStackPosition;
+    Size _backgroundStackSize;
+
+    _backgroundStackRenderBox =
+        backgroundStackKey.currentContext.findRenderObject();
+    _backgroundStackPosition =
+        _backgroundStackRenderBox.localToGlobal(Offset.zero) -
+            Offset(0, headerHeight());
+    _backgroundStackSize = _backgroundStackRenderBox.size;
+
+    print('_backgroundStackPosition $_backgroundStackPosition');
+
+    itemBox = objectKey.currentContext.findRenderObject();
+    itemSize = itemBox.size;
 
     var stackChange = Offset(0, 0);
-
-    if (position.dx > stackOffset.dx &&
-        position.dx < stackOffset.dx + (stackSize.width * stackScale) &&
-        (position.dy) > (stackOffset.dy + headerHeight()) &&
+    print('stackOffset $generalStackOffset');
+    print('position $position');
+    if (position.dx > _backgroundStackPosition.dx &&
+        position.dx <
+            _backgroundStackPosition.dx +
+                (_backgroundStackSize.width * stackScale) &&
+        position.dy > (_backgroundStackPosition.dy) &&
         position.dy <
-            stackOffset.dy +
-                ((stackSize.height + headerHeight()) * stackScale)) {
+            _backgroundStackPosition.dy +
+                headerHeight()*stackScale +
+                (_backgroundStackSize.height*stackScale)) {
+      print('inside');
     } else {
-      if (position.dx > stackOffset.dx + stackSize.width * stackScale) {
-        //sector1
+      /*
+      if (position.dx >
+          _backgroundStackPosition.dx +
+              _backgroundStackSize.width * stackScale) {
+        print('//sector1');
         offsetChange = Offset(
             position.dx -
-                stackOffset.dx -
-                (stackSize.width * stackScale) +
+                _backgroundStackPosition.dx -
+                (_backgroundStackSize.width * stackScale) +
                 itemSize.width * stackScale,
             0);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
         stackSize = Size(
-            stackSize.width + offsetChange.dx / stackScale, stackSize.height);
+            _backgroundStackSize.width + offsetChange.dx / stackScale,
+            _backgroundStackSize.height);
       }
-      if ((position.dy >
-          stackOffset.dy + (headerHeight() + stackSize.height) * stackScale)) {
-        //sector 2
+      if (position.dy >
+          _backgroundStackPosition.dy +
+              headerHeight() +
+              _backgroundStackSize.height * stackScale) {
+        print('//sector 2');
         offsetChange = Offset(
             0,
             position.dy -
-                stackOffset.dy -
-                (stackSize.height * stackScale) +
+                _backgroundStackPosition.dy -
+                (_backgroundStackSize.height - headerHeight() * stackScale) +
                 itemSize.height * stackScale);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
         stackSize = Size(
-            stackSize.width,
-            stackSize.height +
-                offsetChange.dy / stackScale -
-                headerHeight() / stackScale);
+            _backgroundStackSize.width,
+            (_backgroundStackSize.height + offsetChange.dy) / stackScale -
+                (headerHeight() / stackScale));
       }
-      if (position.dx < stackOffset.dx) {
-        //sector 3
+      if (position.dx < _backgroundStackPosition.dx) {
+        print(' //sector 3');
 
         offsetChange = Offset(
-            position.dx - stackOffset.dx - itemSize.width * stackScale, 0);
+            position.dx -
+                _backgroundStackPosition.dx -
+                itemSize.width * stackScale,
+            0);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        appletMap[null].childIds.forEach((k) => {
+        appletMap["parentApplet"].childIds.forEach((k) => {
               appletMap[k].position = Offset(
                   appletMap[k].position.dx - offsetChange.dx / stackScale,
                   appletMap[k].position.dy)
@@ -1018,19 +1054,22 @@ class Project with ChangeNotifier {
         notifier.value
             .setEntry(1, 3, notifier.value.row1.a + (offsetChange.dy));
         stackSize = Size(
-            stackSize.width - offsetChange.dx / stackScale, stackSize.height);
+            _backgroundStackSize.width - offsetChange.dx / stackScale,
+            _backgroundStackSize.height);
       }
-      if (position.dy - headerHeight() < stackOffset.dy) {
-        //sector 4
+print('stackscale $stackScale');
+      if (position.dy < _backgroundStackPosition.dy + headerHeight()) {
+        print('//sector 4');
         offsetChange = Offset(
             0,
             position.dy -
-                stackOffset.dy -
+                _backgroundStackPosition.dy -
                 headerHeight() -
                 itemSize.height * stackScale);
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        appletMap[null].childIds.forEach((k) => {
+
+        appletMap["parentApplet"].childIds.forEach((k) => {
               appletMap[k].position = Offset(appletMap[k].position.dx,
                   appletMap[k].position.dy - offsetChange.dy / stackScale)
             });
@@ -1038,9 +1077,10 @@ class Project with ChangeNotifier {
             .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
         notifier.value
             .setEntry(1, 3, notifier.value.row1.a + (offsetChange.dy));
-        stackSize = Size(
-            stackSize.width, stackSize.height - offsetChange.dy / stackScale);
+        stackSize = Size(_backgroundStackSize.width,
+            _backgroundStackSize.height - offsetChange.dy / stackScale);
       }
+    */
     }
     //update arrows position to the new stack offset
     if (stackChange.dx < 0 || stackChange.dy < 0) {
@@ -1054,7 +1094,6 @@ class Project with ChangeNotifier {
               arrow.position.dx + stackChange.dx,
               arrow.position.dy + stackChange.dy)),
         });
-    //notifyListeners();
   }
 
   getAllArrows(Key key) {
@@ -1085,7 +1124,7 @@ class Project with ChangeNotifier {
     }
 
     //all childItems pointing to or getting targetted
-    List childList = getAllChildren(key);
+    List childList = getAllChildren(itemKey: key);
     childList.add(key);
     var originKey;
     var childId;
@@ -1166,8 +1205,6 @@ class Project with ChangeNotifier {
     Matrix4 matrix = Matrix4.identity();
     Size displaySize = MediaQuery.of(context).size;
     var itemSize = sizeOfRenderBox(selectedKey);
-    var otherPos = itemDropPosition(selectedKey, Offset(0, 0), Offset(0, 0));
-    var mapPosition = appletMap[selectedKey].position;
 
     var newScale = displaySize.width / itemSize.width;
     var itemPosition = getPositionOfRenderBox(selectedKey);
@@ -1186,7 +1223,7 @@ class Project with ChangeNotifier {
   }
 
   childrenAreSelected(Key key) {
-    var childrenList = getAllChildren(key);
+    var childrenList = getAllChildren(itemKey: key);
     var isSelected = false;
 
     childrenList.forEach((element) {
@@ -1256,5 +1293,115 @@ class Project with ChangeNotifier {
                   : appletMap[idFromKey].selected = true
             }
         });
+  }
+
+  void updateApplet(Applet applet, String targetId, String originId) {
+    //update origin applet
+    if (originId != null) {
+      _api.updateApplet(projectId, appletMap[originId].toJson(), originId);
+    }
+
+    //update target applet
+    if (targetId != null) {
+      _api.updateApplet(projectId, appletMap[targetId].toJson(), targetId);
+    }
+
+    //update applet
+    _api.updateApplet(projectId, applet.toJson(), applet.id);
+
+    //update all childs of applet
+    List<String> childrenIds =
+        getAllChildren(applet: applet).map((f) => getIdFromKey(f)).toList();
+
+    if (childrenIds.length > 0) {
+      childrenIds.forEach((f) {
+        Applet tempChildApplet = appletMap[f];
+        _api.updateApplet(
+            projectId, tempChildApplet.toJson(), tempChildApplet.id);
+      });
+    }
+
+    //notifyListeners();
+  }
+
+  Future addApplet(String projectId, Applet data) async {
+    await _api.addApplet(projectId, data.toJson());
+    return;
+  }
+
+  Stream<QuerySnapshot> fetchAppletsAsQueryStream(String projectId) {
+    return _api.streamAppletCollection(projectId);
+  }
+
+  Stream<Map<String, Applet>> fetchAppletsAsStream() {
+    print('fetchAppletsAsStream');
+    var doc = _api.streamAppletCollection(projectId);
+    return doc.map((QuerySnapshot value) =>
+        {for (var v in value.documents) v.documentID: Applet.fromMap(v.data)});
+  }
+
+  Stream<Map<String, Applet>> fetchAppletsChangesAsStream() {
+    Stream<QuerySnapshot> doc = _api.streamAppletCollection(projectId);
+
+    return doc.map((QuerySnapshot value) {
+      return {
+        for (var v in value.documentChanges)
+          v.document.documentID: Applet.fromMap(v.document.data)
+      };
+    });
+  }
+
+  Future<List<Applet>> getAppletsById(String id) async {
+    List<Applet> list = new List();
+    var doc = await _api.getAppletById(id);
+    doc.forEach((DocumentSnapshot docSnapshot) {
+      list.add(Applet.fromMap(docSnapshot.data));
+    });
+    /*map((DocumentSnapshot docSnapshot) {
+     
+       Applet.fromMap(docSnapshot);
+    }).toList();*/
+    return list;
+  }
+
+  Future<String> createNewAppandReturnId(
+      String type, Key newAppKey, BuildContext context) async {
+    //RenderBox itemBox = itemKey.currentContext.findRenderObject();
+    //Offset appPosition = itemBox.globalToLocal(Offset.zero);
+    String appletId;
+
+    Applet newApplet = new Applet();
+    if (type == "WindowApplet") {
+      newApplet = createNewWindow();
+    } else if (type == 'TextApplet') {
+      newApplet = createNewTextBox();
+    }
+
+    var data = newApplet.toJson();
+    DocumentReference doc = await Firestore.instance
+        .collection("projects")
+        .document(projectId)
+        .collection("applets")
+        .add(data);
+
+    var id = doc.documentID;
+    var tempData = data;
+    tempData["id"] = id;
+
+    Firestore.instance
+        .collection("projects")
+        .document(projectId)
+        .collection("applets")
+        .document(id)
+        .updateData(tempData);
+
+    /*
+    if (type == "WindowApplet") {
+      id = createNewWindow(newAppKey, context);
+    } else if (type == 'TextApplet') {
+      createNewTextBox(newAppKey, context);
+    }
+    print('id inside provier $id');*/
+    return id;
   }
 }

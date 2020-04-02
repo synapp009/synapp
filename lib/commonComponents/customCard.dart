@@ -16,56 +16,73 @@ class CustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //var dataProvider = Provider.of<Data>(context);
-    var crudProvider = Provider.of<CRUDModel>(context);
+
     // var projectProvider = Provider.of<Project>(context);
     return Card(
       child: Container(
         padding: const EdgeInsets.only(top: 5.0),
-        child: Column(children: <Widget>[
-          Text(projectDetails.name),
-          FlatButton(
-              child: Text("See More"),
-              onPressed: () {
-                /*  var statusBarHeight = MediaQuery.of(context).padding.top;
-                  projectProvider.updateProvider(
-                      projectDetails, statusBarHeight);*/
+        child: Column(
+          children: <Widget>[
+            Text(projectDetails.name),
+            FlatButton(
+                child: Text("See More"),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => 
+                        StreamProvider<Map<String, Applet>>(
+                          create: (context) =>
+                              projectDetails.fetchAppletsChangesAsStream(),
+                        child:
+                        ChangeNotifierProxyProvider<Map<String, Applet>,
+                            Project>(
+                          create: (context) => projectDetails,
+                          update: (context, appletMap, projectDetail) =>
+                              projectDetails.update(appletMap),
+                          child: HomeView(project: projectDetails),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                // projectDetails.appletMap.forEach((key, value) {projectProvider.appletMap[key] = value; });
-                /* projectProvider.selectedMap = Constants.initializeSelectedMap(
-                      projectProvider.appletMap);*/
-                //dataProvider.createStructureMap(projectDetails);
+/*ListenableProvider.value(
+                      value: projectDetails,
+                      child: StreamBuilder<Map<String, Applet>>(
+                          stream: projectDetails.fetchAppletsAsStream(),
 
-                /** Push a named route to the stcak, which does not require data to be  passed */
-                // Navigator.pushNamed(context, "/task");
+                          //Firestore.instance.collection("projects").snapshots(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<Map<String, Applet>> snapshot2) {
+                            if (snapshot2.hasError)
+                              return new Text('Error: ${snapshot2.error}');
+                            switch (snapshot2.connectionState) {
+                              case ConnectionState.waiting:
+                                return new SpinKitDoubleBounce(
+                                  color: Color(0xff875AFF),
+                                  size: 50.0,
+                                );
+                              default:
+                              print('rebuild streambuilder no data');
+                                if (snapshot2.hasData) {
+                                   print('rebuild streambuilder with data');
+                                  if (projectDetails.appletMap == null) {
+                                    projectDetails.appletMap = {};
+                                  }
+                                  projectDetails.update(snapshot2.data);
 
-                /** Create a new page and push it to stack each time the button is pressed */
-                // Navigator.push(context, MaterialPageRoute<void>(
-                //   builder: (BuildContext context) {
-                //     return Scaffold(
-                //       appBar: AppBar(title: Text('My Page')),
-                //       body: Center(
-                //         child: FlatButton(
-                //           child: Text('POP'),
-                //           onPressed: () {
-                //             Navigator.pop(context);
-                //           },
-                //         ),
-                //       ),
-                //     );
-                //   },
-                // ));
-
-                /** Push a new page while passing data to it */
-                /*projectDetails.appletMap.forEach((key, value) {
-                    value.key = new GlobalKey();
-                  });*/
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ListenableProvider(
-                      //lazy:true,
-                      create: (_) => projectDetails,
-                      child: HomeView(project: projectDetails),
+                                 
+                                }
+                                return HomeView(project: projectDetails);
+                            }
+                          }),
                     ),
                   ),
                 );
@@ -80,4 +97,4 @@ class CustomCard extends StatelessWidget {
       ),
     );
   }
-}
+}*/

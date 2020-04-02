@@ -115,18 +115,22 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                     .position;
               } else {
                 setState(() {
-                  projectProvider.appletMap[id].position =
-                      projectProvider.itemDropPosition(
-                          key, pointerDownOffset, pointerUpOffset);
+                  projectProvider.changeItemDropPosition(
+                      projectProvider.appletMap[id],
+                      pointerDownOffset,
+                      pointerUpOffset);
                 });
               }
             },
             onDraggableCanceled: (vel, off) {
+              
               setState(() {
-                projectProvider.appletMap[id].position = projectProvider
-                    .itemDropPosition(key, pointerDownOffset, pointerUpOffset);
+                projectProvider.changeItemDropPosition(
+                    projectProvider.appletMap[id],
+                    pointerDownOffset,
+                    pointerUpOffset);
               });
-              projectProvider.stackSizeChange(id, feedbackKey, off);
+              projectProvider.stackSizeChange(feedbackKey, off);
             },
             childWhenDragging: Container(),
             feedback: ListenableProvider<Project>.value(
@@ -320,7 +324,7 @@ class FitTextFieldState extends State<FitTextField> {
   void _saveDocument(BuildContext context) {
     var projectProvider = Provider.of<Project>(context, listen: false);
     var appletId = projectProvider.getIdFromKey(widget.itemKey);
-    TextApplet tempApp = projectProvider.appletMap[appletId];
+    //Applet tempApp = projectProvider.appletMap[appletId];
     // Notus documents can be easily serialized to JSON by passing to
     // `jsonEncode` directly
     final contents = jsonEncode(_controller.document);
@@ -331,8 +335,8 @@ class FitTextFieldState extends State<FitTextField> {
     /*file.writeAsString(contents).then((_) {
       //Scaffold.of(context).showSnackBar(SnackBar(content: Text("Saved.")));
     });*/
-    Provider.of<CRUDModel>(context, listen: false)
-        .updateApplet(projectProvider.projectId, tempApp, appletId);
+    /*Provider.of<Project>(context, listen: false)
+        .updateApplet(projectProvider.projectId, tempApp, appletId);*/
   }
 }
 
@@ -398,20 +402,11 @@ class ScaleContainer extends StatelessWidget {
             projectProvider.originTextBoxSize = itemSize;
           },
           onPointerMove: (event) {
-            print(itemSize - event.delta);
-
-            /*print((originTextBoxSize.height +
-                    (originTextBoxPosition.dy - event.position.dy)));*/
-
             projectProvider.scaleTextBox(i, textBoxId, event);
           },
           child: GestureDetector(
-            onPanDown: (details) {
-              print('down');
-            },
-            onTap: () {
-              print('tapp');
-            },
+            onPanDown: (details) {},
+            onTap: () {},
             onPanStart: (details) {
               // originPosition = projectProvider.appletMap[textBoxId].position;
             },

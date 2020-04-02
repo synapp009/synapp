@@ -16,7 +16,7 @@ class FeedbackTextboxWidget extends StatelessWidget {
     final projectProvider = Provider.of<Project>(context);
     var itemKey = projectProvider.getKeyFromId(id);
     var stackScale = projectProvider.notifier.value.row0[0];
-    var textBox = projectProvider.appletMap[id] as TextApplet;
+    var textBox = projectProvider.appletMap[id];
     var itemScale = projectProvider.appletMap[id].scale;
     var initialValue = textBox.content;
     var targetScale = projectProvider.getTargetScale(itemKey);

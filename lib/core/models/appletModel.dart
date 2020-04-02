@@ -42,6 +42,7 @@ class Applet {
   bool fixed;
   bool selected;
   String content;
+  bool onChange;
 
   Applet(
       {this.childIds,
@@ -55,37 +56,28 @@ class Applet {
       this.fixed,
       this.targetScale,
       this.selected,
-      this.content}) {
+      this.content,
+      this.onChange}) {
     selected = false;
   }
 
-  List<Key> _childKeysFromSnapshotChildIdsToKeys(
-      Map<dynamic, dynamic> snapshot) {}
-
-  static List<Key> _getChildKeys(List snapshot) {
-    List<Key> tempList = [];
-
-    /*  snapshot.forEach((v) {
-        Key newKey = new GlobalKey();
-        tempList.add(newKey);
-      });*/
-    return tempList;
-  }
-
-  getIdFromMap(Map<String, dynamic> snapshot) {}
-  Applet.fromMap(DocumentSnapshot snapshot)
+  Applet.fromMap(Map snapshot)
       : //key = Key(snapshot['id']) ?? null,
-        id = snapshot.documentID == null ? null : snapshot.documentID,
-        position = Offset((snapshot.data['positionDx'] as num).toDouble(),
-                (snapshot.data['positionDy'] as num).toDouble()) ??
+        id = snapshot["id"] == "null" ? null : snapshot["id"],
+        position = Offset((snapshot['positionDx'] as num).toDouble(),
+                (snapshot['positionDy'] as num).toDouble()) ??
             Offset(null, null),
-        color = _getColorFromString(snapshot.data['color']) ?? null,
-        scale = (snapshot.data['scale'] as num).toDouble() ?? null,
-        childIds =
-            _childIdsSnapshotDynamicToList(snapshot.data['childIds']) ?? null,
-        type = snapshot.data['type'] ?? null,
-        fixed = snapshot.data['fixed'] == "true",
-        content = snapshot.data['content'] ?? '';
+        color = _getColorFromString(snapshot['color']) ?? null,
+        scale = (snapshot['scale'] as num).toDouble() ?? null,
+        childIds = _childIdsSnapshotDynamicToList(snapshot['childIds']) ?? null,
+        type = snapshot['type'] ?? null,
+        fixed = snapshot['fixed'] == "true",
+        size = Size((snapshot["sizeHeight"] as num).toDouble(),
+                (snapshot["sizeWidth"] as num).toDouble()) ??
+            null,
+        content = snapshot['content'] ?? '',
+        onChange = snapshot['onChange'] == 'true' ? true : false,
+        selected = false;
 
   //childKeys = _getChildKeys(snapshot['childIds']);
 
@@ -98,11 +90,14 @@ class Applet {
       "content": content,
       "positionDx": position.dx,
       "positionDy": position.dy,
+      "sizeHeight": size.height,
+      "sizeWidth": size.width,
       "scale": scale,
       "childIds": childIds,
       "type": type,
       "fixed": fixed.toString(),
       "color": color.toString(),
+      "onChange": onChange.toString()
     };
   }
 }
@@ -118,6 +113,7 @@ class WindowApplet extends Applet {
   double scale;
   bool fixed;
   bool selected;
+  bool onChange;
 
   static final IconData iconData = Icons.crop_din;
   static final String label = 'Box';
@@ -134,6 +130,7 @@ class WindowApplet extends Applet {
       this.scale,
       this.fixed,
       this.selected,
+      this.onChange,
       type})
       : super(scale: scale, type: type, selected: selected, key: key);
 
@@ -151,7 +148,8 @@ class WindowApplet extends Applet {
             null,
         position = Offset((snapshot['positionDx'] as num).toDouble(),
                 (snapshot['positionDy'] as num).toDouble()) ??
-            Offset(null, null);
+            Offset(null, null),
+        onChange = snapshot['onChange'] == 'true' ? true : false;
 
   //childKeys = snapshot['childKeys'] ?? [];
 
@@ -168,6 +166,7 @@ class WindowApplet extends Applet {
       "positionDy": position.dy,
       "scale": scale,
       "childIds": childIds,
+      "onChange": onChange,
       //"childKeys": childKeys.toList(),
     };
   }
@@ -184,6 +183,7 @@ class TextApplet extends Applet {
   bool selected;
   String id;
   Offset position;
+  bool onChange;
 
   static final IconData iconData = Icons.text_fields;
   static final String label = 'Text';
@@ -196,6 +196,7 @@ class TextApplet extends Applet {
     this.content,
     this.fixed,
     this.selected,
+    this.onChange,
     type,
     this.id,
     key,
@@ -203,6 +204,7 @@ class TextApplet extends Applet {
     this.position,
     this.scale,
   }) : super(
+            onChange: onChange,
             size: size,
             key: key,
             position: position,
@@ -225,11 +227,13 @@ class TextApplet extends Applet {
             null,
         position = Offset((snapshot['positionDx'] as num).toDouble(),
                 (snapshot['positionDy'] as num).toDouble()) ??
-            Offset(null, null);
+            Offset(null, null),
+        onChange = snapshot['onChange'] == 'true' ? true : false;
 
   toJson() {
     return {
       "id": id,
+      "onChange": onChange,
       "color": color.toString(),
       "title": title,
       "textSize": textSize,

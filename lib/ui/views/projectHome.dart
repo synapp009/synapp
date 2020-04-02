@@ -7,7 +7,7 @@ import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../feedbackTextboxWidget.dart';
-import '../../feeddbackWindowWidget.dart';
+import '../../feedbackWindowWidget.dart';
 import '../../stackAnimator.dart';
 
 class HomeView extends StatefulWidget {
@@ -28,7 +28,6 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
-
     //set stackSize & headerHeight
     projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
 
@@ -47,9 +46,8 @@ class _HomeViewState extends State<HomeView> {
 
         leading: new IconButton(
           onPressed: () {
-            print('provider $projectProvider');
-            crudProvider.updateProject(projectProvider, widget.project.projectId);
-            //projectProvider.appletMap.clear();
+            //crudProvider.updateProject(projectProvider, widget.project.projectId);
+            
             Navigator.pop(context);
           },
           color: Colors.black,
@@ -57,8 +55,7 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
       body: GestureDetector(
-        onTap:() =>
-            FocusScope.of(context).requestFocus(new FocusNode()),
+        onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
         child: MyHome(widget.project.projectId),
       ),
     );
@@ -93,7 +90,7 @@ class AppBuilder {
 class _MyHomeState extends State<MyHome> {
   List<AppBuilder> _apps = [
     AppBuilder(
-      id: '',
+      id: null,
       itemKey: null,
       type: "WindowApplet",
       label: WindowApplet.label,
@@ -101,7 +98,7 @@ class _MyHomeState extends State<MyHome> {
       color: Colors.yellow,
     ),
     AppBuilder(
-      id: '',
+      id: null,
       itemKey: null,
       type: "TextApplet",
       label: TextApplet.label,
@@ -217,6 +214,7 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
   Offset _pointerDownOffset = Offset(0, 0);
   Offset _pointerUpOffset = Offset(0, 0);
   bool _appletDragged = false;
+  Future<String> newAppletId;
 
   @override
   Widget build(BuildContext context) {
@@ -239,74 +237,86 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     //Container(height:20,width:20,child:WindowWidget()),
-                    Listener(
-                      onPointerDown: (event) {
-                        String id = new Uuid().v4();
-                        GlobalKey newAppKey = new GlobalKey();
-                        feedbackKey = new GlobalKey();
+                    FutureBuilder<String>(
+                        future: newAppletId,
+                        builder: (context, snapshot) {
+                          if (projectProvider.appletMap[snapshot.data] !=
+                              null && snapshot.data != null) {
+                            projectProvider.appletMap[snapshot.data].id =
+                                snapshot.data;
 
-                        apps[index].id = id;
-                        apps[index].itemKey = newAppKey;
-                        apps[index].feedbackKey = feedbackKey;
-                        projectProvider.createNewApp(apps[index].type,
-                            apps[index].itemKey, newAppKey, id);
+                          }
 
-                        projectProvider.chosenId = apps[index].id;
-                        setState(() {});
+                          return Listener(
+                            onPointerDown: (event) {
+                              //String id = new Uuid().v4();
+                              GlobalKey newAppKey = new GlobalKey();
+                              feedbackKey = new GlobalKey();
 
-                        _pointerDownOffset = Offset(75, 75);
-                      },
-                      onPointerMove: (event) {
-                        projectProvider.appletMap[apps[index].id].position =
-                            event.position;
-                      },
-                      onPointerUp: (event) {
-                        _pointerUpOffset = event.position;
-                        projectProvider.appletMap[apps[index].id].position =
-                            projectProvider.itemDropPosition(
-                                apps[index].itemKey,
-                                _pointerDownOffset,
-                                _pointerUpOffset);
-                        projectProvider.chosenId = null;
-                        if (!_appletDragged) {
+                              apps[index].itemKey = newAppKey;
+                              apps[index].feedbackKey = feedbackKey;
+                              newAppletId =
+                                  projectProvider.createNewAppandReturnId(
+                                      apps[index].type, newAppKey, context);
+
+                              projectProvider.chosenId = newAppletId;
+                              setState(() {});
+                              _pointerDownOffset = Offset(75, 75);
+                            },
+                            onPointerMove: (event) {
+                              projectProvider.appletMap[snapshot.data]
+                                  .position = event.position;
+                            },
+                            onPointerUp: (event) {
+                              _pointerUpOffset = event.position;
+                              
+                                  projectProvider.changeItemDropPosition(
+                                      projectProvider.appletMap[snapshot.data],
+                                      _pointerDownOffset,
+                                      _pointerUpOffset);
+                              projectProvider.chosenId = null;
+                              /*    if (!_appletDragged) {
                           setState(() {
                             projectProvider.appletMap.remove(apps[index].id);
                           });
-                        }
-                        setState(() {});
-                      },
-                      child: Draggable(
-                        dragAnchor: DragAnchor.pointer,
-                        onDragStarted: () {
-                          _appletDragged = true;
-                          HapticFeedback.mediumImpact();
-                        },
-                        onDragEnd: (details) => _appletDragged = false,
-                        feedback: ChangeNotifierProvider<Project>.value(
-                          value: projectProvider,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: FeedbackChooser(
-                                id: apps[index].id,
-                                type: apps[index].type,
-                                feedbackKey: feedbackKey),
-                          ),
-                        ),
-                        child: RawMaterialButton(
-                          onPressed: () {},
-                          child: new Icon(
-                            apps[index].iconData,
-                            color: Colors.black87,
-                            size: 35.0,
-                          ),
-                          shape: new CircleBorder(),
-                          elevation: 0.0,
-                          fillColor: apps[index].color,
-                          padding: const EdgeInsets.all(15.0),
-                        ),
-                        data: projectProvider.appletMap[apps[index].id],
-                      ),
-                    ),
+                        }*/
+                              newAppletId = null;
+                              setState(() {});
+                            },
+                            child: Draggable(
+                              dragAnchor: DragAnchor.pointer,
+                              onDragStarted: () {
+                                _appletDragged = true;
+                                HapticFeedback.mediumImpact();
+                              },
+                              onDragEnd: (details) => _appletDragged = false,
+                              feedback: ChangeNotifierProvider<Project>.value(
+                                value: projectProvider,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: FeedbackChooser(
+                                      id: snapshot.data,
+                                      type: apps[index].type,
+                                      feedbackKey: feedbackKey),
+                                ),
+                              ),
+                              child: RawMaterialButton(
+                                onPressed: () {},
+                                child: new Icon(
+                                  apps[index].iconData,
+                                  color: Colors.black87,
+                                  size: 35.0,
+                                ),
+                                shape: new CircleBorder(),
+                                elevation: 0.0,
+                                fillColor: apps[index].color,
+                                padding: const EdgeInsets.all(15.0),
+                              ),
+                              data: projectProvider.appletMap[snapshot.data],
+                            ),
+                          );
+                        }),
+
                     Text(apps[index].label),
                   ]);
             },

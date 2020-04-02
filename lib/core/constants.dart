@@ -10,8 +10,9 @@ class Constants {
   static const String taskRoute = '/task';
   static const String registerRoute = '/register';
 
-    static Map<String, Applet> initializeAppletMap(Map<String, Applet> appletMap) {
-    return appletMap = {
+    static Map<String, Applet> initializeAppletMap() {
+      var tempMap;
+    return tempMap = {
       null: Applet(
           color: null,
           type: '',
@@ -22,6 +23,19 @@ class Constants {
           childIds: [],
           selected: false)
     };
+  }
+
+  static Applet initializeApplet(){
+   return Applet(
+          color: null,
+          type: '',
+          id: 'parentApplet',
+          key: null,
+          position: Offset(0, 0),
+          scale: 1.0,
+          size: Size(10,10),
+          childIds: [],
+          selected: false);
   }
 
   static Offset initializePositionMap(Offset positionForDrop) {

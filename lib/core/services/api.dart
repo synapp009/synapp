@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/constants.dart';
 import 'dart:async';
 
 import 'package:synapp/core/models/appletModel.dart';
@@ -17,7 +18,6 @@ class Api {
   }
 
   Future<QuerySnapshot> getDataCollection() {
-    print(ref.getDocuments());
     return ref.getDocuments();
   }
 
@@ -43,23 +43,33 @@ class Api {
     return ref.document(id).delete();
   }
 
-  Future<void> addDocument(Map data) async {
-    Map<String, dynamic> tempAppletList = data['appletList'];
-    data.remove('appletList');
+  Future<void> addDocument(Map<String, dynamic> data) async {
+    //Map<String, dynamic> tempAppletList = data['appletList'];
+    //data.remove('appletList');
+
+    Map<String, dynamic> initializeApplet =
+        Constants.initializeApplet().toJson();
+
     var doc = await ref.add(data);
+
     var id = doc.documentID;
     var tempData = data;
     tempData["id"] = id;
     ref.document(id).updateData(tempData);
-    tempAppletList.forEach((key, value) {
+    ref
+        .document(id)
+        .collection('applets')
+        .document("parentApplet")
+        .setData(initializeApplet);
+
+    /*tempAppletList.forEach((key, value) {
       ref.document(id).collection('applets').document(key).setData(value);
-    });
+    });*/
 
     //.then((result) => addAppletMap(data, result.documentID));
   }
 
   Future<void> updateDocument(Map data, String id) {
-    print('id from future $id');
     Map<String, dynamic> tempAppletList = data['appletList'];
     data.remove('appletList');
     var tempData = data;
@@ -70,7 +80,7 @@ class Api {
     return ref.document(id).updateData(data);
   }
 
-  Future<void> updateApplet(String projectId, Map data, String appletId) async {
+  Future<void> updateApplet(String projectId, Map data, String appletId) {
     return ref
         .document(projectId)
         .collection('applets')
