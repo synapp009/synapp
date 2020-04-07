@@ -284,6 +284,8 @@ class _WindowWidgetState extends State<WindowWidget>
                 maxSimultaneousDrags:
                     _projectProvider.appletMap[id].selected ? 0 : 1,
                 onDragEnd: (DraggableDetails details) {
+                  print('details offset ${details.offset}');
+                    
                   // _projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
                     //setState(() {
@@ -321,8 +323,8 @@ class _WindowWidgetState extends State<WindowWidget>
                   _projectProvider.appletMap[id].onChange = false;
 
                   setState(() {
-                    _projectProvider.stackSizeChange(
-                        feedbackKey, _pointerUpOffset);
+                    _projectProvider.stackSizeChange(widget.key,
+                        feedbackKey, _pointerUpOffset,_pointerDownOffset);
 
                     _projectProvider.changeItemDropPosition(
                         _projectProvider.appletMap[id],
@@ -333,7 +335,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 },
                 onDraggableCanceled: (vel, Offset off) {
                   setState(() {
-                    _projectProvider.stackSizeChange(feedbackKey, off);
+                    _projectProvider.stackSizeChange(widget.key, feedbackKey, _pointerUpOffset,_pointerDownOffset);
 
                     _projectProvider.appletMap[id].onChange = false;
                     _projectProvider.changeItemDropPosition(

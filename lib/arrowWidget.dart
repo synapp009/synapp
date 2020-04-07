@@ -15,9 +15,9 @@ class ArrowWidget extends StatelessWidget {
     var sector;
     Arrow tempArrow;
     var projectProvider = Provider.of<Project>(context);
+
     var originId = projectProvider.getIdFromKey(originKey);
     var targetId = projectProvider.getIdFromKey(targetKey);
-
     double originScale = projectProvider.appletMap[originId].scale;
     double targetScale = projectProvider.appletMap[targetId].scale;
     var stackScale = projectProvider.stackScale;
@@ -25,7 +25,6 @@ class ArrowWidget extends StatelessWidget {
     projectProvider.arrowMap[originId].forEach((Arrow k) => {
           if (k.target == targetId) {tempArrow = k}
         });
-
     return Positioned(
       top: tempArrow.position.dy,
       //projectProvider.centerOfRenderBox(originKey).dy,

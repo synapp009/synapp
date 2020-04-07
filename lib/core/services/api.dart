@@ -105,6 +105,15 @@ class Api {
     //.then((result) => addAppletMap(data, result.documentID));
   }
 
+  Future<void> addArrow(String projectId, String originId, Map data) {
+    return ref
+        .document(projectId)
+        .collection("arrows")
+        .document(originId)
+        .updateData(data);
+  }
+
+
   Stream<QuerySnapshot> streamAppletCollection(String projectId) {
     return ref.document(projectId).collection("applets").snapshots();
 

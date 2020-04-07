@@ -63,7 +63,7 @@ class Constants {
   }
 
   static ValueNotifier<Matrix4> initializeNotifier(
-      ValueNotifier<Matrix4> notifier) {
-    return notifier = ValueNotifier(Matrix4.identity());
+      Matrix4 initialMatrix) {
+    return ValueNotifier(initialMatrix);
   }
 }

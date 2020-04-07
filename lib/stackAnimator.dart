@@ -1,11 +1,13 @@
+import 'package:after_layout/after_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:provider/provider.dart';
 import 'package:synapp/core/constants.dart';
+import 'package:vector_math/vector_math_64.dart' as vector64;
+import 'package:vector_math/vector_math.dart' as vector;
+
 import 'package:zefyr/zefyr.dart';
 import 'core/models/projectModel.dart';
-
-import 'package:flutter/rendering.dart';
 
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
@@ -17,244 +19,15 @@ import 'windowWidget.dart';
 import 'arrowWidget.dart';
 
 class StackAnimator extends StatelessWidget {
-  final id;
-  StackAnimator(this.id);
+  final project;
+  StackAnimator(this.project);
+
   @override
   Widget build(BuildContext context) {
-    var projectProvider = Provider.of<Project>(context);
-    Size displaySize = MediaQuery.of(context).size;
     ValueNotifier<Matrix4> notifier;
+    var projectProvider = Provider.of<Project>(context);
 
-    if (projectProvider.notifier == null) {
-      projectProvider.notifier = Constants.initializeNotifier(notifier);
-    }
     notifier = projectProvider.notifier;
-
-    //get the outer keys
-    List<Key> getOuterKeysAsList(keyAtBottomList) {
-      Key mostLeftKey;
-      Key mostRightKey;
-      Key mostTopKey;
-      Key mostBottomKey;
-
-      mostBottomKey =
-          mostLeftKey = mostRightKey = mostTopKey = keyAtBottomList[0];
-
-      for (int i = 0; i < keyAtBottomList.length; i++) {
-        //getting most right key
-        if ((projectProvider
-                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
-                    .position
-                    .dx +
-                projectProvider
-                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
-                    .size
-                    .width) >
-            (projectProvider
-                    .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                    .position
-                    .dx +
-                projectProvider
-                    .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                    .size
-                    .width)) {
-          mostRightKey = keyAtBottomList[i];
-        }
-
-//getting most left key
-        if (projectProvider
-                .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
-                .position
-                .dx <
-            projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)]
-                .position.dx) {
-          mostLeftKey = keyAtBottomList[i];
-        }
-
-//getting most top key
-        if ((projectProvider
-                .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
-                .position
-                .dy) <
-            projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)]
-                .position.dy) {
-          mostTopKey = keyAtBottomList[i];
-        }
-
-//getting most bottom key
-        if ((projectProvider
-                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
-                    .position
-                    .dy +
-                projectProvider
-                    .appletMap[projectProvider.getIdFromKey(keyAtBottomList[i])]
-                    .size
-                    .height) >
-            projectProvider.appletMap[projectProvider.getIdFromKey(mostTopKey)]
-                    .position.dy +
-                projectProvider
-                    .appletMap[projectProvider.getIdFromKey(mostTopKey)]
-                    .size
-                    .height) {
-          mostBottomKey = keyAtBottomList[i];
-        }
-      }
-      return [mostRightKey, mostBottomKey, mostLeftKey, mostTopKey];
-    }
-
-    List<double> getMaxOffset(List<Key> getOuterKeysAsList) {
-      var mostRightKey = getOuterKeysAsList[0];
-      var mostBottomKey = getOuterKeysAsList[1];
-      var mostLeftKey = getOuterKeysAsList[2];
-      var mostTopKey = getOuterKeysAsList[3];
-
-      var maxLeftOffset;
-      var maxRightOffset;
-      var maxTopOffset;
-      var maxBottomOffset;
-
-      maxLeftOffset = projectProvider
-              .appletMap[projectProvider.getIdFromKey(mostLeftKey)]
-              .position
-              .dx *
-          projectProvider.stackScale;
-
-      maxRightOffset = projectProvider
-          .appletMap[projectProvider.getIdFromKey(mostRightKey)].position.dx;
-
-      maxTopOffset = projectProvider
-              .appletMap[projectProvider.getIdFromKey(mostTopKey)].position.dy *
-          projectProvider.stackScale;
-
-      maxBottomOffset = projectProvider
-              .appletMap[projectProvider.getIdFromKey(mostBottomKey)]
-              .position
-              .dy *
-          projectProvider.stackScale;
-
-      return [maxRightOffset, maxBottomOffset, maxLeftOffset, maxTopOffset];
-    }
-
-    //set scroll barrier
-    void setMaxOffset(List<Key> getOuterKeysAsList) {
-      List<double> maxOffset = getMaxOffset(getOuterKeysAsList);
-
-      var maxRightOffset = maxOffset[0];
-      var maxBottomOffset = maxOffset[1];
-      var maxLeftOffset = maxOffset[2];
-      var maxTopOffset = maxOffset[3];
-
-      var mostRightKey = getOuterKeysAsList[0];
-      var mostBottomKey = getOuterKeysAsList[1];
-      var mostLeftKey = getOuterKeysAsList[2];
-      var mostTopKey = getOuterKeysAsList[3];
-
-//left offset barrier
-      if (projectProvider.stackOffset.dx >
-          -maxLeftOffset + displaySize.width / 2) {
-        notifier.value.setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
-      }
-
-      if ((projectProvider.stackOffset.dx +
-              projectProvider
-                      .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                      .position
-                      .dx *
-                  projectProvider.stackScale +
-              projectProvider
-                      .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                      .size
-                      .width *
-                  projectProvider.stackScale) <
-          displaySize.width / 2) {
-        var tempOffsetRightDx = -(projectProvider
-                    .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                    .position
-                    .dx *
-                projectProvider.stackScale +
-            projectProvider
-                    .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                    .size
-                    .width *
-                projectProvider.stackScale -
-            displaySize.width / (1.99));
-        notifier.value.setEntry(0, 3, tempOffsetRightDx);
-      }
-
-//top offset barrier
-      if (projectProvider.stackOffset.dy >
-          -maxTopOffset + displaySize.height / 2) {
-        notifier.value.setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
-      }
-
-//top bottom barrier
-      if (projectProvider.stackOffset.dy < -maxBottomOffset) {
-        notifier.value.setEntry(1, 3, -maxBottomOffset);
-      }
-    }
-
-    //set max scale
-    void setMaxScale(List<Key> getOuterKeysAsList) {
-      //set here the scale rate property you want
-      var scaleRate = 0.3;
-      var maxScale;
-      var maxScaleWidth;
-      var maxScaleHeight;
-      //List<double> maxOffset = getMaxOffset(getOuterKeysAsList);
-
-      var mostRightKey = getOuterKeysAsList[0];
-      // var mostBottomKey = getOuterKeysAsList[1];
-      var mostLeftKey = getOuterKeysAsList[2];
-      //var mostTopKey = getOuterKeysAsList[3];
-
-      maxScaleWidth = (displaySize.width /
-          (projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)]
-                  .position.dx +
-              projectProvider
-                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                  .position
-                  .dx +
-              projectProvider
-                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                  .size
-                  .width));
-
-      maxScaleHeight = (displaySize.height /
-          (projectProvider.appletMap[projectProvider.getIdFromKey(mostLeftKey)]
-                  .position.dy +
-              projectProvider
-                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                  .position
-                  .dy +
-              projectProvider
-                  .appletMap[projectProvider.getIdFromKey(mostRightKey)]
-                  .size
-                  .height +
-              projectProvider.headerHeight()));
-
-      maxScale =
-          (maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth) *
-              scaleRate;
-
-      if (projectProvider.appletMap["parentApplet"].childIds.length > 1) {
-        if (projectProvider.stackScale < maxScale) {
-          notifier.value.setEntry(0, 0, maxScale);
-          notifier.value.setEntry(1, 1, maxScale);
-        }
-      }
-    }
-
-    setMaxScaleAndOffset(context) {
-      List<GlobalKey> keyAtBottomList = projectProvider
-          .appletMap["parentApplet"].childIds
-          .map((e) => projectProvider.getGlobalKeyFromId(e))
-          .toList();
-
-      //sets the boundaries of the visable part of the screen
-      // and the maximum scale to zoom out
-      setMaxOffset(getOuterKeysAsList(keyAtBottomList));
-      setMaxScale(getOuterKeysAsList(keyAtBottomList));
-    }
 
     /* setStackSize() {
       //set the stack size when change stackoffset and scale to garuantee the possibility of drag and drop items
@@ -275,19 +48,24 @@ class StackAnimator extends StatelessWidget {
                 projectProvider.stackOffset.dy),
       );
     }*/
+    //initialViewArea();
 
     return ZefyrScaffold(
       child: MatrixGestureDetector(
         onMatrixUpdate: (m, tm, sm, rm) {
           //notifier.value = m;
-
           projectProvider.stackScale = notifier.value.row0[0];
           projectProvider.stackOffset =
               Offset(notifier.value.row0.a, notifier.value.row1.a);
 
-          notifier.value = m;
-          setMaxScaleAndOffset(context);
-          //setStackSize();
+
+//continue with the initial view after moving but then change to matrixgesturedetector input
+          notifier.value = projectProvider.initial
+              ? projectProvider.updateStackWithMatrix(m)
+              : m;
+
+          projectProvider.setMaxScaleAndOffset(context);
+          projectProvider.initial = false;
         },
         shouldRotate: false,
         child: Stack(children: [
@@ -300,7 +78,7 @@ class StackAnimator extends StatelessWidget {
                 builder: (context, child) {
                   return Transform(
                     transform: projectProvider.notifier.value,
-                    child: ItemStackBuilder(id),
+                    child: ItemStackBuilder(project.projectId),
                   );
                 }),
           ),
@@ -313,26 +91,44 @@ class StackAnimator extends StatelessWidget {
 class ItemStackBuilder extends StatefulWidget {
   final id;
   ItemStackBuilder(this.id);
+
   @override
   _ItemStackBuilderState createState() => _ItemStackBuilderState();
 }
 
-class _ItemStackBuilderState extends State<ItemStackBuilder> {
+class _ItemStackBuilderState extends State<ItemStackBuilder>
+    with AfterLayoutMixin<ItemStackBuilder> {
+  bool isExec = true;
+  var _backgroundStackKey = new GlobalKey();
+  @override
+  void afterFirstLayout(BuildContext context) {
+    // Calling the same function "after layout" to resolve the issue.
+    var projectProvider = Provider.of<Project>(context, listen: false);
+    projectProvider.setInitialStackSizeAndOffset();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
     var crudProvider = Provider.of<CRUDModel>(context);
     var stackScale = projectProvider.stackScale;
-
-    var _backgroundStackKey = new GlobalKey();
     projectProvider.backgroundStackKey = _backgroundStackKey;
 
     return Stack(overflow: Overflow.visible, children: [
       DragTarget(
         builder: (buildContext, List<dynamic> candidateData, rejectData) {
           return Container(
-            key:_backgroundStackKey,
-            color: Colors.green,
+            key: _backgroundStackKey,
+            decoration: new BoxDecoration(
+              border: Border.all(color: Colors.grey[900]),
+              borderRadius: BorderRadius.circular(3),
+            ),
             width: projectProvider.stackSize.width,
             height: projectProvider.stackSize.height,
             child: GestureDetector(
@@ -349,9 +145,9 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
           );
         },
         onWillAccept: (dynamic data) {
-          print('"parentApplet" != data.id ${"parentApplet" != data.id}');
+          /* print('"parentApplet" != data.id ${"parentApplet" != data.id}');
           print(
-              "!projectProvider.appletMap['parentApplet'].childIds.contains(data.id) ${!projectProvider.appletMap['parentApplet'].childIds.contains(data.id)}");
+              "!projectProvider.appletMap['parentApplet'].childIds.contains(data.id) ${!projectProvider.appletMap['parentApplet'].childIds.contains(data.id)}");*/
           if ("parentApplet" != data.id
               //&& !projectProvider.appletMap[data.id].childIds.contains(null)  &&
 
@@ -396,7 +192,6 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
             }
             return true;
           } else {
-            print('no accept');
             return false;
           }
         },
@@ -431,6 +226,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder> {
 
   List<Widget> stackItems(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
+
     List<Widget> stackItemsList = [];
     Widget stackItemDraggable;
     List childIdList = [];
@@ -474,6 +270,5 @@ List<Widget> arrowItems(BuildContext context) {
             }),
           }
       });
-
   return arrowItemsList;
 }

@@ -9,6 +9,9 @@ import 'package:synapp/core/services/api.dart';
 import 'package:synapp/core/services/localization.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
 
+import 'package:vector_math/vector_math_64.dart' as vector64;
+import 'package:vector_math/vector_math.dart' as vector;
+
 import '../../locator.dart';
 import '../constants.dart';
 import 'appletModel.dart';
@@ -50,7 +53,7 @@ class Project with ChangeNotifier {
     arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
     //selectedMap = Constants.initializeSelectedMap(appletMap);
-    notifier = Constants.initializeNotifier(notifier);
+    notifier = Constants.initializeNotifier(notifier.value);
     stackSize = null;
   }
 
@@ -235,6 +238,8 @@ class Project with ChangeNotifier {
   bool pointerMoving = false;
   Offset originTextBoxPosition;
   Size originTextBoxSize;
+  Size displaySize;
+  bool initial = true;
 
   String originId;
   String targetId;
@@ -965,89 +970,112 @@ class Project with ChangeNotifier {
     return tempKey;
   }
 
-  void stackSizeChange(GlobalKey objectKey, Offset position) {
-    Offset offsetChange;
+  void stackSizeChange(GlobalKey appletKey, GlobalKey feedbackKey,
+      Offset pointerUpOffset, Offset pointerDownOffset) {
+    var targetOffset = Offset(0, 0);
+    var objectItemId = getIdFromKey(appletKey);
+
+    var itemScale = appletMap[objectItemId].scale;
+
+    var positionOfItem = Offset(
+      ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
+          pointerDownOffset.dx),
+      ((pointerUpOffset.dy - targetOffset.dy - headerHeight()) /
+              itemScale /
+              stackScale -
+          pointerDownOffset.dy),
+    );
+
     var itemSize;
     RenderBox itemBox;
     RenderBox _backgroundStackRenderBox;
     Offset _backgroundStackPosition;
     Size _backgroundStackSize;
-
+    print('backgroundStackKey $backgroundStackKey');
     _backgroundStackRenderBox =
         backgroundStackKey.currentContext.findRenderObject();
     _backgroundStackPosition =
-        _backgroundStackRenderBox.localToGlobal(Offset.zero) -
-            Offset(0, headerHeight());
+        (_backgroundStackRenderBox.localToGlobal(Offset.zero) -
+                Offset(0, headerHeight())) /
+            stackScale;
     _backgroundStackSize = _backgroundStackRenderBox.size;
 
-    print('_backgroundStackPosition $_backgroundStackPosition');
-
-    itemBox = objectKey.currentContext.findRenderObject();
+    itemBox = feedbackKey.currentContext.findRenderObject();
     itemSize = itemBox.size;
-
     var stackChange = Offset(0, 0);
-    print('stackOffset $generalStackOffset');
-    print('position $position');
-    if (position.dx > _backgroundStackPosition.dx &&
-        position.dx <
+    var offsetChange = Offset(0, 0);
+    if (positionOfItem.dx > _backgroundStackPosition.dx &&
+        positionOfItem.dx <
             _backgroundStackPosition.dx +
-                (_backgroundStackSize.width * stackScale) &&
-        position.dy > (_backgroundStackPosition.dy) &&
-        position.dy <
+                (_backgroundStackSize.width) -
+                itemSize.width &&
+        positionOfItem.dy > (_backgroundStackPosition.dy) &&
+        positionOfItem.dy <
             _backgroundStackPosition.dy +
-                headerHeight()*stackScale +
-                (_backgroundStackSize.height*stackScale)) {
-      print('inside');
+                (_backgroundStackSize.height) -
+                itemSize.height) {
     } else {
-      /*
-      if (position.dx >
+      var tempOffsetChangeOne;
+      var tempOffsetChangeTwo;
+
+      if (positionOfItem.dx >
           _backgroundStackPosition.dx +
-              _backgroundStackSize.width * stackScale) {
-        print('//sector1');
+              _backgroundStackSize.width -
+              itemSize.width) {
+        //sector1
         offsetChange = Offset(
-            position.dx -
+            positionOfItem.dx -
                 _backgroundStackPosition.dx -
-                (_backgroundStackSize.width * stackScale) +
-                itemSize.width * stackScale,
+                (_backgroundStackSize.width) +
+                itemSize.width,
             0);
-        stackChange = Offset(
-            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        stackSize = Size(
-            _backgroundStackSize.width + offsetChange.dx / stackScale,
+        stackChange = Offset(stackChange.dx + offsetChange.dx, stackChange.dy);
+        stackSize = Size(_backgroundStackSize.width + offsetChange.dx,
             _backgroundStackSize.height);
       }
-      if (position.dy >
+
+      if (positionOfItem.dy >
           _backgroundStackPosition.dy +
-              headerHeight() +
-              _backgroundStackSize.height * stackScale) {
-        print('//sector 2');
-        offsetChange = Offset(
-            0,
-            position.dy -
-                _backgroundStackPosition.dy -
-                (_backgroundStackSize.height - headerHeight() * stackScale) +
-                itemSize.height * stackScale);
-        stackChange = Offset(
-            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
-        stackSize = Size(
-            _backgroundStackSize.width,
-            (_backgroundStackSize.height + offsetChange.dy) / stackScale -
-                (headerHeight() / stackScale));
-      }
-      if (position.dx < _backgroundStackPosition.dx) {
-        print(' //sector 3');
+              _backgroundStackSize.height -
+              itemSize.height) {
+        //sector 2');
 
         offsetChange = Offset(
-            position.dx -
-                _backgroundStackPosition.dx -
-                itemSize.width * stackScale,
-            0);
+            offsetChange.dx,
+            positionOfItem.dy -
+                _backgroundStackPosition.dy -
+                (_backgroundStackSize.height - headerHeight()) +
+                itemSize.height);
+        tempOffsetChangeOne = offsetChange;
+        stackChange = Offset(
+            stackChange.dx, stackChange.dy + offsetChange.dy / stackScale);
+        stackSize = Size(_backgroundStackSize.width + offsetChange.dx,
+            (_backgroundStackSize.height + offsetChange.dy) - (headerHeight()));
+      }
+      if (positionOfItem.dx < _backgroundStackPosition.dx) {
+        //sector 3
+
+        offsetChange = Offset(
+                positionOfItem.dx - _backgroundStackPosition.dx,
+                positionOfItem.dy >
+                        _backgroundStackPosition.dy +
+                            _backgroundStackSize.height -
+                            itemSize.height
+                    ? offsetChange.dy -
+                        (positionOfItem.dy -
+                            _backgroundStackPosition.dy -
+                            (_backgroundStackSize.height - headerHeight()) +
+                            itemSize.height)
+                    : offsetChange.dy) *
+            stackScale;
+        tempOffsetChangeTwo = offsetChange;
         stackChange = Offset(
             stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
+
         appletMap["parentApplet"].childIds.forEach((k) => {
               appletMap[k].position = Offset(
                   appletMap[k].position.dx - offsetChange.dx / stackScale,
-                  appletMap[k].position.dy)
+                  appletMap[k].position.dy - offsetChange.dy / stackScale)
             });
         notifier.value
             .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
@@ -1055,32 +1083,41 @@ class Project with ChangeNotifier {
             .setEntry(1, 3, notifier.value.row1.a + (offsetChange.dy));
         stackSize = Size(
             _backgroundStackSize.width - offsetChange.dx / stackScale,
-            _backgroundStackSize.height);
+            _backgroundStackSize.height +
+                offsetChange.dy -
+                headerHeight() +
+                (positionOfItem.dy >
+                        _backgroundStackPosition.dy +
+                            _backgroundStackSize.height -
+                            itemSize.height
+                    ? tempOffsetChangeOne.dy
+                    : 0));
       }
-print('stackscale $stackScale');
-      if (position.dy < _backgroundStackPosition.dy + headerHeight()) {
-        print('//sector 4');
-        offsetChange = Offset(
-            0,
-            position.dy -
-                _backgroundStackPosition.dy -
-                headerHeight() -
-                itemSize.height * stackScale);
+
+      if (positionOfItem.dy < _backgroundStackPosition.dy) {
+        //sector 4
+
+        offsetChange = Offset(offsetChange.dx,
+                positionOfItem.dy - _backgroundStackPosition.dy) *
+            stackScale;
         stackChange = Offset(
-            stackChange.dx + offsetChange.dx, stackChange.dy + offsetChange.dy);
+            stackChange.dx, stackChange.dy + offsetChange.dy / stackScale);
 
         appletMap["parentApplet"].childIds.forEach((k) => {
               appletMap[k].position = Offset(appletMap[k].position.dx,
                   appletMap[k].position.dy - offsetChange.dy / stackScale)
             });
-        notifier.value
-            .setEntry(0, 3, notifier.value.row0.a + (offsetChange.dx));
+        notifier.value.setEntry(0, 3, notifier.value.row0.a);
         notifier.value
             .setEntry(1, 3, notifier.value.row1.a + (offsetChange.dy));
-        stackSize = Size(_backgroundStackSize.width,
+        stackSize = Size(
+            _backgroundStackSize.width +
+                (positionOfItem.dx < _backgroundStackPosition.dx
+                        ? (-1) * offsetChange.dx + tempOffsetChangeTwo.dx * (-1)
+                        : offsetChange.dx / stackScale) /
+                    stackScale,
             _backgroundStackSize.height - offsetChange.dy / stackScale);
       }
-    */
     }
     //update arrows position to the new stack offset
     if (stackChange.dx < 0 || stackChange.dy < 0) {
@@ -1334,7 +1371,6 @@ print('stackscale $stackScale');
   }
 
   Stream<Map<String, Applet>> fetchAppletsAsStream() {
-    print('fetchAppletsAsStream');
     var doc = _api.streamAppletCollection(projectId);
     return doc.map((QuerySnapshot value) =>
         {for (var v in value.documents) v.documentID: Applet.fromMap(v.data)});
@@ -1401,7 +1437,271 @@ print('stackscale $stackScale');
     } else if (type == 'TextApplet') {
       createNewTextBox(newAppKey, context);
     }
-    print('id inside provier $id');*/
+    */
     return id;
   }
+
+  //get the outer keys
+  List<GlobalKey> getOuterKeysAsList(List<GlobalKey> keyAtBottomList) {
+    GlobalKey mostLeftKey;
+    GlobalKey mostRightKey;
+    GlobalKey mostTopKey;
+    GlobalKey mostBottomKey;
+
+    mostBottomKey =
+        mostLeftKey = mostRightKey = mostTopKey = keyAtBottomList[0];
+
+    for (int i = 0; i < keyAtBottomList.length; i++) {
+      //getting most right key
+      if ((appletMap[getIdFromKey(keyAtBottomList[i])].position.dx +
+              appletMap[getIdFromKey(keyAtBottomList[i])].size.width) >
+          (appletMap[getIdFromKey(mostRightKey)].position.dx +
+              appletMap[getIdFromKey(mostRightKey)].size.width)) {
+        mostRightKey = keyAtBottomList[i];
+      }
+
+//getting most left key
+      if (appletMap[getIdFromKey(keyAtBottomList[i])].position.dx <
+          appletMap[getIdFromKey(mostLeftKey)].position.dx) {
+        mostLeftKey = keyAtBottomList[i];
+      }
+
+//getting most top key
+      if ((appletMap[getIdFromKey(keyAtBottomList[i])].position.dy) <
+          appletMap[getIdFromKey(mostTopKey)].position.dy) {
+        mostTopKey = keyAtBottomList[i];
+      }
+
+//getting most bottom key
+      if ((appletMap[getIdFromKey(keyAtBottomList[i])].position.dy +
+              appletMap[getIdFromKey(keyAtBottomList[i])].size.height) >
+          appletMap[getIdFromKey(mostTopKey)].position.dy +
+              appletMap[getIdFromKey(mostTopKey)].size.height) {
+        mostBottomKey = keyAtBottomList[i];
+      }
+    }
+    return [mostRightKey, mostBottomKey, mostLeftKey, mostTopKey];
+  }
+
+  List<double> getMaxOffset(List<Key> getOuterKeysAsList) {
+    var mostRightKey = getOuterKeysAsList[0];
+    var mostBottomKey = getOuterKeysAsList[1];
+    var mostLeftKey = getOuterKeysAsList[2];
+    var mostTopKey = getOuterKeysAsList[3];
+
+    var maxLeftOffset;
+    var maxRightOffset;
+    var maxTopOffset;
+    var maxBottomOffset;
+
+    maxLeftOffset =
+        appletMap[getIdFromKey(mostLeftKey)].position.dx * stackScale;
+
+    maxRightOffset = appletMap[getIdFromKey(mostRightKey)].position.dx;
+
+    maxTopOffset = appletMap[getIdFromKey(mostTopKey)].position.dy * stackScale;
+
+    maxBottomOffset =
+        appletMap[getIdFromKey(mostBottomKey)].position.dy * stackScale;
+
+    return [maxRightOffset, maxBottomOffset, maxLeftOffset, maxTopOffset];
+  }
+
+  //set scroll barrier
+  void setMaxOffset(List<Key> getOuterKeysAsList) {
+    List<double> maxOffset = getMaxOffset(getOuterKeysAsList);
+
+    var maxRightOffset = maxOffset[0];
+    var maxBottomOffset = maxOffset[1];
+    var maxLeftOffset = maxOffset[2];
+    var maxTopOffset = maxOffset[3];
+
+    var mostRightKey = getOuterKeysAsList[0];
+    var mostBottomKey = getOuterKeysAsList[1];
+    var mostLeftKey = getOuterKeysAsList[2];
+    var mostTopKey = getOuterKeysAsList[3];
+
+//left offset barrier
+    if (stackOffset.dx > -maxLeftOffset + displaySize.width / 2) {
+      notifier.value.setEntry(0, 3, -maxLeftOffset + displaySize.width / 2);
+    }
+
+    if ((stackOffset.dx +
+            appletMap[getIdFromKey(mostRightKey)].position.dx * stackScale +
+            appletMap[getIdFromKey(mostRightKey)].size.width * stackScale) <
+        displaySize.width / 2) {
+      var tempOffsetRightDx =
+          -(appletMap[getIdFromKey(mostRightKey)].position.dx * stackScale +
+              appletMap[getIdFromKey(mostRightKey)].size.width * stackScale -
+              displaySize.width / (1.99));
+      notifier.value.setEntry(0, 3, tempOffsetRightDx);
+    }
+
+//top offset barrier
+    if (stackOffset.dy > -maxTopOffset + displaySize.height / 2) {
+      notifier.value.setEntry(1, 3, -maxTopOffset + displaySize.height / 2);
+    }
+
+//top bottom barrier
+    if (stackOffset.dy < -maxBottomOffset) {
+      notifier.value.setEntry(1, 3, -maxBottomOffset);
+    }
+  }
+
+  //set max scale
+  double getMaxScale(List<Key> getOuterKeysAsList) {
+    //set here the scale rate property you want
+    var scaleRate = 0.9;
+    var maxScale;
+    var maxScaleWidth;
+    var maxScaleHeight;
+    //List<double> maxOffset = getMaxOffset(getOuterKeysAsList);
+
+    var mostRightKey = getOuterKeysAsList[0];
+    // var mostBottomKey = getOuterKeysAsList[1];
+    var mostLeftKey = getOuterKeysAsList[2];
+    //var mostTopKey = getOuterKeysAsList[3];
+
+    maxScaleWidth = (displaySize.width /
+        (appletMap[getIdFromKey(mostLeftKey)].position.dx +
+            appletMap[getIdFromKey(mostRightKey)].position.dx +
+            appletMap[getIdFromKey(mostRightKey)].size.width));
+
+    maxScaleHeight = (displaySize.height /
+        (appletMap[getIdFromKey(mostLeftKey)].position.dy +
+            appletMap[getIdFromKey(mostRightKey)].position.dy +
+            appletMap[getIdFromKey(mostRightKey)].size.height +
+            headerHeight()));
+
+    return maxScale =
+        (maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth) *
+            scaleRate;
+  }
+
+  setMaxScaleAndOffset(context) {
+    List<GlobalKey> keyAtBottomList = appletMap["parentApplet"]
+        .childIds
+        .map((e) => getGlobalKeyFromId(e))
+        .toList();
+
+    //sets the boundaries of the visable part of the screen
+    // and the maximum scale to zoom out
+    setMaxOffset(getOuterKeysAsList(keyAtBottomList));
+    var maxScale = getMaxScale(getOuterKeysAsList(keyAtBottomList));
+    if (appletMap["parentApplet"].childIds.length > 1) {
+      if (stackScale < maxScale) {
+        notifier.value.setEntry(0, 0, maxScale);
+        notifier.value.setEntry(1, 1, maxScale);
+      }
+    }
+  }
+
+  Matrix4 updateStackWithMatrix(Matrix4 matrix) {
+    if (appletMap["parentApplet"] == null) {
+      appletMap = {};
+    }
+
+    if (notifier == null) {
+      notifier = Constants.initializeNotifier(Matrix4.identity());
+    }
+
+    if (appletMap["parentApplet"] != null &&
+        appletMap["parentApplet"].childIds.length > 1) {
+      List<GlobalKey> keyAtBottomList = appletMap["parentApplet"]
+          .childIds
+          .map(
+            (String e) => getGlobalKeyFromId(e),
+          )
+          .toList();
+      double maxScale = getMaxScale(getOuterKeysAsList(keyAtBottomList));
+      print('matrix $matrix');
+      matrix.translate(initialViewOffset());
+      print('translated $matrix');
+      matrix.scale(maxScale);
+    }
+    notifier.value = matrix;
+    return matrix;
+  }
+
+  vector64.Vector3 initialViewOffset() {
+    vector64.Vector3 initialVector;
+    if (notifier == null) {
+      notifier = Constants.initializeNotifier(Matrix4.identity());
+    }
+
+    if (appletMap["parentApplet"] != null &&
+        appletMap["parentApplet"].childIds.length > 1) {
+      List<GlobalKey> keyAtBottomList = appletMap["parentApplet"]
+          .childIds
+          .map(
+            (String e) => getGlobalKeyFromId(e),
+          )
+          .toList();
+
+      List<Key> outerKeysAsList = getOuterKeysAsList(keyAtBottomList);
+      List<double> maxOffsetList = getMaxOffset(outerKeysAsList);
+
+      var stackWidth = (maxOffsetList[0] -
+          maxOffsetList[2] +
+          appletMap[getIdFromKey(outerKeysAsList[0])].size.width);
+      var stackHeight = (maxOffsetList[1] -
+          maxOffsetList[3] +
+          appletMap[getIdFromKey(outerKeysAsList[1])].size.height);
+
+      double maxScale = getMaxScale(getOuterKeysAsList(keyAtBottomList));
+
+      var widthOffset = displaySize.width / maxScale - stackWidth;
+      var heightOffset = displaySize.height / maxScale - stackHeight;
+      initialVector = vector64.Vector3(
+          widthOffset / 2 * maxScale,
+          heightOffset/2 * maxScale - headerHeight(),
+          0);
+
+      /*notifier.value
+          .translate(transformOffset); // setTranslation(transformOffset);
+      notifier.value.scale(maxScale);*/
+
+      //.notifier.value.setEntry(1, 3, middleOffset.dy);
+    }
+    return initialVector;
+  }
+
+  setInitialStackSizeAndOffset() {
+    List<GlobalKey> keyAtBottomList = appletMap["parentApplet"]
+        .childIds
+        .map(
+          (String e) => getGlobalKeyFromId(e),
+        )
+        .toList();
+    List<GlobalKey> outerKeysAsList = getOuterKeysAsList(keyAtBottomList);
+    List<double> maxOffsetList =
+        getMaxOffset(getOuterKeysAsList(keyAtBottomList));
+
+    print(maxOffsetList);
+    var maxScale = getMaxScale(outerKeysAsList);
+    print(maxScale);
+    print(maxOffsetList[1] - maxOffsetList[3]);
+    stackSize = Size(
+        maxOffsetList[0] -
+            maxOffsetList[2] +
+            appletMap[getIdFromKey(outerKeysAsList[0])].size.width,
+        (maxOffsetList[1] - maxOffsetList[3]) +
+            appletMap[getIdFromKey(outerKeysAsList[1])].size.height);
+
+    appletMap["parentApplet"].childIds.forEach((k) => {
+          appletMap[k].position = Offset(
+              appletMap[k].position.dx - maxOffsetList[2] / stackScale,
+              appletMap[k].position.dy - maxOffsetList[3] / stackScale)
+        });
+  }
+
+    void createNewArrow(
+      String originId, Arrow arrow)  {
+    //RenderBox itemBox = itemKey.currentContext.findRenderObject();
+    //Offset appPosition = itemBox.globalToLocal(Offset.zero);
+
+    _api.addArrow(projectId,originId,arrow.toJson());
+  }
+
+
 }

@@ -21,33 +21,42 @@ class CustomCard extends StatelessWidget {
     return Card(
       child: Container(
         padding: const EdgeInsets.only(top: 5.0),
-        child: Column(
-          children: <Widget>[
-            Text(projectDetails.name),
-            FlatButton(
-                child: Text("See More"),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => 
-                        StreamProvider<Map<String, Applet>>(
-                          create: (context) =>
-                              projectDetails.fetchAppletsChangesAsStream(),
-                        child:
-                        ChangeNotifierProxyProvider<Map<String, Applet>,
-                            Project>(
-                          create: (context) => projectDetails,
-                          update: (context, appletMap, projectDetail) =>
-                              projectDetails.update(appletMap),
-                          child: HomeView(project: projectDetails),
-                        ),
+        child: Column(children: <Widget>[
+          Text(projectDetails.name),
+          FlatButton(
+              child: Text("See More"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StreamProvider<Map<String, Applet>>(
+                      create: (context) =>
+                          projectDetails.fetchAppletsChangesAsStream(),
+                      child: ChangeNotifierProxyProvider<Map<String, Applet>,
+                          Project>(
+                        create: (context) => projectDetails,
+                        update: (context, appletMap, projectDetail) =>
+                            projectDetails.update(appletMap),
+                        child: Builder(builder: (context) {
+                          var snapshot =
+                              Provider.of<Map<String, Applet>>(context);
+                          projectDetails.displaySize =
+                              MediaQuery.of(context).size;
+                          if (snapshot == null) {
+                            return new SpinKitDoubleBounce(
+                              color: Color(0xff875AFF),
+                              size: 50.0,
+                            );
+                          } else {
+                            return HomeView(project: projectDetails);
+                          }
+                        }),
                       ),
                     ),
-                  );
-                }),
-          ],
-        ),
+                  ),
+                );
+              }),
+        ]),
       ),
     );
   }

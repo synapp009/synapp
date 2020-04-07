@@ -19,24 +19,30 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  var isExec = true;
   @override
   void initState() {
+    print('runinit');
+    isExec = false;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
-    var crudProvider = Provider.of<CRUDModel>(context);
-    //set stackSize & headerHeight
-    projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
 
     if (projectProvider.stackSize == null) {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
-    var statusBarHeight = MediaQuery.of(context).padding.top;
-    //projectProvider.updateProvider(widget.project, statusBarHeight);
+    if (!isExec) {
+    projectProvider.initial = true;      
+      projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
 
+      projectProvider.updateStackWithMatrix(Matrix4.identity());
+      isExec = true;
+    }
+
+    //projectProvider.updateProvider(widget.project, statusBarHeight);
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       backgroundColor: Colors.grey,
@@ -47,7 +53,7 @@ class _HomeViewState extends State<HomeView> {
         leading: new IconButton(
           onPressed: () {
             //crudProvider.updateProject(projectProvider, widget.project.projectId);
-            
+
             Navigator.pop(context);
           },
           color: Colors.black,
@@ -56,15 +62,15 @@ class _HomeViewState extends State<HomeView> {
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-        child: MyHome(widget.project.projectId),
+        child: MyHome(widget.project),
       ),
     );
   }
 }
 
 class MyHome extends StatefulWidget {
-  final id;
-  MyHome(this.id);
+  final project;
+  MyHome(this.project);
   @override
   _MyHomeState createState() => _MyHomeState();
 }
@@ -109,7 +115,6 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
-
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: _MyFloatingActionButton(_apps, projectProvider),
@@ -134,7 +139,7 @@ class _MyHomeState extends State<MyHome> {
           ],
         ),
       ),
-      body: StackAnimator(widget.id),
+      body: StackAnimator(widget.project),
     );
   }
 }
@@ -241,10 +246,10 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                         future: newAppletId,
                         builder: (context, snapshot) {
                           if (projectProvider.appletMap[snapshot.data] !=
-                              null && snapshot.data != null) {
+                                  null &&
+                              snapshot.data != null) {
                             projectProvider.appletMap[snapshot.data].id =
                                 snapshot.data;
-
                           }
 
                           return Listener(
@@ -269,11 +274,11 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                             },
                             onPointerUp: (event) {
                               _pointerUpOffset = event.position;
-                              
-                                  projectProvider.changeItemDropPosition(
-                                      projectProvider.appletMap[snapshot.data],
-                                      _pointerDownOffset,
-                                      _pointerUpOffset);
+
+                              projectProvider.changeItemDropPosition(
+                                  projectProvider.appletMap[snapshot.data],
+                                  _pointerDownOffset,
+                                  _pointerUpOffset);
                               projectProvider.chosenId = null;
                               /*    if (!_appletDragged) {
                           setState(() {

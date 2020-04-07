@@ -130,7 +130,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                     pointerDownOffset,
                     pointerUpOffset);
               });
-              projectProvider.stackSizeChange(feedbackKey, off);
+              projectProvider.stackSizeChange(feedbackKey, pointerUpOffset,pointerDownOffset);
             },
             childWhenDragging: Container(),
             feedback: ListenableProvider<Project>.value(
