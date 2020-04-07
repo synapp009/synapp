@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:random_color/random_color.dart';
+import 'package:synapp/core/models/projectModel.dart';
 
 Color _getColorFromString(String snapshot) {
   Color tempColor;
@@ -100,6 +102,154 @@ class Applet {
       "onChange": onChange.toString()
     };
   }
+   WindowApplet createNewWindow() {
+    Key windowKey = new GlobalKey();
+    var appletId;
+    Color color = new RandomColor().randomColor(
+        colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
+
+    return WindowApplet(
+        type: 'WindowApplet',
+        key: windowKey,
+        size: Size(130, 130),
+        position: Offset(200, 100),
+        color: color,
+        title: 'Title',
+        childIds: [],
+        scale: 0.3,
+        selected: false,
+        onChange: true);
+  }
+
+
+  TextApplet createNewTextBox() {
+    return TextApplet(
+        type: "TextApplet",
+        //id: id,
+        //key: newAppKey,
+        size: Size(100, 60),
+        position: Offset(200, 100),
+        color: Colors.black,
+        title: 'Title',
+        content: 'Enter Text\n',
+        fixed: false,
+        //bool expanded;
+        scale: 1.0,
+        textSize: 16,
+        onChange: true);
+  }
+
+   void scaleTextBox(Project project, int i, String textBoxId, PointerMoveEvent details) {
+    if (i == 0) {
+      project.appletMap[textBoxId].position = Offset(
+        project.appletMap[textBoxId].size.width - details.delta.dx > 40
+            ? project.appletMap[textBoxId].position.dx + details.delta.dx
+            : project.appletMap[textBoxId].position.dx,
+        project.appletMap[textBoxId].size.height - details.delta.dy > 40
+            ? project.appletMap[textBoxId].position.dy + details.delta.dy
+            : project.appletMap[textBoxId].position.dy,
+      );
+      project.appletMap[textBoxId].size = Size(
+        project.appletMap[textBoxId].size.width +
+            (project.appletMap[textBoxId].size.width - details.delta.dx > 40
+                ? -details.delta.dx
+                : 0),
+        project.appletMap[textBoxId].size.height +
+            (project.appletMap[textBoxId].size.height - details.delta.dy > 40
+                ? -details.delta.dy
+                : 0),
+      );
+
+      // i = 6 or 7
+    } else if (i == 6 || i == 7) {
+      project.appletMap[textBoxId].position = Offset(
+          project.appletMap[textBoxId].position.dx +
+              (project.appletMap[textBoxId].size.width - details.delta.dx > 40
+                  ? details.delta.dx
+                  : 0),
+          project.appletMap[textBoxId].position.dy);
+      if (i == 6) {
+        project.appletMap[textBoxId].size = Size(
+            project.appletMap[textBoxId].size.width +
+                (project.appletMap[textBoxId].size.width - details.delta.dx > 40
+                    ? -details.delta.dx
+                    : 0),
+            project.appletMap[textBoxId].size.height +
+                (project.appletMap[textBoxId].size.height + details.delta.dy > 40
+                    ? details.delta.dy
+                    : 0));
+        //i = 7
+      } else if (i == 7) {
+        project.appletMap[textBoxId].size = Size(
+            project.appletMap[textBoxId].size.width -
+                (project.appletMap[textBoxId].size.width - details.delta.dx > 40
+                    ? (details.delta.dx)
+                    : 0),
+            project.appletMap[textBoxId].size.height);
+      }
+    } else if (i == 1 || i == 5) {
+      if (i == 5) {
+        project.appletMap[textBoxId].size = Size(
+            project.appletMap[textBoxId].size.width,
+            project.appletMap[textBoxId].size.height +
+                (project.appletMap[textBoxId].size.height + details.delta.dy > 40
+                    ? (details.delta.dy)
+                    : 0));
+      } else if (i == 1) {
+        project.appletMap[textBoxId].position = Offset(
+          project.appletMap[textBoxId].position.dx,
+          project.appletMap[textBoxId].position.dy +
+              (project.appletMap[textBoxId].size.height - details.delta.dy > 40
+                  ? details.delta.dy
+                  : 0),
+        );
+
+        project.appletMap[textBoxId].size = Size(
+            project.appletMap[textBoxId].size.width,
+            project.appletMap[textBoxId].size.height -
+                (project.appletMap[textBoxId].size.height - details.delta.dy > 40
+                    ? (details.delta.dy)
+                    : 0));
+      }
+    } else if (i == 2) {
+      project.appletMap[textBoxId].position = Offset(
+        project.appletMap[textBoxId].position.dx,
+        project.appletMap[textBoxId].position.dy +
+            (project.appletMap[textBoxId].position.dy + details.position.dy > 40
+                ? (project.appletMap[textBoxId].size.height - details.delta.dy > 40
+                    ? details.delta.dy
+                    : 0)
+                : 0),
+      );
+      project.appletMap[textBoxId].size = Size(
+        project.appletMap[textBoxId].size.width +
+            (project.appletMap[textBoxId].size.width + details.delta.dx > 40
+                ? details.delta.dx
+                : 0),
+        project.appletMap[textBoxId].size.height +
+            (project.appletMap[textBoxId].size.height - details.delta.dy > 40
+                ? -details.delta.dy
+                : 0),
+      );
+    } else if (i == 3) {
+      project.appletMap[textBoxId].size = Size(
+          project.appletMap[textBoxId].size.width +
+              (project.appletMap[textBoxId].size.width + details.delta.dx > 40
+                  ? (details.delta.dx)
+                  : 0),
+          project.appletMap[textBoxId].size.height);
+    } else if (i == 4) {
+      project.appletMap[textBoxId].size = Size(
+          project.appletMap[textBoxId].size.width +
+              (project.appletMap[textBoxId].size.width + details.delta.dx > 40
+                  ? details.delta.dx
+                  : 0),
+          project.appletMap[textBoxId].size.height +
+              (project.appletMap[textBoxId].size.height + details.delta.dy > 40
+                  ? details.delta.dy
+                  : 0));
+    }}
+
 }
 
 class WindowApplet extends Applet {
@@ -170,6 +320,9 @@ class WindowApplet extends Applet {
       //"childKeys": childKeys.toList(),
     };
   }
+
+  
+
 }
 
 class TextApplet extends Applet {
@@ -247,4 +400,8 @@ class TextApplet extends Applet {
       "positionDy": position.dy,
     };
   }
+
+
+ 
+  
 }

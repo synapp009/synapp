@@ -35,7 +35,6 @@ class _HomeViewState extends State<HomeView> {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
     if (!isExec) {
-    projectProvider.initial = true;      
       projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
 
       projectProvider.updateStackWithMatrix(Matrix4.identity());

@@ -65,14 +65,13 @@ class StackAnimator extends StatelessWidget {
               : m;
 
           projectProvider.setMaxScaleAndOffset(context);
-          projectProvider.initial = false;
         },
         shouldRotate: false,
         child: Stack(children: [
           Container(color: Colors.transparent),
           Positioned(
-            top: projectProvider.generalStackOffset.dy,
-            left: projectProvider.generalStackOffset.dx,
+            top: 0,
+            left: 0,
             child: AnimatedBuilder(
                 animation: projectProvider.notifier,
                 builder: (context, child) {

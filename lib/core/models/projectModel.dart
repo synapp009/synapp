@@ -1,16 +1,9 @@
-import 'dart:math';
-
-import 'package:angles/angles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:random_color/random_color.dart';
 import 'package:synapp/core/services/api.dart';
 import 'package:synapp/core/services/localization.dart';
-import 'package:synapp/core/viewmodels/CRUDModel.dart';
 
 import 'package:vector_math/vector_math_64.dart' as vector64;
-import 'package:vector_math/vector_math.dart' as vector;
 
 import '../../locator.dart';
 import '../constants.dart';
@@ -37,7 +30,8 @@ class Project with ChangeNotifier {
   ValueNotifier<Matrix4> notifier;
 
   Api _api = locator<Api>();
-
+  Applet _applet = locator<Applet>();
+  Arrow _arrow = locator<Arrow>();
   Localization localization;
 
   Project(
@@ -63,7 +57,6 @@ class Project with ChangeNotifier {
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
         description = snapshot['description'] ?? '',
-        //appletMap = getAppletMap(snapshot['id'], snapshot['appletList']) ?? {},
         arrowMap = getArrowMap(snapshot['arrowMap']) ?? {};
 
   /*tempMap = appletMap.map((k, v) {
@@ -109,12 +102,6 @@ class Project with ChangeNotifier {
       "arrowMap": arrowJsonMap,
       "description": description
     };
-  }
-
-  static bool mapContainsOnChange(Map<String, Applet> map) {
-    bool contains = false;
-    map.forEach((s, a) => contains = a.onChange ? true : false);
-    return contains;
   }
 
   Project update(Map<String, Applet> updatedAppletMap) {
@@ -174,41 +161,6 @@ class Project with ChangeNotifier {
     return this;
   }
 
-  static Map<String, Applet> getAppletMap(
-      String projectId, List<dynamic> snapshot) {
-    Map<String, Applet> tempMap = {};
-
-    /*Firestore.instance
-        .collection('projects')
-        .document(projectId)
-        .collection('applets')
-        .snapshots()
-        .listen((snapshot) {
-      snapshot.documents.forEach((doc) {
-        tempMap[doc.documentID] = Applet.fromMap(doc.data);
-      });
-    });*/
-
-    //return Project.fromMap(doc.data, doc.documentID);
-
-    snapshot.forEach((dynamic appletDraft) {
-      dynamic tempApplet;
-      var tempId;
-      if (appletDraft.toString().contains('WindowApplet')) {
-        tempApplet = WindowApplet.fromMap(appletDraft);
-      } else if (appletDraft.toString().contains('TextApplet')) {
-        tempApplet = TextApplet.fromMap(appletDraft);
-      } else {
-        tempApplet = Applet.fromMap(appletDraft);
-      }
-      tempId = tempApplet.id == "" ? null : tempApplet.id;
-
-      tempMap[tempId] = tempApplet;
-    });
-
-    return tempMap;
-  }
-
   static Map<String, List<Arrow>> getArrowMap(Map<dynamic, dynamic> snapshot) {
     Map<String, List<Arrow>> tempMap = {};
 
@@ -222,17 +174,13 @@ class Project with ChangeNotifier {
     return tempMap;
   }
 
-  Matrix4 matrix = Matrix4.identity();
-
   Size stackSize;
   Offset positionForDrop;
-  Offset currentStackPosition = Offset(0, 100);
   Offset currentTargetPosition = Offset(0, 0);
-  Offset actualItemToPointerOffset = Offset(0, 0);
   double stackScale = 1.0;
   double statusBarHeight;
   double maxScale;
-  Offset maxOffset;
+
   double scaleChange = 1.0;
   bool textFieldFocus = false;
   bool pointerMoving = false;
@@ -252,7 +200,6 @@ class Project with ChangeNotifier {
   var chosenId;
 
   Offset stackOffset = Offset(0, 0);
-  Offset generalStackOffset = Offset(0, 0);
 
   String getIdFromKey(Key itemKey) {
     //print('appletmap $appletMap');
@@ -271,8 +218,6 @@ class Project with ChangeNotifier {
       @required String newId,
       @required Applet applet}) {
     //String itemId = getIdFromKey(itemId);
-    Key itemKey = getKeyFromId(itemId);
-    Key newKey = getKeyFromId(newId);
 
     appletMap.forEach((String id, Applet v) => {
           if (
@@ -297,43 +242,6 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  /* createNewApp(
-      type,  GlobalKey newAppKey, BuildContext context) {
-    //RenderBox itemBox = itemKey.currentContext.findRenderObject();
-    //Offset appPosition = itemBox.globalToLocal(Offset.zero);
-    if (type == "WindowApplet") {
-      createNewWindow(newAppKey, context);
-    } else if (type == 'TextApplet') {
-      createNewTextBox(newAppKey, context);
-    }
-  }*/
-
-  WindowApplet createNewWindow() {
-    Key windowKey = new GlobalKey();
-    var appletId;
-    Color color = new RandomColor().randomColor(
-        colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
-
-    /*if (appletMap[null] == null) {
-      appletMap[null] = Applet(
-        childIds: [id],
-      );
-    }*/
-    //appletMap[null].childIds.add(id);
-    // appletMap[id]
-    return WindowApplet(
-        type: 'WindowApplet',
-        key: windowKey,
-        size: Size(130, 130),
-        position: Offset(200, 100),
-        color: color,
-        title: 'Title',
-        childIds: [],
-        scale: 0.3,
-        selected: false,
-        onChange: true);
-  }
-
   List<Key> getChildKeysFromId(List<String> childIds) {
     List<Key> tempList = [];
     childIds.forEach((String id) {
@@ -346,31 +254,7 @@ class Project with ChangeNotifier {
     return tempList;
   }
 
-  Map<Key, Applet> createAppletMap(Project project) {
-    Map<Key, Applet> tempMap = {};
-    project.appletMap.forEach((String id, Applet applet) {});
-
-    return tempMap;
-  }
-
-  TextApplet createNewTextBox() {
-    return TextApplet(
-        type: "TextApplet",
-        //id: id,
-        //key: newAppKey,
-        size: Size(100, 60),
-        position: Offset(200, 100),
-        color: Colors.black,
-        title: 'Title',
-        content: 'Enter Text\n',
-        fixed: false,
-        //bool expanded;
-        scale: 1.0,
-        textSize: 16,
-        onChange: true);
-    //notifyListeners();
-  }
-
+//avoid to select applets under the most upper
   void onlySelectThis(String key) {
     appletMap.forEach((k, v) => {
           if (k != key) {v.selected = false}
@@ -419,115 +303,7 @@ class Project with ChangeNotifier {
   }
 
   void scaleTextBox(int i, String textBoxId, PointerMoveEvent details) {
-    if (i == 0) {
-      appletMap[textBoxId].position = Offset(
-        appletMap[textBoxId].size.width - details.delta.dx > 40
-            ? appletMap[textBoxId].position.dx + details.delta.dx
-            : appletMap[textBoxId].position.dx,
-        appletMap[textBoxId].size.height - details.delta.dy > 40
-            ? appletMap[textBoxId].position.dy + details.delta.dy
-            : appletMap[textBoxId].position.dy,
-      );
-      appletMap[textBoxId].size = Size(
-        appletMap[textBoxId].size.width +
-            (appletMap[textBoxId].size.width - details.delta.dx > 40
-                ? -details.delta.dx
-                : 0),
-        appletMap[textBoxId].size.height +
-            (appletMap[textBoxId].size.height - details.delta.dy > 40
-                ? -details.delta.dy
-                : 0),
-      );
-
-      // i = 6 or 7
-    } else if (i == 6 || i == 7) {
-      appletMap[textBoxId].position = Offset(
-          appletMap[textBoxId].position.dx +
-              (appletMap[textBoxId].size.width - details.delta.dx > 40
-                  ? details.delta.dx
-                  : 0),
-          appletMap[textBoxId].position.dy);
-      if (i == 6) {
-        appletMap[textBoxId].size = Size(
-            appletMap[textBoxId].size.width +
-                (appletMap[textBoxId].size.width - details.delta.dx > 40
-                    ? -details.delta.dx
-                    : 0),
-            appletMap[textBoxId].size.height +
-                (appletMap[textBoxId].size.height + details.delta.dy > 40
-                    ? details.delta.dy
-                    : 0));
-        //i = 7
-      } else if (i == 7) {
-        appletMap[textBoxId].size = Size(
-            appletMap[textBoxId].size.width -
-                (appletMap[textBoxId].size.width - details.delta.dx > 40
-                    ? (details.delta.dx)
-                    : 0),
-            appletMap[textBoxId].size.height);
-      }
-    } else if (i == 1 || i == 5) {
-      if (i == 5) {
-        appletMap[textBoxId].size = Size(
-            appletMap[textBoxId].size.width,
-            appletMap[textBoxId].size.height +
-                (appletMap[textBoxId].size.height + details.delta.dy > 40
-                    ? (details.delta.dy)
-                    : 0));
-      } else if (i == 1) {
-        appletMap[textBoxId].position = Offset(
-          appletMap[textBoxId].position.dx,
-          appletMap[textBoxId].position.dy +
-              (appletMap[textBoxId].size.height - details.delta.dy > 40
-                  ? details.delta.dy
-                  : 0),
-        );
-
-        appletMap[textBoxId].size = Size(
-            appletMap[textBoxId].size.width,
-            appletMap[textBoxId].size.height -
-                (appletMap[textBoxId].size.height - details.delta.dy > 40
-                    ? (details.delta.dy)
-                    : 0));
-      }
-    } else if (i == 2) {
-      appletMap[textBoxId].position = Offset(
-        appletMap[textBoxId].position.dx,
-        appletMap[textBoxId].position.dy +
-            (appletMap[textBoxId].position.dy + details.position.dy > 40
-                ? (appletMap[textBoxId].size.height - details.delta.dy > 40
-                    ? details.delta.dy
-                    : 0)
-                : 0),
-      );
-      appletMap[textBoxId].size = Size(
-        appletMap[textBoxId].size.width +
-            (appletMap[textBoxId].size.width + details.delta.dx > 40
-                ? details.delta.dx
-                : 0),
-        appletMap[textBoxId].size.height +
-            (appletMap[textBoxId].size.height - details.delta.dy > 40
-                ? -details.delta.dy
-                : 0),
-      );
-    } else if (i == 3) {
-      appletMap[textBoxId].size = Size(
-          appletMap[textBoxId].size.width +
-              (appletMap[textBoxId].size.width + details.delta.dx > 40
-                  ? (details.delta.dx)
-                  : 0),
-          appletMap[textBoxId].size.height);
-    } else if (i == 4) {
-      appletMap[textBoxId].size = Size(
-          appletMap[textBoxId].size.width +
-              (appletMap[textBoxId].size.width + details.delta.dx > 40
-                  ? details.delta.dx
-                  : 0),
-          appletMap[textBoxId].size.height +
-              (appletMap[textBoxId].size.height + details.delta.dy > 40
-                  ? details.delta.dy
-                  : 0));
-    }
+    _applet.scaleTextBox(this, i, textBoxId, details);
     notifyListeners();
   }
 
@@ -602,27 +378,6 @@ class Project with ChangeNotifier {
     return tempList;
   }
 
-  void addArrow(String key) {
-    //adds an Arrow to the list of arrows from origin widget to null
-    if (arrowMap[key] == null) {
-      arrowMap[key] = [];
-    }
-    var getPosition = (centerOfRenderBox(key) + stackOffset) / stackScale;
-    getPosition =
-        Offset(getPosition.dx, getPosition.dy - headerHeight() * stackScale);
-
-    arrowMap[key].add(
-      Arrow(
-        arrowed: false,
-        target: null,
-        size: 0.0,
-        position: getPosition,
-        angle: Angle.fromRadians(0),
-      ),
-    );
-    notifyListeners();
-  }
-
   Offset centerOfRenderBox(String originId) {
     //calculate the Center of a originKey RenderBox
     GlobalKey originKey = getGlobalKeyFromId(originId);
@@ -639,75 +394,6 @@ class Project with ChangeNotifier {
     return centerOfOrigin = Offset(
         (originBoxPosition.dx + (originBoxSize.width / 2)),
         (originBoxPosition.dy + (originBoxSize.height / 2)));
-  }
-
-  Angle getAngle(Offset pointA, Offset pointB) {
-    double tempAncle =
-        (pointB.dy - pointA.dy - headerHeight()) / (pointB.dx - pointA.dx);
-    var angle;
-
-    var tempSize = Size(pointA.dx - pointB.dx, pointA.dy - pointB.dy);
-
-    int cartesianCoordinateSector(tempSize) {
-      var sector;
-
-      if (tempSize.height > 0 && tempSize.width > 0) {
-        //X2
-
-        return sector = 4;
-      } else if (tempSize.height < 0 && tempSize.width > 0) {
-        //X1
-
-        return sector = 3;
-      } else if (tempSize.height > 0 && tempSize.width < 0) {
-        //X3
-
-        return sector = 1;
-      } else {
-        //X4
-
-        return sector = 2;
-      }
-    }
-
-    if (cartesianCoordinateSector(tempSize) <= 2) {
-      angle = Angle.atan(tempAncle);
-    } else {
-      angle = Angle.atan(tempAncle) + Angle.fromDegrees(180);
-    }
-
-    return angle;
-  }
-
-  double diagonalLength(Offset pointA, Offset pointB) {
-    var tempSize =
-        Size((pointA.dx - pointB.dx), (pointA.dy - pointB.dy - headerHeight()));
-
-    var length = ((tempSize.width * tempSize.width) +
-        (tempSize.height * tempSize.height));
-    return length = sqrt(length);
-  }
-
-  void setArrowToPointer(Key startKey, Offset actualPointer) {
-    //set the size and ancle of the Arrow between widget and pointer
-    //from center of a RenderBox (startKey)
-    Arrow arrow;
-    String startId = getIdFromKey(startKey);
-    arrowMap[startId].forEach((k) => k.target == null ? arrow = k : null);
-    var itemScale = appletMap[startId].scale;
-    var itemOffset = centerOfRenderBox(startId);
-
-    var length = diagonalLength(
-      actualPointer,
-      itemOffset,
-    );
-    if (arrow != null) {
-      arrow.position = (itemOffset - stackOffset) / stackScale;
-      arrow.size = length / stackScale;
-      arrow.angle = getAngle(itemOffset, actualPointer);
-    }
-
-    notifyListeners();
   }
 
   void changeItemDropPosition(
@@ -747,40 +433,6 @@ class Project with ChangeNotifier {
     }
   }
 
-  getEdgeOffset(itemPosition, itemSize, Angle itemAngle) {
-    var adjacent;
-    var opposite;
-    var temp;
-    Angle tempAngle;
-    adjacent = (itemSize.height / 2) * stackScale;
-    if (itemAngle.degrees + 45 < 90 && itemAngle.degrees + 45 > 0) {
-      opposite = adjacent * itemAngle.tan;
-    } else if (itemAngle.degrees + 45 < 180 && itemAngle.degrees + 45 > 90) {
-      tempAngle = itemAngle - Angle.fromDegrees(90);
-
-      opposite = adjacent * tempAngle.tan;
-      temp = opposite;
-      opposite = adjacent;
-      adjacent = -temp;
-    } else if (itemAngle.degrees + 45 < 270 && itemAngle.degrees + 45 > 180) {
-      tempAngle = itemAngle - Angle.fromDegrees(180);
-
-      opposite = adjacent * tempAngle.tan;
-      opposite = -opposite;
-      adjacent = -adjacent;
-    } else {
-      tempAngle = itemAngle + Angle.fromDegrees(270);
-      opposite = adjacent * tempAngle.tan;
-      temp = adjacent;
-      adjacent = opposite;
-      opposite = -temp;
-    }
-    //put some space between arrow and edge
-    adjacent = adjacent * 1.1;
-    opposite = opposite * 1.1;
-    return Offset(adjacent, opposite);
-  }
-
   bool boxHitTest(
       {final Offset itemPosition,
       final Size itemSize,
@@ -803,149 +455,41 @@ class Project with ChangeNotifier {
     }
   }
 
+  void addArrow(String key) {
+    //adds an Arrow to the list of arrows from origin widget to null
+
+    _arrow.addArrow(key, this);
+
+    notifyListeners();
+  }
+
+  void setArrowToPointer(Key startKey, Offset actualPointer) {
+    //set the size and ancle of the Arrow between widget and pointer
+    //from center of a RenderBox (startKey)
+    _arrow.setArrowToPointer(startKey, actualPointer, this);
+
+    notifyListeners();
+  }
+
   updateArrow(
       {final GlobalKey originKey,
       final GlobalKey feedbackKey,
       final GlobalKey targetKey,
       final GlobalKey draggedKey,
       final Map<Key, List<Key>> hasArrowToKeyMap}) {
-    Arrow arrow;
-    String originId = getIdFromKey(originKey);
-    String targetId = getIdFromKey(targetKey);
+    _arrow.updateArrow(
+        project: this,
+        originKey: originKey,
+        feedbackKey: feedbackKey,
+        targetKey: targetKey,
+        draggedKey: draggedKey,
+        hasArrowToKeyMap: hasArrowToKeyMap);
 
-//get size and arrow of origin and target
-    RenderBox originRenderBox = originKey.currentContext.findRenderObject();
-    var originPosition = getPositionOfRenderBox(originKey);
-    originPosition = Offset(originPosition.dx, originPosition.dy);
-    var originSize =
-        Size(originRenderBox.size.width, originRenderBox.size.height);
-    originPosition = Offset(
-      originPosition.dx + (originSize.width / 2) * stackScale,
-      originPosition.dy + (originSize.height / 2) * stackScale,
-    );
-
-    RenderBox targetRenderBox = targetKey.currentContext.findRenderObject();
-    var targetPosition = getPositionOfRenderBox(targetKey);
-    targetPosition = Offset(targetPosition.dx, targetPosition.dy);
-    var targetSize =
-        Size(targetRenderBox.size.width, targetRenderBox.size.height);
-    targetPosition = Offset(
-      targetPosition.dx + (targetSize.width / 2) * stackScale,
-      targetPosition.dy + (targetSize.height / 2) * stackScale,
-    );
-
-    var feedbackPosition;
-    var feedbackSize;
-
-    var targetEdgeOffset;
-    var feedbackEdgeOffset;
-    var originEdgeOffset;
-
-//get size and position of feedback when it gets dragged (means feedbackKey is not draggedKey)
-    if (feedbackKey != null) {
-      RenderBox feedbackRenderBox =
-          feedbackKey.currentContext.findRenderObject();
-      feedbackSize = (feedbackKey == originKey || feedbackKey == targetKey)
-          ? feedbackRenderBox.size
-          : feedbackRenderBox.size * 1.1;
-      feedbackPosition = getPositionOfRenderBox(feedbackKey);
-      feedbackPosition = (Offset(
-          feedbackPosition.dx + (feedbackSize.width / 2) * stackScale,
-          feedbackPosition.dy + (feedbackSize.height / 2) * stackScale));
-    }
-
-//get correct arrow
-    arrowMap[originId].forEach((v) => {
-          if (v.target == targetId)
-            {
-              arrow = v,
-            }
-        });
-
-//check if one (feedback, target or origin) is inside another
-//hasArrowToKeyMap.forEach()
-
-    if (draggedKey == originKey) {
-      //if origin gets tragged, use feedback as origin
-      arrow.angle = getAngle(feedbackPosition,
-          Offset(targetPosition.dx, targetPosition.dy + headerHeight()));
-      feedbackEdgeOffset =
-          getEdgeOffset(feedbackPosition, feedbackSize, arrow.angle);
-      targetEdgeOffset = getEdgeOffset(targetPosition, targetSize, arrow.angle);
-
-      arrow.size = diagonalLength(
-              Offset(targetPosition.dx - targetEdgeOffset.dx,
-                  targetPosition.dy - targetEdgeOffset.dy + headerHeight()),
-              feedbackPosition + feedbackEdgeOffset) /
-          stackScale;
-      arrow.position =
-          (feedbackPosition + feedbackEdgeOffset - stackOffset) / stackScale;
-    } else if (draggedKey == targetKey) {
-      //if target gets tragged, use feedback as target
-
-      arrow.angle = getAngle(
-          Offset(originPosition.dx, originPosition.dy - headerHeight()),
-          feedbackPosition);
-
-      originEdgeOffset = getEdgeOffset(originPosition, originSize, arrow.angle);
-      feedbackEdgeOffset =
-          getEdgeOffset(feedbackPosition, feedbackSize, arrow.angle);
-      arrow.size = diagonalLength(
-              Offset(originPosition.dx + originEdgeOffset.dx,
-                  originPosition.dy + originEdgeOffset.dy + headerHeight()),
-              feedbackPosition - feedbackEdgeOffset) /
-          stackScale;
-      arrow.position =
-          ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
-    } else {
-      arrow.angle = getAngle(Offset(originPosition.dx, originPosition.dy),
-          Offset(targetPosition.dx, targetPosition.dy + headerHeight()));
-
-      targetEdgeOffset = getEdgeOffset(targetPosition, targetSize, arrow.angle);
-      originEdgeOffset = getEdgeOffset(originPosition, originSize, arrow.angle);
-      arrow.size = diagonalLength(
-              Offset(originPosition.dx + originEdgeOffset.dx,
-                  originPosition.dy + originEdgeOffset.dy + headerHeight()),
-              targetPosition - targetEdgeOffset) /
-          stackScale;
-      arrow.position =
-          ((originPosition + originEdgeOffset) - stackOffset) / stackScale;
-    }
     notifyListeners();
   }
 
   connectAndUnselect(Key itemKey) {
-    String itemId = getIdFromKey(itemKey);
-    //connects two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
-    Offset positionOfTarget;
-    String targetId;
-    Key targetKey;
-    appletMap.forEach((String id, Applet applet) => {
-          if (id != itemId && applet.selected == true)
-            {
-              targetId = id,
-              targetKey = applet.key,
-              positionOfTarget = centerOfRenderBox(id),
-              positionOfTarget = Offset(
-                  positionOfTarget.dx, positionOfTarget.dy + headerHeight()),
-              setArrowToPointer(itemKey, positionOfTarget),
-              applet.selected = false,
-              //selectedMap[itemId] = false,
-              arrowMap[itemId].forEach((Arrow l) => {
-                    if (l.target == null) {l.target = targetId}
-                  }),
-              updateArrow(originKey: itemKey, targetKey: targetKey)
-            }
-        });
-    for (int i = 0; i < arrowMap[itemId].length; i++) {
-      if (arrowMap[itemId][i].target == null) {
-        arrowMap[itemId].removeAt(i);
-      }
-    }
-
-    appletMap.forEach((key, value) {
-      value.selected = false;
-    });
+    _arrow.connectAndUnselect(this, itemKey);
 
     notifyListeners();
   }
@@ -1135,104 +679,11 @@ class Project with ChangeNotifier {
 
   getAllArrows(Key key) {
     //get all arrows pointing to or coming from the item and also it's children items
-    bool keyIsTargetOrOrigin(k) {
-      bool _tempBool = false;
-
-      if (arrowMap[k] != null) {
-        arrowMap[k].forEach((Arrow a) => {
-              if (a.target == k)
-                {
-                  _tempBool = true,
-                }
-            });
-      }
-
-      arrowMap.forEach(
-        ((String originId, List<Arrow> listOfArrows) => {
-              listOfArrows.forEach((Arrow a) => {
-                    if (a.target == k)
-                      {
-                        _tempBool = true,
-                      }
-                  }),
-            }),
-      );
-      return _tempBool;
-    }
-
-    //all childItems pointing to or getting targetted
-    List childList = getAllChildren(itemKey: key);
-    childList.add(key);
-    var originKey;
-    var childId;
-    childList.forEach((childKey) => {
-          childId = getIdFromKey(childKey),
-          arrowMap.forEach((String originId, List<Arrow> listOfArrows) => {
-                originKey = getKeyFromId(originId),
-                if (originKey != null)
-                  {
-                    listOfArrows.forEach((Arrow a) => {
-                          if (a.target == childId &&
-                              keyIsTargetOrOrigin(childKey))
-                            {
-                              if (hasArrowToKeyMap[originKey] == null)
-                                {
-                                  hasArrowToKeyMap[originKey] = [],
-                                },
-                              hasArrowToKeyMap[originKey].add(childKey),
-                            }
-                          else
-                            {
-                              if (a.target != null &&
-                                  keyIsTargetOrOrigin(a.target))
-                                {
-                                  if (hasArrowToKeyMap[originKey] == null)
-                                    {
-                                      hasArrowToKeyMap[originKey] = [],
-                                    },
-                                  hasArrowToKeyMap[originKey]
-                                      .add(getKeyFromId(a.target)),
-                                },
-                            },
-                        }),
-                  }
-              })
-        });
+    _arrow.getAllArrows(this, key);
   }
 
   updateArrowToKeyMap(Key key, bool dragStarted, Key feedbackKey) {
-    hasArrowToKeyMap.forEach((Key originKey, List<Key> listOfTargets) => {
-          listOfTargets.forEach((Key targetKey) => {
-                if (dragStarted && originKey == key)
-                  {
-                    updateArrow(
-                      originKey: originKey,
-                      feedbackKey: feedbackKey,
-                      targetKey: targetKey,
-                      draggedKey: originKey,
-                      hasArrowToKeyMap: hasArrowToKeyMap,
-                    )
-                  }
-                else if (dragStarted && targetKey == key)
-                  {
-                    updateArrow(
-                        originKey: originKey,
-                        feedbackKey: feedbackKey,
-                        targetKey: targetKey,
-                        draggedKey: targetKey,
-                        hasArrowToKeyMap: hasArrowToKeyMap)
-                  }
-                else
-                  {
-                    updateArrow(
-                        originKey: originKey,
-                        feedbackKey: feedbackKey,
-                        targetKey: targetKey,
-                        draggedKey: feedbackKey,
-                        hasArrowToKeyMap: hasArrowToKeyMap)
-                  }
-              })
-        });
+    _arrow.updateArrowToKeyMap(this, key, dragStarted, feedbackKey);
     notifyListeners();
   }
 
@@ -1357,8 +808,6 @@ class Project with ChangeNotifier {
             projectId, tempChildApplet.toJson(), tempChildApplet.id);
       });
     }
-
-    //notifyListeners();
   }
 
   Future addApplet(String projectId, Applet data) async {
@@ -1408,9 +857,9 @@ class Project with ChangeNotifier {
 
     Applet newApplet = new Applet();
     if (type == "WindowApplet") {
-      newApplet = createNewWindow();
+      newApplet = _applet.createNewWindow();
     } else if (type == 'TextApplet') {
-      newApplet = createNewTextBox();
+      newApplet = _applet.createNewTextBox();
     }
 
     var data = newApplet.toJson();
@@ -1652,10 +1101,8 @@ class Project with ChangeNotifier {
 
       var widthOffset = displaySize.width / maxScale - stackWidth;
       var heightOffset = displaySize.height / maxScale - stackHeight;
-      initialVector = vector64.Vector3(
-          widthOffset / 2 * maxScale,
-          heightOffset/2 * maxScale - headerHeight(),
-          0);
+      initialVector = vector64.Vector3(widthOffset / 2 * maxScale,
+          heightOffset / 2 * maxScale - headerHeight(), 0);
 
       /*notifier.value
           .translate(transformOffset); // setTranslation(transformOffset);
@@ -1695,13 +1142,10 @@ class Project with ChangeNotifier {
         });
   }
 
-    void createNewArrow(
-      String originId, Arrow arrow)  {
+  void createNewArrow(String originId, Arrow arrow) {
     //RenderBox itemBox = itemKey.currentContext.findRenderObject();
     //Offset appPosition = itemBox.globalToLocal(Offset.zero);
 
-    _api.addArrow(projectId,originId,arrow.toJson());
+    _api.addArrow(projectId, originId, arrow.toJson());
   }
-
-
 }

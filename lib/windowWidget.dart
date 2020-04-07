@@ -223,7 +223,6 @@ class _WindowWidgetState extends State<WindowWidget>
             _projectProvider.firstItem = true;
           },
           onPointerMove: (PointerMoveEvent event) {
-            // _projectProvider.stackSizeHitTest(event.position);
 
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
