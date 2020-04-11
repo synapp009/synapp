@@ -22,9 +22,10 @@ class ArrowWidget extends StatelessWidget {
     double targetScale = projectProvider.appletMap[targetId].scale;
     var stackScale = projectProvider.stackScale;
 
-    projectProvider.arrowMap[originId].forEach((Arrow k) => {
-          if (k.target == targetId) {tempArrow = k}
-        });
+    tempArrow = projectProvider.appletMap[originId].arrowMap[targetId];
+
+
+
     return Positioned(
       top: tempArrow.position.dy,
       //projectProvider.centerOfRenderBox(originKey).dy,

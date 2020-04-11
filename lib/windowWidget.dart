@@ -200,7 +200,7 @@ class _WindowWidgetState extends State<WindowWidget>
             if (_projectProvider.firstItem) {
               _projectProvider.actualItemKey =
                   _projectProvider.getKeyFromId(id);
-              _projectProvider.getAllArrows(_projectProvider.appletMap[id].key);
+              //_projectProvider.getAllArrows(_projectProvider.appletMap[id].key);
               _projectProvider.firstItem = false;
             }
 
@@ -259,7 +259,7 @@ class _WindowWidgetState extends State<WindowWidget>
               _projectProvider.hitTest(_projectProvider.appletMap[id].key,
                   details.globalPosition, context);
               _projectProvider.setArrowToPointer(
-                  _projectProvider.appletMap[id].key, details.globalPosition);
+                  id, details.globalPosition);
             },
             onLongPressEnd: (details) {
               _projectProvider
@@ -283,7 +283,6 @@ class _WindowWidgetState extends State<WindowWidget>
                 maxSimultaneousDrags:
                     _projectProvider.appletMap[id].selected ? 0 : 1,
                 onDragEnd: (DraggableDetails details) {
-                  print('details offset ${details.offset}');
                     
                   // _projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
                   _timer = new Timer(Duration(milliseconds: 200), () {
@@ -330,7 +329,6 @@ class _WindowWidgetState extends State<WindowWidget>
                         _pointerDownOffset,
                         _pointerUpOffset);
                   });
-                  //_crudProvider.updateApplet(_projectProvider.id, _projectProvider.appletMap[id], id);
                 },
                 onDraggableCanceled: (vel, Offset off) {
                   setState(() {
@@ -414,7 +412,7 @@ class _WindowWidgetState extends State<WindowWidget>
       }, onLeave: (dynamic data) {
         _projectProvider.appletMap[id].selected = false;
       }, onAccept: (dynamic data) {
-        _projectProvider.updateApplet(data, id, _projectProvider.originId);
+        _projectProvider.updateApplet(applet:data,targetId: id, originId:_projectProvider.originId);
 
         if (data.type == 'TextApplet') {
           _projectProvider.appletMap[data.id].scale = _itemScale;
@@ -450,7 +448,7 @@ class _WindowWidgetState extends State<WindowWidget>
                   height:
                       (_projectProvider.appletMap[id].size.height + (20.0)) *
                           _itemScale,
-                  color: Colors.green),
+                  color: Colors.transparent),
             ),
             /*  SizedBox(
                   width: _projectProvider.appletMap[id].size.width *
@@ -654,7 +652,7 @@ class WindowStackBuilder extends StatelessWidget {
           height: projectProvider.appletMap[id].size.height,
           width: projectProvider.appletMap[id].size.width,
           child: Text(
-              '${projectProvider.getKeyFromId(id).toString()},${projectProvider.appletMap[id].scale.toString()}'),
+              '${id.toString()},${projectProvider.appletMap[id].scale.toString()}'),
         ),
       ),
       //TextField(maxLines:40),

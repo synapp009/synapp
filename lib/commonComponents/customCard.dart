@@ -48,6 +48,9 @@ class CustomCard extends StatelessWidget {
                               size: 50.0,
                             );
                           } else {
+                            projectDetails.statusBarHeight =
+                                MediaQuery.of(context).padding.top;
+
                             return HomeView(project: projectDetails);
                           }
                         }),
@@ -79,9 +82,7 @@ class CustomCard extends StatelessWidget {
                                   size: 50.0,
                                 );
                               default:
-                              print('rebuild streambuilder no data');
                                 if (snapshot2.hasData) {
-                                   print('rebuild streambuilder with data');
                                   if (projectDetails.appletMap == null) {
                                     projectDetails.appletMap = {};
                                   }

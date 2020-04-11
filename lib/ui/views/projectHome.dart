@@ -22,7 +22,6 @@ class _HomeViewState extends State<HomeView> {
   var isExec = true;
   @override
   void initState() {
-    print('runinit');
     isExec = false;
     super.initState();
   }
@@ -35,13 +34,11 @@ class _HomeViewState extends State<HomeView> {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
     if (!isExec) {
-      projectProvider.statusBarHeight = MediaQuery.of(context).padding.top;
 
       projectProvider.updateStackWithMatrix(Matrix4.identity());
       isExec = true;
     }
 
-    //projectProvider.updateProvider(widget.project, statusBarHeight);
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       backgroundColor: Colors.grey,
@@ -98,16 +95,16 @@ class _MyHomeState extends State<MyHome> {
       id: null,
       itemKey: null,
       type: "WindowApplet",
-      label: WindowApplet.label,
-      iconData: WindowApplet.iconData,
+      label: Applet.iconLabelMap["WindowApplet"],
+      iconData: Applet.iconDataMap["WindowApplet"],
       color: Colors.yellow,
     ),
     AppBuilder(
       id: null,
       itemKey: null,
       type: "TextApplet",
-      label: TextApplet.label,
-      iconData: TextApplet.iconData,
+      label: Applet.iconLabelMap["TextApplet"],
+      iconData: Applet.iconDataMap["TextApplet"],
       color: Colors.yellowAccent,
     ),
   ];

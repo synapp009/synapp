@@ -21,9 +21,16 @@ class Constants {
           position: Offset(0, 0),
           scale: 1.0,
           childIds: [],
+          arrowMap: {},
           selected: false)
     };
   }
+
+static Map<String,Arrow> initializeArrowMap(){
+  Map<String,Arrow> tempMap = {};
+  return tempMap;
+}
+
 
   static Applet initializeApplet(){
    return Applet(
@@ -35,7 +42,8 @@ class Constants {
           scale: 1.0,
           size: Size(10,10),
           childIds: [],
-          selected: false);
+          selected: false,
+          arrowMap: {});
   }
 
   static Offset initializePositionMap(Offset positionForDrop) {
@@ -48,7 +56,7 @@ class Constants {
     return tempMap;
   }
 
-  static Map<String, List<Arrow>> initializeArrowMap(
+  /*static Map<String, List<Arrow>> initializeArrowMap(
       Map<String, List<Arrow>> arrowMap) {
     return arrowMap = {
       null: [
@@ -60,7 +68,7 @@ class Constants {
             target: null)
       ]
     };
-  }
+  }*/
 
   static ValueNotifier<Matrix4> initializeNotifier(
       Matrix4 initialMatrix) {

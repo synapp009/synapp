@@ -17,12 +17,11 @@ class Project with ChangeNotifier {
   String img;
   static String projectIdStatic;
   //Key key;
-
   //structure Map contains all the provider data of the Applets of a project
   Map<String, Applet> appletMap;
 
   //contains all the Arrows in a project between the Applets
-  Map<String, List<Arrow>> arrowMap;
+  //Map<String, List<Arrow>> arrowMap;
 
   //temp List to multi-select Applets by tabbing
   //Map<String, bool> selectedMap;
@@ -40,14 +39,10 @@ class Project with ChangeNotifier {
       this.name,
       this.img,
       this.appletMap,
-      this.arrowMap,
       this.description}) {
     projectIdStatic = this.projectId;
     appletMap = Constants.initializeAppletMap();
-    arrowMap = Constants.initializeArrowMap(arrowMap);
     positionForDrop = Constants.initializePositionMap(positionForDrop);
-    //selectedMap = Constants.initializeSelectedMap(appletMap);
-    notifier = Constants.initializeNotifier(notifier.value);
     stackSize = null;
   }
 
@@ -56,50 +51,13 @@ class Project with ChangeNotifier {
         //key = Key(snapshot['key']) ?? null,
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
-        description = snapshot['description'] ?? '',
-        arrowMap = getArrowMap(snapshot['arrowMap']) ?? {};
-
-  /*tempMap = appletMap.map((k, v) {
-        String tempK = k.toString();
-        dynamic tempV = v.toJson();
-        Map tempMap;
-        return tempMap[tempK] = tempV;
-      }),*/
+        description = snapshot['description'] ?? '';
 
   toJson() {
-    /*appletMap.forEach((k, Applet v) => {
-            Firestore.instance
-                .collection('projects')
-                .document(projectId)
-                .collection('appletList')
-                .document(k)
-                .updateData(v.toJson())
-          });*/
-
-    Map<String, dynamic> arrowJsonMap = {};
-    if (arrowMap != null) {
-      if (arrowMap.length > 0) {
-        arrowMap.forEach((key, value) {
-          var tempList = [];
-          value.forEach((element) {
-            var tempArrow = element.toJson();
-            tempList.add(tempArrow);
-          });
-          if (key != null) {
-            arrowJsonMap[key] = tempList;
-          }
-        });
-      } else {
-        arrowJsonMap['null'] = null;
-      }
-    }
-
     return {
       "id": projectId,
       "name": name,
       "img": img,
-      //"appletList": appletList,
-      "arrowMap": arrowJsonMap,
       "description": description
     };
   }
@@ -110,47 +68,58 @@ class Project with ChangeNotifier {
     }
 
     if (updatedAppletMap != null) {
-      /*updatedAppletMap.forEach(
-        (k, v) => print('updated map $k,${v.childIds}'),
-      );*/
-      updatedAppletMap.forEach((k, v) {
+      updatedAppletMap.forEach((k, updatedApplet) {
         appletMap.update(k, (a) {
           a.key = (a.key == null ? new GlobalKey() : a.key);
-          a.position = (a.position == updatedAppletMap[k].position
+          a.position = (a.position == updatedApplet.position
                   ? a.position
-                  : updatedAppletMap[k].position) ??
+                  : updatedApplet.position) ??
               Offset(0, 0);
-          a.scale = (a.scale == updatedAppletMap[k].scale
-              ? a.scale
-              : updatedAppletMap[k].scale);
-          a.childIds = (a.childIds == updatedAppletMap[k].childIds
+          a.scale =
+              (a.scale == updatedApplet.scale ? a.scale : updatedApplet.scale);
+          a.childIds = (a.childIds == updatedApplet.childIds
               ? a.childIds
-              : updatedAppletMap[k].childIds);
-          a.color = (a.color == updatedAppletMap[k].color
-              ? a.color
-              : updatedAppletMap[k].color);
-          a.size = (a.size == updatedAppletMap[k].size
-              ? a.size
-              : updatedAppletMap[k].size);
-          a.fixed = (a.fixed == updatedAppletMap[k].fixed
-              ? a.fixed
-              : updatedAppletMap[k].fixed);
-          a.content = (a.content == updatedAppletMap[k].content
+              : updatedApplet.childIds);
+          a.color =
+              (a.color == updatedApplet.color ? a.color : updatedApplet.color);
+          a.size = (a.size == updatedApplet.size ? a.size : updatedApplet.size);
+          a.fixed =
+              (a.fixed == updatedApplet.fixed ? a.fixed : updatedApplet.fixed);
+          a.content = (a.content == updatedApplet.content
               ? a.content
-              : updatedAppletMap[k].content);
-          a.onChange = (a.onChange == updatedAppletMap[k].onChange
+              : updatedApplet.content);
+          a.type = (a.type == updatedApplet.type ? a.type : updatedApplet.type);
+          a.onChange = (a.onChange == updatedApplet.onChange
               ? a.onChange
-              : updatedAppletMap[k].onChange);
+              : updatedApplet.onChange);
+          a.textSize = (a.textSize == updatedApplet.textSize
+              ? a.textSize
+              : updatedApplet.textSize);
+          a.title =
+              (a.title == updatedApplet.title ? a.title : updatedApplet.title);
+          a.arrowMap = (a.arrowMap == updatedApplet.arrowMap
+              ? a.arrowMap
+              : updatedApplet.arrowMap);
           return a;
         }, ifAbsent: () {
-          var tempApplet = v;
+          var tempApplet = updatedApplet;
           tempApplet.key = new GlobalKey();
-          tempApplet.id = v.id;
+          tempApplet.id = updatedApplet.id;
           return tempApplet;
         });
+
+        /*if (updatedApplet.arrowList != null &&
+            updatedApplet.arrowList.length > 0) {
+          arrowMap.update(k, (a) {
+            return a =
+                (a == updatedApplet.arrowList ? a : updatedApplet.arrowList);
+          }, ifAbsent: () {
+            return updatedApplet.arrowList;
+          });
+        }*/
       });
     }
-    //check qif appletMap is onChange
+    //check if appletMap is onChange
     int containsOnChange = 0;
     appletMap.forEach((s, a) {
       containsOnChange = a.onChange ? containsOnChange + 1 : containsOnChange;
@@ -158,20 +127,22 @@ class Project with ChangeNotifier {
     if (containsOnChange == 0) {
       notifyListeners();
     }
-    return this;
-  }
 
-  static Map<String, List<Arrow>> getArrowMap(Map<dynamic, dynamic> snapshot) {
-    Map<String, List<Arrow>> tempMap = {};
-
-    if (!snapshot.toString().contains("null")) {
-      snapshot.forEach((key, value) {
-        tempMap[key] = [];
-        value.forEach((dat) => tempMap[key].add(Arrow.fromMap(dat)));
+    //update all arrows
+    appletMap.forEach((String appletId, Applet applet) {
+      applet.arrowMap.forEach((String targetId, Arrow arrow) {
+        if (arrow.angle == null ||
+            arrow.size == null ||
+            arrow.position == null) {
+          arrow.updateArrow(
+              project: this,
+              originKey: getKeyFromId(appletId),
+              targetKey: getKeyFromId(targetId));
+        }
       });
-    }
+    });
 
-    return tempMap;
+    return this;
   }
 
   Size stackSize;
@@ -202,7 +173,6 @@ class Project with ChangeNotifier {
   Offset stackOffset = Offset(0, 0);
 
   String getIdFromKey(Key itemKey) {
-    //print('appletmap $appletMap');
     String itemId;
     appletMap.forEach((key, value) {
       if (value.key == (itemKey)) {
@@ -284,6 +254,7 @@ class Project with ChangeNotifier {
 
   double headerHeight() {
     double appBarHeight = AppBar().preferredSize.height;
+    print('appbarheight $statusBarHeight');
     var tempHeight = statusBarHeight + appBarHeight;
     return tempHeight;
   }
@@ -419,7 +390,7 @@ class Project with ChangeNotifier {
               stackScale -
           pointerDownOffset.dy),
     );
-    updateApplet(applet, targetId, originId);
+    updateApplet(applet: applet, targetId: targetId, originId: originId);
     notifyListeners();
   }
 
@@ -455,18 +426,20 @@ class Project with ChangeNotifier {
     }
   }
 
-  void addArrow(String key) {
+  void addArrow(String id) {
     //adds an Arrow to the list of arrows from origin widget to null
 
-    _arrow.addArrow(key, this);
+    _arrow.addArrow(id, this);
 
     notifyListeners();
   }
 
-  void setArrowToPointer(Key startKey, Offset actualPointer) {
+  void setArrowToPointer(String startId, Offset actualPointer) {
     //set the size and ancle of the Arrow between widget and pointer
     //from center of a RenderBox (startKey)
-    _arrow.setArrowToPointer(startKey, actualPointer, this);
+    appletMap[startId]
+        .arrowMap['parentApplet']
+        .setArrowToPointer(startId, actualPointer, this);
 
     notifyListeners();
   }
@@ -477,7 +450,9 @@ class Project with ChangeNotifier {
       final GlobalKey targetKey,
       final GlobalKey draggedKey,
       final Map<Key, List<Key>> hasArrowToKeyMap}) {
-    _arrow.updateArrow(
+    var originId = getIdFromKey(originKey);
+    var targetId = getIdFromKey(targetKey);
+    appletMap[originId].arrowMap[targetId].updateArrow(
         project: this,
         originKey: originKey,
         feedbackKey: feedbackKey,
@@ -488,10 +463,26 @@ class Project with ChangeNotifier {
     notifyListeners();
   }
 
-  connectAndUnselect(Key itemKey) {
-    _arrow.connectAndUnselect(this, itemKey);
+  getAllArrowApplets(Key key) {
+    //get all arrows pointing to or coming from the item and also it's children items
+    _arrow.getAllArrowApplets(this, key);
+  }
 
-    notifyListeners();
+  updateArrowToKeyMap(Key key, bool dragStarted, Key feedbackKey) {
+    var movingId = getIdFromKey(key);
+    _arrow.updateArrowToKeyMap(this, key, dragStarted, feedbackKey);
+
+    print('updatearrpw');
+    // notifyListeners();
+  }
+
+  connectAndUnselect(Key originKey) {
+    var originId = getIdFromKey(originKey);
+    appletMap[originId]
+        .arrowMap['parentApplet']
+        .connectAndUnselect(this, originKey);
+
+    //notifyListeners();
   }
 
   Key getKeyFromId(String itemId) {
@@ -535,7 +526,6 @@ class Project with ChangeNotifier {
     RenderBox _backgroundStackRenderBox;
     Offset _backgroundStackPosition;
     Size _backgroundStackSize;
-    print('backgroundStackKey $backgroundStackKey');
     _backgroundStackRenderBox =
         backgroundStackKey.currentContext.findRenderObject();
     _backgroundStackPosition =
@@ -662,29 +652,31 @@ class Project with ChangeNotifier {
                     stackScale,
             _backgroundStackSize.height - offsetChange.dy / stackScale);
       }
+
+      //update arrows position to the new stack offset
+      appletMap.forEach((appletId, applet) {
+        if (appletId == objectItemId) {
+          applet.arrowMap?.forEach(
+            (id, arrow) => arrow.position = Offset(
+                arrow.position.dx - stackChange.dx / stackScale,
+                arrow.position.dy -
+                    (stackChange.dy + headerHeight()) / stackScale),
+          );
+        }
+      });
     }
     //update arrows position to the new stack offset
-    if (stackChange.dx < 0 || stackChange.dy < 0) {
-      stackOffset = stackOffset + stackChange;
-    }
-
     stackChange = -stackChange / stackScale;
 
-    arrowMap.forEach((k, List<Arrow> arrowList) => {
-          arrowList.forEach((Arrow arrow) => arrow.position = Offset(
-              arrow.position.dx + stackChange.dx,
-              arrow.position.dy + stackChange.dy)),
-        });
-  }
-
-  getAllArrows(Key key) {
-    //get all arrows pointing to or coming from the item and also it's children items
-    _arrow.getAllArrows(this, key);
-  }
-
-  updateArrowToKeyMap(Key key, bool dragStarted, Key feedbackKey) {
-    _arrow.updateArrowToKeyMap(this, key, dragStarted, feedbackKey);
-    notifyListeners();
+    appletMap.forEach((appletId, applet) {
+      if (appletId == objectItemId) {
+        applet.arrowMap?.forEach(
+          (id, arrow) => arrow.position = Offset(
+              arrow.position.dx - stackChange.dx / stackScale,
+              arrow.position.dy - stackChange.dy / stackScale),
+        );
+      }
+    });
   }
 
   zoomToBox(selectedKey, context) {
@@ -783,7 +775,7 @@ class Project with ChangeNotifier {
         });
   }
 
-  void updateApplet(Applet applet, String targetId, String originId) {
+  void updateApplet({Applet applet, String targetId, String originId}) {
     //update origin applet
     if (originId != null) {
       _api.updateApplet(projectId, appletMap[originId].toJson(), originId);
@@ -821,8 +813,10 @@ class Project with ChangeNotifier {
 
   Stream<Map<String, Applet>> fetchAppletsAsStream() {
     var doc = _api.streamAppletCollection(projectId);
-    return doc.map((QuerySnapshot value) =>
-        {for (var v in value.documents) v.documentID: Applet.fromMap(v.data)});
+    return doc.map((QuerySnapshot value) => {
+          for (var v in value.documents)
+            v.documentID: Applet.fromMap(snapshot: v.data)
+        });
   }
 
   Stream<Map<String, Applet>> fetchAppletsChangesAsStream() {
@@ -831,16 +825,16 @@ class Project with ChangeNotifier {
     return doc.map((QuerySnapshot value) {
       return {
         for (var v in value.documentChanges)
-          v.document.documentID: Applet.fromMap(v.document.data)
+          v.document.documentID: Applet.fromMap(snapshot: v.document.data)
       };
-    });
+    }).handleError((err) => print(err));
   }
 
   Future<List<Applet>> getAppletsById(String id) async {
     List<Applet> list = new List();
     var doc = await _api.getAppletById(id);
     doc.forEach((DocumentSnapshot docSnapshot) {
-      list.add(Applet.fromMap(docSnapshot.data));
+      list.add(Applet.fromMap(snapshot: docSnapshot.data));
     });
     /*map((DocumentSnapshot docSnapshot) {
      
@@ -1063,9 +1057,7 @@ class Project with ChangeNotifier {
           )
           .toList();
       double maxScale = getMaxScale(getOuterKeysAsList(keyAtBottomList));
-      print('matrix $matrix');
       matrix.translate(initialViewOffset());
-      print('translated $matrix');
       matrix.scale(maxScale);
     }
     notifier.value = matrix;
@@ -1124,10 +1116,6 @@ class Project with ChangeNotifier {
     List<double> maxOffsetList =
         getMaxOffset(getOuterKeysAsList(keyAtBottomList));
 
-    print(maxOffsetList);
-    var maxScale = getMaxScale(outerKeysAsList);
-    print(maxScale);
-    print(maxOffsetList[1] - maxOffsetList[3]);
     stackSize = Size(
         maxOffsetList[0] -
             maxOffsetList[2] +
@@ -1140,12 +1128,5 @@ class Project with ChangeNotifier {
               appletMap[k].position.dx - maxOffsetList[2] / stackScale,
               appletMap[k].position.dy - maxOffsetList[3] / stackScale)
         });
-  }
-
-  void createNewArrow(String originId, Arrow arrow) {
-    //RenderBox itemBox = itemKey.currentContext.findRenderObject();
-    //Offset appPosition = itemBox.globalToLocal(Offset.zero);
-
-    _api.addArrow(projectId, originId, arrow.toJson());
   }
 }

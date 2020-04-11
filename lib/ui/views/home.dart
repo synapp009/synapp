@@ -141,8 +141,7 @@ class _HomePageState extends State<HomePage> {
                       Project project = new Project(
                           name: taskTitleInputController.text,
                           description: taskDescripInputController.text,
-                          appletMap: {},
-                          arrowMap: {});
+                          appletMap: {});
 
                       Provider.of<CRUDModel>(context, listen: false)
                           .addProject(project)

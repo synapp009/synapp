@@ -4,9 +4,6 @@ import 'package:angles/angles.dart';
 import 'package:flutter/material.dart';
 import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
-import 'package:synapp/core/services/api.dart';
-
-import '../../locator.dart';
 
 class Arrow {
   String originId;
@@ -15,55 +12,53 @@ class Arrow {
   Offset position;
   double size;
   Angle angle;
-  Arrow(
-      {this.originId,
-      this.target,
-      this.arrowed,
-      this.position,
-      this.size,
-      this.angle});
+  Arrow({this.target, this.arrowed, this.position, this.size, this.angle});
 
-  Arrow.fromMap(Map snapshot)
+  Arrow.fromMap(dynamic snapshot)
       : target = snapshot["target"],
-        arrowed = snapshot["arrowed"] == "true",
-        position = Offset((snapshot["positionDx"] as num).toDouble(),
+        arrowed = snapshot["arrowed"] == "true" ? true : false;
+  //position = _positionFromMap(project, appletSnapshot, snapshot);
+  //size = _sizeFromMap(project, appletId, snapshot);
+  //angle = _angleFromMap(project, appletId, snapshot);
+  /*position = Offset((snapshot["positionDx"] as num).toDouble(),
             (snapshot["positionDy"] as num).toDouble()),
         size = (snapshot["size"] as num).toDouble(),
-        angle = Angle.fromDegrees((snapshot["angle"] as num).toDouble());
+        angle = Angle.fromDegrees((snapshot["angle"] as num).toDouble())*/
 
   toJson() {
     return {
       "target": target,
       "arrowed": arrowed.toString(),
-      "positionDx": position.dx,
-      "positionDy": position.dy,
-      "size": size,
-      "angle": angle.degrees,
+      //"positionDx": position.dx,
+      //"positionDy": position.dy,
+      //"size": size,
+      //"angle": angle.degrees,
     };
   }
 
-  void addArrow(String key, Project project) {
+  void addArrow(String appletId, Project project) {
     //adds an Arrow to the list of arrows from origin widget to null
-    if (project.arrowMap[key] == null) {
-      project.arrowMap[key] = [];
+
+    if (project.appletMap[appletId].arrowMap == null) {
+      project.appletMap[appletId].arrowMap = {};
     }
-    var getPosition = (project.centerOfRenderBox(key) + project.stackOffset) /
-        project.stackScale;
+
+    var getPosition =
+        (project.centerOfRenderBox(appletId) + project.stackOffset) /
+            project.stackScale;
     getPosition = Offset(getPosition.dx,
         getPosition.dy - project.headerHeight() * project.stackScale);
 
-    project.arrowMap[key].add(
-      Arrow(
-        arrowed: false,
-        target: null,
-        size: 0.0,
-        position: getPosition,
-        angle: Angle.fromRadians(0),
-      ),
+    project.appletMap[appletId].arrowMap["parentApplet"] = Arrow(
+      arrowed: false,
+      target: "parentApplet",
+      size: 0.0,
+      position: getPosition,
+      angle: Angle.fromRadians(0),
     );
   }
 
-  Angle getAngle(Offset pointA, Offset pointB, headerHeight) {
+  static Angle getAngle(Offset pointA, Offset pointB, headerHeight) {
     double tempAncle =
         (pointB.dy - pointA.dy - headerHeight) / (pointB.dx - pointA.dx);
     var angle;
@@ -101,7 +96,7 @@ class Arrow {
     return angle;
   }
 
-  double diagonalLength(Offset pointA, Offset pointB, headerHeight) {
+  static double diagonalLength(Offset pointA, Offset pointB, headerHeight) {
     var tempSize =
         Size((pointA.dx - pointB.dx), (pointA.dy - pointB.dy - headerHeight));
 
@@ -110,52 +105,61 @@ class Arrow {
     return length = sqrt(length);
   }
 
-  void setArrowToPointer(Key startKey, Offset actualPointer, Project project) {
+  void setArrowToPointer(
+      String startId, Offset actualPointer, Project project) {
     //set the size and ancle of the Arrow between widget and pointer
     //from center of a RenderBox (startKey)
-    Arrow arrow;
-    String startId = project.getIdFromKey(startKey);
-    project.arrowMap[startId]
-        .forEach((k) => k.target == null ? arrow = k : null);
+
     var itemScale = project.appletMap[startId].scale;
     var itemOffset = project.centerOfRenderBox(startId);
 
     var length =
         diagonalLength(actualPointer, itemOffset, project.headerHeight());
-    if (arrow != null) {
-      arrow.position = (itemOffset - project.stackOffset) / project.stackScale;
-      arrow.size = length / project.stackScale;
-      arrow.angle = getAngle(itemOffset, actualPointer, project.headerHeight());
-    }
+
+    position = (itemOffset - project.stackOffset) / project.stackScale;
+    size = length / project.stackScale;
+    angle = getAngle(itemOffset, actualPointer, project.headerHeight());
   }
 
   updateArrow(
-      {final Project project,
-      final GlobalKey originKey,
-      final GlobalKey feedbackKey,
-      final GlobalKey targetKey,
-      final GlobalKey draggedKey,
-      final Map<Key, List<Key>> hasArrowToKeyMap}) {
-    Arrow arrow;
+      {Project project,
+      GlobalKey originKey,
+      GlobalKey feedbackKey,
+      GlobalKey targetKey,
+      GlobalKey draggedKey,
+      Map<Key, List<Key>> hasArrowToKeyMap}) {
     String originId = project.getIdFromKey(originKey);
     String targetId = project.getIdFromKey(targetKey);
 
 //get size and arrow of origin and target
-    RenderBox originRenderBox = originKey.currentContext.findRenderObject();
-    var originPosition = project.getPositionOfRenderBox(originKey);
-    originPosition = Offset(originPosition.dx, originPosition.dy);
-    var originSize =
-        Size(originRenderBox.size.width, originRenderBox.size.height);
+    var originPosition;
+    var originSize;
+    if (originKey.currentContext != null) {
+      RenderBox originRenderBox = originKey.currentContext.findRenderObject();
+      originPosition = project.getPositionOfRenderBox(originKey);
+      originPosition = Offset(originPosition.dx, originPosition.dy);
+      originSize =
+          Size(originRenderBox.size.width, originRenderBox.size.height);
+    } else {
+      originPosition = project.appletMap[originId].position;
+      originSize = project.appletMap[originId].size;
+    }
     originPosition = Offset(
       originPosition.dx + (originSize.width / 2) * project.stackScale,
       originPosition.dy + (originSize.height / 2) * project.stackScale,
     );
 
-    RenderBox targetRenderBox = targetKey.currentContext.findRenderObject();
-    var targetPosition = project.getPositionOfRenderBox(targetKey);
-    targetPosition = Offset(targetPosition.dx, targetPosition.dy);
-    var targetSize =
-        Size(targetRenderBox.size.width, targetRenderBox.size.height);
+    var targetPosition;
+    var targetSize;
+    if (targetKey.currentContext != null) {
+      RenderBox targetRenderBox = targetKey.currentContext.findRenderObject();
+      targetPosition = project.getPositionOfRenderBox(targetKey);
+      targetSize =
+          Size(targetRenderBox.size.width, targetRenderBox.size.height);
+    } else {
+      targetPosition = project.appletMap[targetId].position;
+      targetSize = project.appletMap[targetId].size;
+    }
     targetPosition = Offset(
       targetPosition.dx + (targetSize.width / 2) * project.stackScale,
       targetPosition.dy + (targetSize.height / 2) * project.stackScale,
@@ -183,28 +187,23 @@ class Arrow {
     }
 
 //get correct arrow
-    project.arrowMap[originId].forEach((v) => {
-          if (v.target == targetId)
-            {
-              arrow = v,
-            }
-        });
+    //arrow = project.appletMap[originId].arrowMap[targetId];
 
 //check if one (feedback, target or origin) is inside another
 //hasArrowToKeyMap.forEach()
 
     if (draggedKey == originKey) {
       //if origin gets tragged, use feedback as origin
-      arrow.angle = getAngle(
+      angle = getAngle(
           feedbackPosition,
           Offset(targetPosition.dx, targetPosition.dy + project.headerHeight()),
           project.headerHeight());
       feedbackEdgeOffset = getEdgeOffset(
-          project.stackScale, feedbackPosition, feedbackSize, arrow.angle);
-      targetEdgeOffset = getEdgeOffset(
-          project.stackScale, targetPosition, targetSize, arrow.angle);
+          project.stackScale, feedbackPosition, feedbackSize, angle);
+      targetEdgeOffset =
+          getEdgeOffset(project.stackScale, targetPosition, targetSize, angle);
 
-      arrow.size = diagonalLength(
+      size = diagonalLength(
               Offset(
                   targetPosition.dx - targetEdgeOffset.dx,
                   targetPosition.dy -
@@ -213,22 +212,21 @@ class Arrow {
               feedbackPosition + feedbackEdgeOffset,
               project.headerHeight()) /
           project.stackScale;
-      arrow.position =
-          (feedbackPosition + feedbackEdgeOffset - project.stackOffset) /
-              project.stackScale;
+      position = (feedbackPosition + feedbackEdgeOffset - project.stackOffset) /
+          project.stackScale;
     } else if (draggedKey == targetKey) {
       //if target gets tragged, use feedback as target
 
-      arrow.angle = getAngle(
+      angle = getAngle(
           Offset(originPosition.dx, originPosition.dy - project.headerHeight()),
           feedbackPosition,
           project.headerHeight());
 
-      originEdgeOffset = getEdgeOffset(
-          project.stackScale, originPosition, originSize, arrow.angle);
+      originEdgeOffset =
+          getEdgeOffset(project.stackScale, originPosition, originSize, angle);
       feedbackEdgeOffset = getEdgeOffset(
-          project.stackScale, feedbackPosition, feedbackSize, arrow.angle);
-      arrow.size = diagonalLength(
+          project.stackScale, feedbackPosition, feedbackSize, angle);
+      size = diagonalLength(
               Offset(
                   originPosition.dx + originEdgeOffset.dx,
                   originPosition.dy +
@@ -237,20 +235,20 @@ class Arrow {
               feedbackPosition - feedbackEdgeOffset,
               project.headerHeight()) /
           project.stackScale;
-      arrow.position =
-          ((originPosition + originEdgeOffset) - project.stackOffset) /
-              project.stackScale;
+      position = ((originPosition + originEdgeOffset) - project.stackOffset) /
+          project.stackScale;
     } else {
-      arrow.angle = getAngle(
+      print('targetPosition ${project.headerHeight()}');
+      angle = getAngle(
           Offset(originPosition.dx, originPosition.dy),
           Offset(targetPosition.dx, targetPosition.dy + project.headerHeight()),
           project.headerHeight());
 
-      targetEdgeOffset = getEdgeOffset(
-          project.stackScale, targetPosition, targetSize, arrow.angle);
-      originEdgeOffset = getEdgeOffset(
-          project.stackScale, originPosition, originSize, arrow.angle);
-      arrow.size = diagonalLength(
+      targetEdgeOffset =
+          getEdgeOffset(project.stackScale, targetPosition, targetSize, angle);
+      originEdgeOffset =
+          getEdgeOffset(project.stackScale, originPosition, originSize, angle);
+      size = diagonalLength(
               Offset(
                   originPosition.dx + originEdgeOffset.dx,
                   originPosition.dy +
@@ -259,9 +257,8 @@ class Arrow {
               targetPosition - targetEdgeOffset,
               project.headerHeight()) /
           project.stackScale;
-      arrow.position =
-          ((originPosition + originEdgeOffset) - project.stackOffset) /
-              project.stackScale;
+      position = ((originPosition + originEdgeOffset) - project.stackOffset) /
+          project.stackScale;
     }
   }
 
@@ -305,6 +302,7 @@ class Arrow {
     Offset positionOfTarget;
     String targetId;
     Key targetKey;
+    Arrow tempArrow;
     project.appletMap.forEach((String id, Applet applet) => {
           if (id != itemId && applet.selected == true)
             {
@@ -313,76 +311,100 @@ class Arrow {
               positionOfTarget = project.centerOfRenderBox(id),
               positionOfTarget = Offset(positionOfTarget.dx,
                   positionOfTarget.dy + project.headerHeight()),
-              setArrowToPointer(itemKey, positionOfTarget, project),
+              // project.setArrowToPointer(itemId, positionOfTarget),
               applet.selected = false,
               //selectedMap[itemId] = false,
-              project.arrowMap[itemId].forEach((Arrow l) => {
-                    if (l.target == null) {l.target = targetId}
-                  }),
-              updateArrow(originKey: itemKey, targetKey: targetKey)
+              target = targetId,
+              project.appletMap[itemId].arrowMap[targetId] = this,
+              project.appletMap[itemId].arrowMap.remove('parentApplet'),
+              project.updateArrow(originKey: itemKey, targetKey: targetKey),
+
+              project.updateApplet(applet: project.appletMap[itemId]),
             }
         });
-    for (int i = 0; i < project.arrowMap[itemId].length; i++) {
-      if (project.arrowMap[itemId][i].target == null) {
-        project.arrowMap[itemId].removeAt(i);
+    project.appletMap[itemId].arrowMap.remove('parentApplet');
+    /*for (int i = 0; i < project.appletMap[itemId].arrowMap.length; i++) {
+      if (project.appletMap[itemId].arrowList[i].target == "parentApplet") {
+        project.appletMap[itemId].arrowList.removeAt(i);
       }
-    }
+    }*/
   }
 
-  getAllArrows(Project project, Key key) {
+  List<Applet> getAllArrowApplets(Project project, Key key) {
     //get all arrows pointing to or coming from the item and also it's children items
-    bool keyIsTargetOrOrigin(k) {
+    List<Applet> hasArrowToMovingApplet = [];
+    var movingAppletId = project.getIdFromKey(key);
+
+    List<String> allIds = project
+        .getAllChildren(itemKey: key)
+        .map((f) => project.getIdFromKey(f))
+        .toList();
+    allIds.add(movingAppletId);
+
+    allIds.forEach((String idFromAllIds) {
+      project.appletMap.forEach((String appletId, Applet applet) {
+        if ((appletId == idFromAllIds && applet.arrowMap != null) ||
+            applet.arrowMap.containsKey(idFromAllIds)) {
+          hasArrowToMovingApplet.add(applet);
+        }
+      });
+    });
+
+    return hasArrowToMovingApplet;
+
+    bool keyIsTargetOrOrigin(String id) {
       bool _tempBool = false;
 
-      if (project.arrowMap[k] != null) {
-        project.arrowMap[k].forEach((Arrow a) => {
-              if (a.target == k)
+      if (project.appletMap[id].arrowMap != null) {
+        project.appletMap[id].arrowMap.forEach((String id, Arrow a) => {
+              if (a.target == id)
                 {
                   _tempBool = true,
                 }
             });
       }
 
-      project.arrowMap.forEach(
-        ((String originId, List<Arrow> listOfArrows) => {
-              listOfArrows.forEach((Arrow a) => {
-                    if (a.target == k)
-                      {
-                        _tempBool = true,
-                      }
-                  }),
-            }),
-      );
+      for (int i; i < project.appletMap.length; i++) {
+        project.appletMap[i].arrowMap.forEach((String id, Arrow arrow) => {
+              if (arrow.target == id)
+                {
+                  _tempBool = true,
+                }
+            });
+      }
+
       return _tempBool;
     }
 
     //all childItems pointing to or getting targetted
-    List childList = project.getAllChildren(itemKey: key);
-    childList.add(key);
+    List<Key> childKeyList = project.getAllChildren(itemKey: key);
+    List<String> childList =
+        childKeyList.map((Key f) => project.getIdFromKey(f)).toList();
+    childList.add(project.getIdFromKey(key));
     var originKey;
-    var childId;
-    childList.forEach((childKey) => {
-          childId = project.getIdFromKey(childKey),
-          project.arrowMap.forEach((String originId,
-                  List<Arrow> listOfArrows) =>
-              {
-                originKey = project.getKeyFromId(originId),
-                if (originKey != null)
-                  {
-                    listOfArrows.forEach((Arrow a) => {
-                          if (a.target == childId &&
-                              keyIsTargetOrOrigin(childKey))
+
+    childList.forEach((childId) => {
+          for (int i = 0; i < project.appletMap.length; i++)
+            {
+              project.appletMap.forEach((itemId, applet) {
+                applet.arrowMap?.forEach((String id, Arrow arrow) => {
+                      originKey = project.getKeyFromId(originId),
+                      if (originKey != null)
+                        {
+                          if (arrow.target == childId &&
+                              keyIsTargetOrOrigin(childId))
                             {
                               if (project.hasArrowToKeyMap[originKey] == null)
                                 {
                                   project.hasArrowToKeyMap[originKey] = [],
                                 },
-                              project.hasArrowToKeyMap[originKey].add(childKey),
+                              project.hasArrowToKeyMap[originKey]
+                                  .add(project.getKeyFromId(childId)),
                             }
                           else
                             {
-                              if (a.target != null &&
-                                  keyIsTargetOrOrigin(a.target))
+                              if (arrow.target != null &&
+                                  keyIsTargetOrOrigin(arrow.target))
                                 {
                                   if (project.hasArrowToKeyMap[originKey] ==
                                       null)
@@ -390,49 +412,54 @@ class Arrow {
                                       project.hasArrowToKeyMap[originKey] = [],
                                     },
                                   project.hasArrowToKeyMap[originKey]
-                                      .add(project.getKeyFromId(a.target)),
+                                      .add(project.getKeyFromId(arrow.target)),
                                 },
                             },
-                        }),
-                  }
-              })
+                        }
+                    });
+              }),
+            }
         });
   }
 
   updateArrowToKeyMap(
       Project project, Key key, bool dragStarted, Key feedbackKey) {
-    project.hasArrowToKeyMap
-        .forEach((Key originKey, List<Key> listOfTargets) => {
-              listOfTargets.forEach((Key targetKey) => {
-                    if (dragStarted && originKey == key)
-                      {
-                        updateArrow(
-                          originKey: originKey,
-                          feedbackKey: feedbackKey,
-                          targetKey: targetKey,
-                          draggedKey: originKey,
-                          hasArrowToKeyMap: project.hasArrowToKeyMap,
-                        )
-                      }
-                    else if (dragStarted && targetKey == key)
-                      {
-                        updateArrow(
-                            originKey: originKey,
-                            feedbackKey: feedbackKey,
-                            targetKey: targetKey,
-                            draggedKey: targetKey,
-                            hasArrowToKeyMap: project.hasArrowToKeyMap)
-                      }
-                    else
-                      {
-                        updateArrow(
-                            originKey: originKey,
-                            feedbackKey: feedbackKey,
-                            targetKey: targetKey,
-                            draggedKey: feedbackKey,
-                            hasArrowToKeyMap: project.hasArrowToKeyMap)
-                      }
-                  })
-            });
+    var movingAppletId = project.getIdFromKey(key);
+    List<Applet> hasArrowToMovingApplet = getAllArrowApplets(project,key);
+print('hasarrowtomovingapplet $hasArrowToMovingApplet');
+    var targetKey;
+    hasArrowToMovingApplet.forEach((Applet applet) => {
+          applet.arrowMap.forEach((String targetId, Arrow arrow) => {
+                targetKey = project.getKeyFromId(targetId),
+                if (dragStarted && applet.key == key)
+                  {
+                    project.updateArrow(
+                      originKey: applet.key,
+                      feedbackKey: feedbackKey,
+                      targetKey: targetKey,
+                      draggedKey: applet.key,
+                      hasArrowToKeyMap: project.hasArrowToKeyMap,
+                    )
+                  }
+                else if (dragStarted && targetKey == key)
+                  {
+                    project.updateArrow(
+                        originKey: applet.key,
+                        feedbackKey: feedbackKey,
+                        targetKey: targetKey,
+                        draggedKey: targetKey,
+                        hasArrowToKeyMap: project.hasArrowToKeyMap)
+                  }
+                else
+                  {
+                    project.updateArrow(
+                        originKey: applet.key,
+                        feedbackKey: feedbackKey,
+                        targetKey: targetKey,
+                        draggedKey: feedbackKey,
+                        hasArrowToKeyMap: project.hasArrowToKeyMap)
+                  }
+              }),
+        });
   }
 }

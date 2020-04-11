@@ -7,6 +7,7 @@ import 'package:vector_math/vector_math_64.dart' as vector64;
 import 'package:vector_math/vector_math.dart' as vector;
 
 import 'package:zefyr/zefyr.dart';
+import 'core/models/appletModel.dart';
 import 'core/models/projectModel.dart';
 
 import 'package:synapp/core/models/projectModel.dart';
@@ -18,9 +19,21 @@ import 'textboxWidget.dart';
 import 'windowWidget.dart';
 import 'arrowWidget.dart';
 
-class StackAnimator extends StatelessWidget {
+class StackAnimator extends StatefulWidget {
   final project;
   StackAnimator(this.project);
+  @override
+  _StackAnimatorState createState() => _StackAnimatorState();
+}
+
+class _StackAnimatorState extends State<StackAnimator>
+    with AfterLayoutMixin<StackAnimator> {
+  bool isExec = true;
+  @override
+  void afterFirstLayout(BuildContext context) {
+    // Calling the same function "after layout" to resolve the issue.
+    isExec = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,27 +42,7 @@ class StackAnimator extends StatelessWidget {
 
     notifier = projectProvider.notifier;
 
-    /* setStackSize() {
-      //set the stack size when change stackoffset and scale to garuantee the possibility of drag and drop items
-
-      projectProvider.stackSizeChange(null, Offset(0, 0));
-      projectProvider.stackSizeChange(
-        null,
-        Offset(
-            (displaySize.width / projectProvider.stackScale) +
-                projectProvider.stackOffset.dx,
-            0),
-      );
-      projectProvider.stackSizeChange(
-        null,
-        Offset(
-            0,
-            (displaySize.height / projectProvider.stackScale) +
-                projectProvider.stackOffset.dy),
-      );
-    }*/
-    //initialViewArea();
-
+   
     return ZefyrScaffold(
       child: MatrixGestureDetector(
         onMatrixUpdate: (m, tm, sm, rm) {
@@ -58,12 +51,11 @@ class StackAnimator extends StatelessWidget {
           projectProvider.stackOffset =
               Offset(notifier.value.row0.a, notifier.value.row1.a);
 
-
 //continue with the initial view after moving but then change to matrixgesturedetector input
-          notifier.value = projectProvider.initial
-              ? projectProvider.updateStackWithMatrix(m)
-              : m;
+          notifier.value =
+              !isExec ? projectProvider.updateStackWithMatrix(m) : m;
 
+          isExec = true;
           projectProvider.setMaxScaleAndOffset(context);
         },
         shouldRotate: false,
@@ -77,7 +69,7 @@ class StackAnimator extends StatelessWidget {
                 builder: (context, child) {
                   return Transform(
                     transform: projectProvider.notifier.value,
-                    child: ItemStackBuilder(project.projectId),
+                    child: ItemStackBuilder(widget.project.projectId),
                   );
                 }),
           ),
@@ -144,9 +136,6 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
           );
         },
         onWillAccept: (dynamic data) {
-          /* print('"parentApplet" != data.id ${"parentApplet" != data.id}');
-          print(
-              "!projectProvider.appletMap['parentApplet'].childIds.contains(data.id) ${!projectProvider.appletMap['parentApplet'].childIds.contains(data.id)}");*/
           if ("parentApplet" != data.id
               //&& !projectProvider.appletMap[data.id].childIds.contains(null)  &&
 
@@ -196,12 +185,10 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
         },
         onLeave: (dynamic data) {},
         onAccept: (dynamic data) {
-          print('help ${projectProvider.originId}, data ${data.position}');
-
           projectProvider.updateApplet(
-              projectProvider.appletMap["parentApplet"],
-              "parentApplet",
-              projectProvider.originId);
+              applet: projectProvider.appletMap["parentApplet"],
+              targetId: "parentApplet",
+              originId: projectProvider.originId);
           if (data.type == 'TextApplet') {
             projectProvider.appletMap[data.id].scale = 1.0;
             if (projectProvider.appletMap[data.id].selected == true) {
@@ -215,7 +202,9 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
             projectProvider.appletMap["parentApplet"].selected = false;
           }
           projectProvider.updateApplet(
-              data, "parentApplet", projectProvider.originId);
+              applet: data,
+              targetId: "parentApplet",
+              originId: projectProvider.originId);
         },
       ),
       ...stackItems(context),
@@ -256,18 +245,20 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
 List<Widget> arrowItems(BuildContext context) {
   var projectProvider = Provider.of<Project>(context);
   List<Widget> arrowItemsList = [];
-  Map<String, List<Arrow>> arrowMap = projectProvider.arrowMap;
+  List<Applet> appletList = projectProvider.appletMap.values.toList();
   Key originKey;
   Key targetKey;
-  arrowMap.forEach((String originId, List<Arrow> arrowList) => {
-        originKey = projectProvider.getKeyFromId(originId),
-        if (originKey != null)
-          {
-            arrowList.forEach((Arrow tempArrow) {
-              targetKey = projectProvider.getKeyFromId(tempArrow.target);
-              arrowItemsList.add(ArrowWidget(originKey, targetKey));
-            }),
-          }
-      });
+  for (int i = 0; i < appletList.length; i++) {
+    if (appletList[i].arrowMap != null) {
+      appletList[i].arrowMap.forEach((String id, Arrow arrow) => {
+            originKey = projectProvider.getKeyFromId(appletList[i].id),
+            if (originKey != null)
+              {
+                targetKey = projectProvider.getKeyFromId(id),
+                arrowItemsList.add(ArrowWidget(originKey, targetKey)),
+              }
+          });
+    }
+  }
   return arrowItemsList;
 }

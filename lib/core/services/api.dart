@@ -117,7 +117,5 @@ class Api {
   Stream<QuerySnapshot> streamAppletCollection(String projectId) {
     return ref.document(projectId).collection("applets").snapshots();
 
-    /*return ref.document(projectId).collection("applets").snapshots().map((list)=>
-    list.documents.map((doc) => Applet.fromMap(doc.data)).toList());*/
   }
 }
