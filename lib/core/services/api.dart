@@ -29,7 +29,16 @@ class Api {
     return ref.document(id).get();
   }
 
-  Future<List<DocumentSnapshot>> getAppletById(String projectId) async {
+Future<DocumentSnapshot> getAppletById(String projectId,String appletId) async{
+  return ref.document(projectId).collection('applets').document(appletId).get();
+}
+
+Stream<DocumentSnapshot> getAppletByIdAsStream(String projectId,String appletId) {
+  return ref.document(projectId).collection('applets').document(appletId).snapshots();
+}
+
+
+  Future<List<DocumentSnapshot>> getAppletsById(String projectId) async {
     List<DocumentSnapshot> tempList;
     QuerySnapshot collectionSnapshot =
         await ref.document(projectId).collection('applets').getDocuments();

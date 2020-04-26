@@ -4,11 +4,10 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quill_delta/quill_delta.dart';
+import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
-import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:zefyr/zefyr.dart';
-import 'core/models/appletModel.dart';
-import 'feedbackTextboxWidget.dart';
+
 
 // change: add these two lines to imports section at the top of the file
 import 'dart:convert'; // access to jsonEncode()
@@ -49,6 +48,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
     Key actualTargetKey = projectProvider.getActualTargetKey(key);
     String actualTargetId = projectProvider.getIdFromKey(actualTargetKey);
     String id = projectProvider.getIdFromKey(key);
+    Applet _applet = projectProvider.appletMap[id];
     var initialValue = projectProvider.appletMap[id].content;
     double itemScale = projectProvider.appletMap[id].scale;
     Offset boxPosition = projectProvider.appletMap[id].position;
@@ -116,21 +116,23 @@ class _TextboxWidgetState extends State<TextboxWidget> {
               } else {
                 setState(() {
                   projectProvider.changeItemDropPosition(
-                      projectProvider.appletMap[id],
-                      pointerDownOffset,
-                      pointerUpOffset);
+                      applet:projectProvider.appletMap[id],
+                      feedbackKey: feedbackKey,
+                      pointerDownOffset:pointerDownOffset,
+                      pointerUpOffset:pointerUpOffset);
                 });
               }
             },
             onDraggableCanceled: (vel, off) {
               
               setState(() {
+               
                 projectProvider.changeItemDropPosition(
-                    projectProvider.appletMap[id],
-                    pointerDownOffset,
-                    pointerUpOffset);
+                    applet: projectProvider.appletMap[id],
+                    feedbackKey:feedbackKey,
+                   pointerDownOffset: pointerDownOffset,
+                    pointerUpOffset: pointerUpOffset);
               });
-              projectProvider.stackSizeChange(feedbackKey, pointerUpOffset,pointerDownOffset);
             },
             childWhenDragging: Container(),
             feedback: ListenableProvider<Project>.value(
@@ -155,7 +157,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
                 ),
               ),
             ),
-            data: projectProvider.appletMap[id] as dynamic),
+            data: projectProvider.appletMap[id]),
       ),
     );
   }
@@ -440,6 +442,40 @@ class ScaleContainer extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+class FeedbackTextboxWidget extends StatelessWidget {
+  final String id;
+  final Offset pointerDownOffset;
+  final GlobalKey feedbackKey;
+  FeedbackTextboxWidget(this.id, this.feedbackKey, this.pointerDownOffset);
+
+  @override
+  Widget build(BuildContext context) {
+    final projectProvider = Provider.of<Project>(context);
+    var itemKey = projectProvider.getKeyFromId(id);
+    var stackScale = projectProvider.notifier.value.row0[0];
+    var textBox = projectProvider.appletMap[id];
+    var itemScale = projectProvider.appletMap[id].scale;
+    var initialValue = textBox.content;
+    var targetScale = projectProvider.getTargetScale(itemKey);
+    return Transform.translate(
+      offset: Offset((-pointerDownOffset.dx * stackScale * itemScale),
+          -pointerDownOffset.dy * stackScale * itemScale),
+      child: Transform.scale(
+        scale: itemScale,
+        alignment: Alignment.topLeft,
+        child: FitTextField(
+          feedbackKey: feedbackKey,
+          itemKey: itemKey,
+          initialValue: initialValue,
+          itemScale: itemScale * stackScale,
         ),
       ),
     );

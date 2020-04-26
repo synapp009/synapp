@@ -151,18 +151,7 @@ class _HomePageState extends State<HomePage> {
                                 taskDescripInputController.clear(),
                               })
                           .catchError((err) => print(err));
-                      //await Provider.of<CRUDModel>(context, listen: false)
-                      //.addAppletMap(applet, docRef.documentID);
-
-                      /*
-                      docRef.setData(project)
-                          .then((result) => {
-                  
-                                Navigator.pop(context),                              
-                                taskTitleInputController.clear(),
-                                taskDescripInputController.clear(),
-                              })
-                          .catchError((err) => print(err));*/
+                
 
                     }
                   })

@@ -54,9 +54,9 @@ class Applet {
     arrowMap = Constants.initializeArrowMap();
   }
 
-  Applet.fromMap({ Map snapshot})
+  Applet.fromMap({Map snapshot})
       : //key = Key(snapshot['id']) ?? null,
-        id = snapshot["id"] == "null" ? null : snapshot["id"],
+        id = snapshot["id"] ?? null,
         position = Offset((snapshot['positionDx'] as num).toDouble(),
                 (snapshot['positionDy'] as num).toDouble()) ??
             Offset(null, null),
@@ -65,13 +65,12 @@ class Applet {
         childIds = _childIdsSnapshotDynamicToList(snapshot['childIds']) ?? null,
         type = snapshot['type'] ?? null,
         fixed = snapshot['fixed'] == "true",
-        size = Size((snapshot["sizeHeight"] as num).toDouble(),
-                (snapshot["sizeWidth"] as num).toDouble()) ??
+        size = Size((snapshot["sizeWidth"] as num).toDouble(),
+                (snapshot["sizeHeight"] as num).toDouble()) ??
             null,
         content = snapshot['content'] ?? '',
         onChange = snapshot['onChange'] == 'true' ? true : false,
-        arrowMap =
-            _arrowsFromMap(snapshot),
+        arrowMap = _arrowsFromMap(snapshot),
         selected = false,
         title = snapshot['title'] ?? '',
         textSize = snapshot['textSize'] ?? null;
@@ -101,21 +100,18 @@ class Applet {
     };
   }
 
-  Map<String,dynamic> _arrowMapToJson(Map<String,Arrow> arrowMap) {
-    Map<String,dynamic> tempList = {};
-    arrowMap?.forEach((id,arrow) => tempList[id] = arrow.toJson());
+  Map<String, dynamic> _arrowMapToJson(Map<String, Arrow> arrowMap) {
+    Map<String, dynamic> tempList = {};
+    arrowMap?.forEach((id, arrow) => tempList[id] = arrow.toJson());
     return tempList;
   }
 
-  static Map<String,Arrow> _arrowsFromMap(
-     dynamic snapshot) {
+  static Map<String, Arrow> _arrowsFromMap(dynamic snapshot) {
     Map<String, Arrow> tempMap = {};
     if (snapshot['arrowMap'] != null) {
       snapshot['arrowMap'].forEach(
-        (k,v) {
-          tempMap[k] = 
-            Arrow.fromMap( v);
-          
+        (k, v) {
+          tempMap[k] = Arrow.fromMap(v);
         },
       );
     }
@@ -151,41 +147,35 @@ class Applet {
     return tempList;
   }
 
-  Applet createNewWindow() {
-    Key windowKey = new GlobalKey();
-    var appletId;
-    Color color = new RandomColor().randomColor(
+  void setNewWindow() {
+    type = 'WindowApplet';
+    key = new GlobalKey();
+    size = Size(130, 130);
+    position = Offset(200, 100);
+    color = new RandomColor().randomColor(
         colorHue: ColorHue.yellow, colorBrightness: ColorBrightness.light);
-
-    return Applet(
-        type: 'WindowApplet',
-        key: windowKey,
-        size: Size(130, 130),
-        position: Offset(200, 100),
-        color: color,
-        title: 'Title',
-        childIds: [],
-        scale: 0.3,
-        selected: false,
-        onChange: true,
-        arrowMap: {});
+    title = 'Title';
+    childIds = [];
+    scale = 1.0;
+    selected = false;
+    onChange = true;
+    arrowMap = {};
   }
 
-  Applet createNewTextBox() {
-    return Applet(
-        type: "TextApplet",
-        //id: id,
-        //key: newAppKey,
-        size: Size(100, 60),
-        position: Offset(200, 100),
-        color: Colors.black,
-        title: 'Title',
-        content: 'Enter Text\n',
-        fixed: false,
-        //bool expanded;
-        scale: 1.0,
-        textSize: 16,
-        onChange: true);
+  void setNewTextBox() {
+    type = "TextApplet";
+    //id: id,
+    //key: newAppKey,
+    size = Size(100, 60);
+    position = Offset(200, 100);
+    color = Colors.black;
+    title = 'Title';
+    content = 'Enter Text\n';
+    fixed = false;
+    //bool expanded;
+    scale = 1.0;
+    textSize = 16;
+    onChange = true;
   }
 
   void scaleTextBox(
@@ -303,5 +293,33 @@ class Applet {
                   ? details.delta.dy
                   : 0));
     }
+  }
+
+  Offset getAppletDropPosition(
+      {Project project,
+      Applet applet,
+      GlobalKey feedbackKey,
+      Offset pointerDownOffset,
+      Offset pointerUpOffset}) {
+    var itemScale = applet.scale;
+    var dropKey = applet.key;
+    var position;
+
+    var targetKey = project.getActualTargetKey(dropKey);
+    var targetOffset = project.getPositionOfRenderBox(targetKey);
+
+    //checks if there is some relevance of additional offset caused by trag helper offset
+    
+
+    return position = Offset(
+      ((pointerUpOffset.dx - targetOffset.dx) / itemScale / project.stackScale -
+          pointerDownOffset.dx),
+      ((pointerUpOffset.dy - targetOffset.dy - project.headerHeight()) /
+              itemScale /
+              project.stackScale -
+          pointerDownOffset.dy),
+    );
+
+
   }
 }

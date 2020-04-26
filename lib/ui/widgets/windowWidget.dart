@@ -5,12 +5,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:superellipse_shape/superellipse_shape.dart';
+import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
-import 'package:synapp/textboxWidget.dart';
+import 'package:synapp/ui/widgets/textboxWidget.dart';
 
-import 'core/models/projectModel.dart';
-
-import 'feedbackWindowWidget.dart';
+import '../../core/models/projectModel.dart';
 
 class WindowWidget extends StatefulWidget {
   WindowWidget({GlobalKey key}) : super(key: key);
@@ -59,7 +58,6 @@ class _WindowWidgetState extends State<WindowWidget>
 
   var _pointerDownOffset = Offset(0, 0);
   var _pointerUpOffset = Offset(0, 0);
-  var _onDragEndOffset;
   var _pointerMoving = false;
   var _scalePointerMoving = false;
   var _pointerUp = false;
@@ -73,7 +71,6 @@ class _WindowWidgetState extends State<WindowWidget>
   Map<Key, Offset> childrenOriginPosition = {};
   Map<Key, double> childrenOriginScale = {};
 
-  Map<Key, List<Key>> hasArrowToKeyMap = {};
   String id;
 
 //Calculate color when clicked on a window()
@@ -86,9 +83,9 @@ class _WindowWidgetState extends State<WindowWidget>
     return tempColor;
   }
 
-  void changeChildrenScale(key, scaleChange) {
+  void changeChildrenScale(_applet, scaleChange) {
     List<Key> childrenList = Provider.of<Project>(context, listen: false)
-        .getAllChildren(itemKey: key);
+        .getAllChildren(applet: _applet);
     if (childrenList != null) {
       childrenList.forEach((element) {
         Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
@@ -106,7 +103,9 @@ class _WindowWidgetState extends State<WindowWidget>
 
   void changeChildrenScaleAndPosition(key, offsetFromOriginDX, scaleChange) {
     List<Key> childrenList = Provider.of<Project>(context, listen: false)
-        .getAllChildren(itemKey: key);
+        .getAllChildren(
+            applet:
+                _projectProvider.appletMap[_projectProvider.getIdFromKey(key)]);
     if (childrenList != null) {
       childrenList.forEach((element) {
         Key _dragItemTargetKey = _projectProvider.getActualTargetKey(element);
@@ -124,7 +123,7 @@ class _WindowWidgetState extends State<WindowWidget>
     }
   }
 
-  void changeChildrenPosition(key, scaleChange, changeMap) {
+  /* void changeChildrenPosition(key, scaleChange, changeMap) {
     List<Key> childrenList = Provider.of<Project>(context, listen: false)
         .getAllChildren(itemKey: key);
     if (childrenList != null) {
@@ -136,15 +135,18 @@ class _WindowWidgetState extends State<WindowWidget>
                       .appletMap[_projectProvider.getIdFromKey(element)]
                       .scale));
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
+    print(
+        '_projectProvider.appletMap[id].position ${_projectProvider.appletMap[id]?.position}');
     _projectProvider = Provider.of<Project>(context);
     _crudProvider = Provider.of<CRUDModel>(context);
     id = _projectProvider.getIdFromKey(widget.key);
     _stackScale = _projectProvider.stackScale;
 
+    Applet applet = _projectProvider.appletMap[id];
     _itemScale = _projectProvider.appletMap[id].scale;
     _stackOffset = _projectProvider.stackOffset;
 
@@ -223,7 +225,6 @@ class _WindowWidgetState extends State<WindowWidget>
             _projectProvider.firstItem = true;
           },
           onPointerMove: (PointerMoveEvent event) {
-
             //update the position of all the arrows pointing to the window
             if (_dragStarted) {
               _projectProvider.updateArrowToKeyMap(
@@ -231,7 +232,6 @@ class _WindowWidgetState extends State<WindowWidget>
                   _dragStarted,
                   feedbackKey);
             }
-
             _controller.reverse();
 
             //set if Pointer is Moving with threshold
@@ -249,7 +249,6 @@ class _WindowWidgetState extends State<WindowWidget>
             },
             onLongPressStart: (details) {
               HapticFeedback.mediumImpact();
-
               _projectProvider.addArrow(id);
 
               //only select the creating window
@@ -258,8 +257,7 @@ class _WindowWidgetState extends State<WindowWidget>
             onLongPressMoveUpdate: (details) {
               _projectProvider.hitTest(_projectProvider.appletMap[id].key,
                   details.globalPosition, context);
-              _projectProvider.setArrowToPointer(
-                  id, details.globalPosition);
+              _projectProvider.setArrowToPointer(id, details.globalPosition);
             },
             onLongPressEnd: (details) {
               _projectProvider
@@ -278,153 +276,106 @@ class _WindowWidgetState extends State<WindowWidget>
               _isTapped = false;
             },
             child: LongPressDraggable(
-                //hapticFeedbackOnStart: true,
+              //hapticFeedbackOnStart: true,
 
-                maxSimultaneousDrags:
-                    _projectProvider.appletMap[id].selected ? 0 : 1,
-                onDragEnd: (DraggableDetails details) {
-                    
-                  // _projectProvider.updateArrowToKeyMap(id, _dragStarted, feedbackKey);
-                  _timer = new Timer(Duration(milliseconds: 200), () {
-                    //setState(() {
-                    _projectProvider.targetId = id;
-                    _dragStarted = false;
-                    _projectProvider.updateArrowToKeyMap(
-                        _projectProvider.appletMap[id].key,
-                        _dragStarted,
-                        _projectProvider.appletMap[id].key);
-                    _projectProvider.hasArrowToKeyMap.clear();
-                    //});
-                  });
-                },
-                onDragStarted: () {
-                  HapticFeedback.mediumImpact();
-                  setState(() {
-                    _projectProvider.appletMap[id].onChange = true;
-                    _projectProvider.originId =
-                        _projectProvider.getActualTargetId(id);
-                    _projectProvider.changeItemDropPosition(
-                        _projectProvider.appletMap[id],
-                        _pointerDownOffset,
-                        _pointerUpOffset);
-                    _timer = new Timer(Duration(milliseconds: 200), () {
-                      _dragStarted = true;
+              maxSimultaneousDrags:
+                  _projectProvider.appletMap[id].selected ? 0 : 1,
+              onDragEnd: (DraggableDetails details) {
+                _timer = new Timer(Duration(milliseconds: 200), () {
+                  //setState(() {
 
-                      _projectProvider.updateArrowToKeyMap(
-                          _projectProvider.appletMap[id].key,
-                          _dragStarted,
-                          feedbackKey);
-                    });
-                  });
-                },
-                onDragCompleted: () {
-                  _projectProvider.appletMap[id].onChange = false;
+                  _dragStarted = false;
+                  _projectProvider.updateArrowToKeyMap(
+                      _projectProvider.appletMap[id].key,
+                      _dragStarted,
+                      _projectProvider.appletMap[id].key);
+                  //});
+                });
+              },
+              onDragStarted: () {
+                HapticFeedback.mediumImpact();
 
-                  setState(() {
-                    _projectProvider.stackSizeChange(widget.key,
-                        feedbackKey, _pointerUpOffset,_pointerDownOffset);
+                //_projectProvider.appletMap[id].onChange = true;
+                _projectProvider.originId =
+                    _projectProvider.getActualTargetId(id);
 
-                    _projectProvider.changeItemDropPosition(
-                        _projectProvider.appletMap[id],
-                        _pointerDownOffset,
-                        _pointerUpOffset);
-                  });
-                },
-                onDraggableCanceled: (vel, Offset off) {
-                  setState(() {
-                    _projectProvider.stackSizeChange(widget.key, feedbackKey, _pointerUpOffset,_pointerDownOffset);
+                _timer = new Timer(Duration(milliseconds: 200), () {
+                  _dragStarted = true;
 
-                    _projectProvider.appletMap[id].onChange = false;
-                    _projectProvider.changeItemDropPosition(
-                        _projectProvider.appletMap[id],
-                        _pointerDownOffset,
-                        _pointerUpOffset);
-                  });
-                },
-                dragAnchor: DragAnchor.pointer,
-                childWhenDragging: Container(),
-                feedback: ChangeNotifierProvider<Project>.value(
-                  value: _projectProvider,
-                  child:
-                      FeedbackWindowWidget(id, _pointerDownOffset, feedbackKey),
-                ),
-                child: Visibility(
-                    visible: _projectProvider.chosenId == id ? false : true,
-                    child: _animatedButtonUI),
-                data: _projectProvider.appletMap[id]),
+                  _projectProvider.updateArrowToKeyMap(
+                      _projectProvider.appletMap[id].key,
+                      _dragStarted,
+                      feedbackKey);
+                });
+                //setState(() {});
+              },
+              onDragCompleted: () {
+                //_projectProvider.appletMap[id].onChange = false;
+                _projectProvider.changeItemDropPosition(
+                    applet: applet,
+                    feedbackKey: feedbackKey,
+                    pointerDownOffset: _pointerDownOffset,
+                    pointerUpOffset: _pointerUpOffset);
+              },
+              onDraggableCanceled: (vel, Offset off) {
+                //_projectProvider.appletMap[id].onChange = false;
+                _projectProvider.changeItemDropPosition(
+                  applet: applet,
+                  feedbackKey: feedbackKey,
+                  pointerDownOffset: _pointerDownOffset,
+                  pointerUpOffset: _pointerUpOffset,
+                );
+              },
+              dragAnchor: DragAnchor.pointer,
+              childWhenDragging: Container(),
+              feedback: ChangeNotifierProvider<Project>.value(
+                value: _projectProvider,
+                child: FeedbackWindowWidget(
+                    applet, _pointerDownOffset, feedbackKey),
+              ),
+              child: Visibility(
+                  visible: _projectProvider.chosenId == id ? false : true,
+                  child: _animatedButtonUI),
+              data: _projectProvider.appletMap[id] as Applet,
+            ),
           ),
         );
-      }, onWillAccept: (dynamic data) {
+      }, onWillAccept: (Applet data) {
         //true if window changes target
-        if (_projectProvider.appletMap[id].key != data.key &&
+        if (data.id != id &&
             //!_projectProvider.appletMap[null].childIds.contains(id) &&
             !_projectProvider.appletMap[id].childIds.contains(data.id)) {
-          _projectProvider.changeItemListPosition(
-              itemId: data.id, newId: id, applet: data);
+          double _dragItemTargetScale = data.scale;
 
-          Key _dragItemTargetKey =
-              _projectProvider.getActualTargetKey(data.key);
-          String _dragItemTargetId =
-              _projectProvider.getIdFromKey(_dragItemTargetKey);
-          double _dragItemTargetScale =
-              _projectProvider.appletMap[_dragItemTargetId].scale;
-
-          double _scaleChange = _projectProvider.appletMap[data.id].scale;
-          _projectProvider.appletMap[data.id].scale =
-              _dragItemTargetScale * 0.3;
-          _projectProvider.scaleChange =
-              _projectProvider.appletMap[data.id].scale / _scaleChange;
-
+          double _scaleChange = data.scale;
+          data.scale = _dragItemTargetScale * 0.3;
+          _projectProvider.scaleChange = data.scale / _scaleChange;
           if (data.type == "WindowApplet") {
-            changeChildrenScale(data.key, _projectProvider.scaleChange);
+            changeChildrenScale(data, _projectProvider.scaleChange);
           } else if (data.type == "TextApplet") {
-            _projectProvider.appletMap[data.id].scale = _itemScale;
+            data.scale = _itemScale;
           }
-
+          _projectProvider.targetId = id;
+          _projectProvider.notifyListeners();
           return true;
         } else {
           return false;
         }
-        /*else {
-          //if for example textboxWidget
-          if (_projectProvider.appletMap[id].key != data.key  &&
-              //!_projectProvider.appletMap[null].childIds.contains(id) &&
-              !_projectProvider.appletMap[id].childIds.contains(id)) {
-            _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
-            _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
-            Key _dragItemTargetKey =
-                _projectProvider.getActualTargetKey(data.key);
-            String _dragItemTargetId =
-                _projectProvider.getIdFromKey(_dragItemTargetKey);
-            double _dragItemTargetScale =
-                _projectProvider.appletMap[_dragItemTargetId].scale;
-
-          // _projectProvider.changeItemListPosition(itemId: data.id, newId: id);
-          Key _targetKey = _projectProvider.getActualTargetKey(data.id);
-          double _targetScale = _projectProvider.appletMap[data.id].scale;
-          _projectProvider.appletMap[data.id].scale = _targetScale;
-
-            return true;
-          } else {
-            return false;
-          }
-        }*/
-      }, onLeave: (dynamic data) {
+      }, onLeave: (Applet data) {
         _projectProvider.appletMap[id].selected = false;
-      }, onAccept: (dynamic data) {
-        _projectProvider.updateApplet(applet:data,targetId: id, originId:_projectProvider.originId);
-
+      }, onAccept: (Applet data) {
+        /*_projectProvider.updateApplet(
+            applet: data, targetId: id, originId: _projectProvider.originId);*/
         if (data.type == 'TextApplet') {
-          _projectProvider.appletMap[data.id].scale = _itemScale;
-          if (_projectProvider.appletMap[id].selected == true) {
-            _projectProvider.appletMap[data.id].fixed = true;
-            _projectProvider.appletMap[data.id].position = Offset(10, 10);
-            _projectProvider.appletMap[data.id].size =
-                _projectProvider.appletMap[id].size * 0.9;
+          data.scale = _itemScale;
+          if (data.selected == true) {
+            data.fixed = true;
+            data.position = Offset(10, 10);
+            data.size = data.size * 0.9;
           } else {
-            _projectProvider.appletMap[data.id].fixed = false;
+            data.fixed = false;
           }
-          _projectProvider.appletMap[id].selected = false;
+          data.selected = false;
         }
       }),
     );
@@ -469,7 +420,7 @@ class _WindowWidgetState extends State<WindowWidget>
                 ),*/
 
             Opacity(
-              opacity: _projectProvider.appletMap[id].onChange ? 0.7 : 1,
+              opacity: 1,
               child: SizedBox(
                 //key: widget.key,
                 height: _projectProvider.appletMap[id].size.height * _itemScale,
@@ -536,8 +487,7 @@ class _WindowWidgetState extends State<WindowWidget>
                             List<Key> childrenList =
                                 Provider.of<Project>(context, listen: false)
                                     .getAllChildren(
-                                        itemKey:
-                                            _projectProvider.getKeyFromId(id));
+                                        applet: _projectProvider.appletMap[id]);
 
                             childrenList.forEach((element) {
                               childrenOriginPosition[element] = _projectProvider
@@ -555,6 +505,13 @@ class _WindowWidgetState extends State<WindowWidget>
                               _pointerMoving = false;
                               offsetChange = Offset(0, 0);
                             });
+                            _projectProvider.updateApplet(
+                                applet: _projectProvider.appletMap[id]);
+                            _projectProvider.stackSizeChange(
+                                _projectProvider.appletMap[id],
+                                _projectProvider.appletMap[id].key,
+                                details.globalPosition,
+                                details.globalPosition);
                           },
                           onLongPressStart: (details) {},
                           onPanUpdate: (details) {},
@@ -651,8 +608,7 @@ class WindowStackBuilder extends StatelessWidget {
         child: Container(
           height: projectProvider.appletMap[id].size.height,
           width: projectProvider.appletMap[id].size.width,
-          child: Text(
-              '${id.toString()},${projectProvider.appletMap[id].scale.toString()}'),
+          child: Text('${id.toString()},${projectProvider.appletMap[id].key}'),
         ),
       ),
       //TextField(maxLines:40),
@@ -682,5 +638,57 @@ class WindowStackBuilder extends StatelessWidget {
       stackItemsList.add(stackItemDraggable);
     }
     return stackItemsList;
+  }
+}
+
+class FeedbackWindowWidget extends StatelessWidget {
+  final Applet applet;
+  final Offset pointerDownOffset;
+  final GlobalKey feedbackKey;
+  FeedbackWindowWidget(this.applet, this.pointerDownOffset, this.feedbackKey);
+
+  @override
+  Widget build(BuildContext context) {
+    final appletProvider = Provider.of<Project>(context);
+
+    var stackScale = appletProvider.notifier.value.row0[0];
+    var itemScale = appletProvider.appletMap[applet.id].scale;
+
+    Size animationOffseter =
+        Size((applet.size.width / 2) * 0.1, (applet.size.width / 2) * 0.1);
+    return Transform.translate(
+      offset: Offset(
+          ((-pointerDownOffset.dx - animationOffseter.width) *
+                  stackScale *
+                  itemScale) +
+              0.1,
+          ((-pointerDownOffset.dy - animationOffseter.height) *
+                  stackScale *
+                  itemScale) +
+              0.1),
+      child: Transform.scale(
+        alignment: Alignment.topLeft,
+        scale: stackScale + (stackScale * 0.1),
+        child: Column(
+          children: [
+            SizedBox(
+              key: feedbackKey,
+              height: applet.size.height * itemScale,
+              width: applet.size.width * itemScale,
+              child: Material(
+                animationDuration: Duration.zero,
+                shape: SuperellipseShape(
+                  borderRadius: BorderRadius.circular(28 * itemScale),
+                ),
+                //margin: EdgeInsets.all(0),
+                color: applet.color,
+
+                child: WindowStackBuilder(applet.id),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

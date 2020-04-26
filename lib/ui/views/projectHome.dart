@@ -1,14 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:synapp/core/constants.dart';
 import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:synapp/core/viewmodels/CRUDModel.dart';
-import 'package:uuid/uuid.dart';
+import 'package:synapp/ui/widgets/arrowWidget.dart';
+import 'package:synapp/ui/widgets/textboxWidget.dart';
+import 'package:synapp/ui/widgets/windowWidget.dart';
+import 'package:flutter/src/foundation/change_notifier.dart';
 
-import '../../feedbackTextboxWidget.dart';
-import '../../feedbackWindowWidget.dart';
-import '../../stackAnimator.dart';
+import 'package:after_layout/after_layout.dart';
+
+import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
+
+import 'package:zefyr/zefyr.dart';
+import '../../core/models/appletModel.dart';
+import '../../core/models/projectModel.dart';
+
+import '../../core/models/arrowModel.dart';
 
 class HomeView extends StatefulWidget {
   HomeView({Key key, @required this.project}) : super(key: key);
@@ -18,12 +29,17 @@ class HomeView extends StatefulWidget {
   _HomeViewState createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
-  var isExec = true;
+class _HomeViewState extends State<HomeView> with AfterLayoutMixin<HomeView> {
+  bool isExec = false;
+
   @override
-  void initState() {
-    isExec = false;
-    super.initState();
+  void afterFirstLayout(BuildContext context) {
+    var projectProvider = Provider.of<Project>(context, listen: false);
+
+    setState(() {
+      projectProvider.setInitialStackSizeAndOffset();
+      projectProvider.getInitialStackViewAsMatrix(Matrix4.identity());
+    });
   }
 
   @override
@@ -34,8 +50,7 @@ class _HomeViewState extends State<HomeView> {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
     if (!isExec) {
-
-      projectProvider.updateStackWithMatrix(Matrix4.identity());
+      //projectProvider.updateStackWithMatrix(Matrix4.identity());
       isExec = true;
     }
 
@@ -174,13 +189,12 @@ class __MyFloatingActionButtonState extends State<_MyFloatingActionButton> {
                       topRight: const Radius.circular(40.0),
                     ),
                   ),
-                  child: BottomSheetApp(
-                      apps: _apps, projectProvider: projectProvider),
+                  child: BottomSheetApp(apps: _apps),
                 ),
               );
-              showFoatingActionButton(false);
+              showFloatingActionButton(false);
               bottomSheetController.closed.then((value) {
-                showFoatingActionButton(true);
+                showFloatingActionButton(true);
               });
             },
             child: const Icon(Icons.add, size: 40),
@@ -188,7 +202,7 @@ class __MyFloatingActionButtonState extends State<_MyFloatingActionButton> {
         : Container();
   }
 
-  void showFoatingActionButton(bool value) {
+  void showFloatingActionButton(bool value) {
     setState(() {
       showFab = value;
     });
@@ -197,31 +211,27 @@ class __MyFloatingActionButtonState extends State<_MyFloatingActionButton> {
 
 class BottomSheetApp extends StatefulWidget {
   final List<AppBuilder> apps;
-  final projectProvider;
-  BottomSheetApp({this.apps, this.projectProvider});
+
+  BottomSheetApp({this.apps});
   @override
-  _BottomSheetAppState createState() =>
-      _BottomSheetAppState(apps, projectProvider);
+  _BottomSheetAppState createState() => _BottomSheetAppState(apps);
 }
 
 class _BottomSheetAppState extends State<BottomSheetApp> {
-  _BottomSheetAppState(this.apps, this.projectProvider);
+  _BottomSheetAppState(this.apps);
   List<AppBuilder> apps;
-  var projectProvider;
 
   String id;
-  GlobalKey feedbackKey;
-  GlobalKey newAppKey;
+  GlobalKey _feedbackKey;
   Offset _pointerDownOffset = Offset(0, 0);
   Offset _pointerUpOffset = Offset(0, 0);
-  bool _appletDragged = false;
-  Future<String> newAppletId;
-
+  String newAppId;
+  Future<Applet> newApplet;
   @override
   Widget build(BuildContext context) {
-    apps = widget.apps;
-    projectProvider = widget.projectProvider;
-
+    var projectProvider = Provider.of<Project>(context);
+    var stackOffset = projectProvider.stackOffset;
+    var stackScale = projectProvider.stackScale;
     return FractionallySizedBox(
       //heightFactor: 0.2,
       child: Padding(
@@ -237,68 +247,69 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
               return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    //Container(height:20,width:20,child:WindowWidget()),
-                    FutureBuilder<String>(
-                        future: newAppletId,
-                        builder: (context, snapshot) {
-                          if (projectProvider.appletMap[snapshot.data] !=
-                                  null &&
-                              snapshot.data != null) {
-                            projectProvider.appletMap[snapshot.data].id =
-                                snapshot.data;
-                          }
-
+                    FutureBuilder<Applet>(
+                        future: newApplet,
+                        builder: (context, newAppletFuture) {
                           return Listener(
                             onPointerDown: (event) {
-                              //String id = new Uuid().v4();
-                              GlobalKey newAppKey = new GlobalKey();
-                              feedbackKey = new GlobalKey();
-
-                              apps[index].itemKey = newAppKey;
-                              apps[index].feedbackKey = feedbackKey;
-                              newAppletId =
-                                  projectProvider.createNewAppandReturnId(
-                                      apps[index].type, newAppKey, context);
-
-                              projectProvider.chosenId = newAppletId;
+                              _feedbackKey = new GlobalKey();
+                              newApplet = projectProvider
+                                  .createNewApp(apps[index].type);
                               setState(() {});
+
                               _pointerDownOffset = Offset(75, 75);
                             },
                             onPointerMove: (event) {
-                              projectProvider.appletMap[snapshot.data]
-                                  .position = event.position;
+                              //newAppletFuture.data.position = event.position;
                             },
                             onPointerUp: (event) {
-                              _pointerUpOffset = event.position;
+                              _pointerUpOffset = (event.position);
 
-                              projectProvider.changeItemDropPosition(
-                                  projectProvider.appletMap[snapshot.data],
-                                  _pointerDownOffset,
-                                  _pointerUpOffset);
                               projectProvider.chosenId = null;
-                              /*    if (!_appletDragged) {
-                          setState(() {
-                            projectProvider.appletMap.remove(apps[index].id);
-                          });
-                        }*/
-                              newAppletId = null;
                               setState(() {});
                             },
                             child: Draggable(
+                              onDragEnd: (details) {
+                                print('ondragend');
+                                projectProvider.changeItemDropPosition(
+                                    applet: newAppletFuture.data,
+                                    feedbackKey: _feedbackKey,
+                                    pointerDownOffset: _pointerDownOffset,
+                                    pointerUpOffset: _pointerUpOffset);
+                              },
+                              onDragCompleted: () {
+                                print('ondrag completed');
+                                projectProvider.changeItemDropPosition(
+                                    applet: newAppletFuture.data,
+                                    feedbackKey: _feedbackKey,
+                                    pointerDownOffset: _pointerDownOffset,
+                                    pointerUpOffset: _pointerUpOffset);
+                              },
+
+                              childWhenDragging: RawMaterialButton(
+                                onPressed: () {},
+                                child: new Icon(
+                                  apps[index].iconData,
+                                  color: Colors.black87,
+                                  size: 35.0,
+                                ),
+                                shape: new CircleBorder(),
+                                elevation: 0.0,
+                                fillColor: apps[index].color,
+                                padding: const EdgeInsets.all(15.0),
+                              ),
                               dragAnchor: DragAnchor.pointer,
                               onDragStarted: () {
-                                _appletDragged = true;
                                 HapticFeedback.mediumImpact();
                               },
-                              onDragEnd: (details) => _appletDragged = false,
+                              //onDragEnd: (details) => _appletDragged = false,
                               feedback: ChangeNotifierProvider<Project>.value(
                                 value: projectProvider,
                                 child: Material(
                                   color: Colors.transparent,
                                   child: FeedbackChooser(
-                                      id: snapshot.data,
-                                      type: apps[index].type,
-                                      feedbackKey: feedbackKey),
+                                      applet: newAppletFuture.data,
+                                      feedbackKey: _feedbackKey),
                                 ),
                               ),
                               child: RawMaterialButton(
@@ -313,11 +324,10 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                                 fillColor: apps[index].color,
                                 padding: const EdgeInsets.all(15.0),
                               ),
-                              data: projectProvider.appletMap[snapshot.data],
+                              data: newAppletFuture.data,
                             ),
                           );
                         }),
-
                     Text(apps[index].label),
                   ]);
             },
@@ -333,20 +343,247 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
 }
 
 class FeedbackChooser extends StatelessWidget {
-  final type;
-  final id;
+  final applet;
   final feedbackKey;
 
-  FeedbackChooser({this.id, this.type, this.feedbackKey});
+  FeedbackChooser({this.applet, this.feedbackKey});
 
   @override
   Widget build(BuildContext context) {
-    if (type == "WindowApplet") {
-      return FeedbackWindowWidget(id, Offset(75.0, 75.0), feedbackKey);
-    } else if (type == "TextApplet") {
-      return FeedbackTextboxWidget(id, feedbackKey, Offset(25.0, 25.0));
+    if (applet.type == "WindowApplet") {
+      return FeedbackWindowWidget(applet, Offset(75.0, 75.0), feedbackKey);
+    } else if (applet.type == "TextApplet") {
+      return FeedbackTextboxWidget(applet, feedbackKey, Offset(25.0, 25.0));
     } else {
       return Container();
     }
   }
+}
+
+class StackAnimator extends StatefulWidget {
+  final project;
+  StackAnimator(this.project);
+  @override
+  _StackAnimatorState createState() => _StackAnimatorState();
+}
+
+class _StackAnimatorState extends State<StackAnimator>
+    with AfterLayoutMixin<StackAnimator> {
+  bool isExec = true;
+  @override
+  void afterFirstLayout(BuildContext context) {
+    // Calling the same function "after layout" to resolve the issue.
+    isExec = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ValueNotifier<Matrix4> notifier;
+    var projectProvider = Provider.of<Project>(context);
+    if (projectProvider.notifier == null) {
+      projectProvider.notifier =
+          Constants.initializeNotifier(Matrix4.identity());
+    }
+    notifier = projectProvider.notifier;
+
+    return ZefyrScaffold(
+      child: MatrixGestureDetector(
+        onMatrixUpdate: (m, tm, sm, rm) {
+          //notifier.value = m;
+
+          projectProvider.stackScale = notifier.value.row0[0];
+          projectProvider.stackOffset =
+              Offset(notifier.value.row0.a, notifier.value.row1.a);
+//continue with the initial view after moving but then change to matrixgesturedetector input
+          notifier.value =
+              !isExec ? projectProvider.getInitialStackViewAsMatrix(m) : m;
+
+          isExec = true;
+          projectProvider.setMaxScaleAndOffset(context);
+        },
+        shouldRotate: false,
+        child: Stack(children: [
+          Container(color: Colors.transparent),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: AnimatedBuilder(
+                animation: projectProvider.notifier,
+                builder: (context, child) {
+                  return Transform(
+                    transform: projectProvider.notifier.value,
+                    child: ItemStackBuilder(widget.project.projectId),
+                  );
+                }),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+class ItemStackBuilder extends StatefulWidget {
+  final id;
+  ItemStackBuilder(this.id);
+
+  @override
+  _ItemStackBuilderState createState() => _ItemStackBuilderState();
+}
+
+class _ItemStackBuilderState extends State<ItemStackBuilder>
+    with AfterLayoutMixin<ItemStackBuilder> {
+  void afterFirstLayout(BuildContext context) {
+    isExec = false;
+  }
+
+  bool isExec = true;
+  var _backgroundStackKey = new GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var projectProvider = Provider.of<Project>(context);
+
+    projectProvider.backgroundStackKey = _backgroundStackKey;
+
+    return Stack(overflow: Overflow.visible, children: [
+      DragTarget(
+        builder: (buildContext, List<dynamic> candidateData, rejectData) {
+          return Container(
+            key: _backgroundStackKey,
+            decoration: new BoxDecoration(
+              border: Border.all(color: Colors.grey[900]),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            width: projectProvider.stackSize.width,
+            height: projectProvider.stackSize.height,
+            child: GestureDetector(
+              onTap: () {
+                //remove focus
+                FocusScopeNode currentFocus = FocusScope.of(context);
+
+                if (!currentFocus.hasPrimaryFocus) {
+                  currentFocus.unfocus();
+                }
+                projectProvider.unselectAll();
+              },
+            ),
+          );
+        },
+        onWillAccept: (Applet data) {
+          var stackOffset = Offset(projectProvider.notifier.value.row0.a,
+              projectProvider.notifier.value.row1.a);
+          double _scaleChange = data.scale;
+          data.scale = 1.0;
+          projectProvider.currentTargetPosition = stackOffset;
+          projectProvider.targetId = "parentApplet";
+          projectProvider.scaleChange = data.scale / _scaleChange;
+          projectProvider.notifyListeners();
+          if (data.type == "WindowApplet") {
+            List<Key> childrenList =
+                Provider.of<Project>(context, listen: false)
+                    .getAllChildren(applet: data);
+            if (childrenList != null) {
+              childrenList.forEach((element) {
+                if (element != null) {
+                  projectProvider
+                      .appletMap[projectProvider.getIdFromKey(element)]
+                      .scale = projectProvider
+                          .appletMap[projectProvider.getIdFromKey(element)]
+                          .scale *
+                      projectProvider.scaleChange;
+                }
+              });
+            }
+          }
+
+          if (!projectProvider.appletMap["parentApplet"].childIds
+              .contains(data.id)) {
+            /*projectProvider.changeItemListPosition(
+                itemId: data.id, newId: "parentApplet", applet: data);*/
+            return true;
+          } else {
+            return false;
+          }
+        },
+        onLeave: (Applet data) {},
+        onAccept: (Applet data) {
+          if (!projectProvider.appletMap["parentApplet"].childIds
+              .contains(data.id)) {
+          }
+
+          if (data.type == 'TextApplet') {
+            data.scale = 1.0;
+            if (data.selected == true) {
+              data.fixed = true;
+              data.position = Offset(10, 10);
+              data.size = data.size * 0.9;
+            } else {
+              data.fixed = false;
+            }
+            data.selected = false;
+          }
+        },
+      ),
+      ...stackItems(context),
+      ...arrowItems(context),
+    ]);
+  }
+
+  List<Widget> stackItems(BuildContext context) {
+    var projectProvider = Provider.of<Project>(context);
+
+    List<Widget> stackItemsList = [];
+    Widget stackItemDraggable;
+    List childIdList = [];
+    List<GlobalKey> childKeyList = [];
+    if (projectProvider.appletMap["parentApplet"] != null) {
+      childIdList = projectProvider.appletMap["parentApplet"].childIds;
+      childKeyList = projectProvider.appletMap["parentApplet"].childIds
+          .map((e) => projectProvider.getGlobalKeyFromId(e))
+          .toList();
+    }
+
+    List<Applet> appletList =
+        projectProvider.appletMap.entries.map((v) => v.value).toList();
+
+    for (int i = 0; i < childIdList.length; i++) {
+      if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
+        stackItemDraggable = WindowWidget(key: childKeyList[i]);
+      } else if (projectProvider.appletMap[childIdList[i]].type ==
+          "TextApplet") {
+        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+      } else {
+        stackItemDraggable = Container(width: 0, height: 0);
+      }
+
+      stackItemsList.add(stackItemDraggable);
+    }
+    return stackItemsList;
+  }
+}
+
+List<Widget> arrowItems(BuildContext context) {
+  var projectProvider = Provider.of<Project>(context);
+  List<Widget> arrowItemsList = [];
+  List<Applet> appletList = projectProvider.appletMap.values.toList();
+  Key originKey;
+  Key targetKey;
+  for (int i = 0; i < appletList.length; i++) {
+    if (appletList[i].arrowMap != null) {
+      appletList[i].arrowMap.forEach((String id, Arrow arrow) => {
+            originKey = projectProvider.getKeyFromId(appletList[i].id),
+            if (originKey != null)
+              {
+                targetKey = projectProvider.getKeyFromId(id),
+                arrowItemsList.add(ArrowWidget(originKey, targetKey)),
+              }
+          });
+    }
+  }
+  return arrowItemsList;
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'core/models/arrowModel.dart';
-import 'core/models/projectModel.dart';
+import '../../core/models/arrowModel.dart';
+import '../../core/models/projectModel.dart';
 
 class ArrowWidget extends StatelessWidget {
   final GlobalKey originKey;
@@ -23,14 +23,11 @@ class ArrowWidget extends StatelessWidget {
     var stackScale = projectProvider.stackScale;
 
     tempArrow = projectProvider.appletMap[originId].arrowMap[targetId];
-
-
+   
 
     return Positioned(
       top: tempArrow.position.dy,
-      //projectProvider.centerOfRenderBox(originKey).dy,
       left: tempArrow.position.dx,
-      //projectProvider.centerOfRenderBox(originKey).dx,
       child: Transform.translate(
         offset: Offset(0, -50),
         child: Transform.rotate(
