@@ -260,22 +260,21 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                               _pointerDownOffset = Offset(75, 75);
                             },
                             onPointerMove: (event) {
-                              //newAppletFuture.data.position = event.position;
+                          
+                              newAppletFuture.data.position =
+                                  projectProvider.getDropPosition(
+                                      applet: newAppletFuture.data,
+                                      pointerDownOffset: _pointerDownOffset,
+                                      pointerUpOffset: event.position);
                             },
                             onPointerUp: (event) {
-                              _pointerUpOffset = (event.position);
-
+                              _pointerUpOffset = event.position;
                               projectProvider.chosenId = null;
                               setState(() {});
                             },
                             child: Draggable(
                               onDragEnd: (details) {
                                 print('ondragend');
-                                projectProvider.changeItemDropPosition(
-                                    applet: newAppletFuture.data,
-                                    feedbackKey: _feedbackKey,
-                                    pointerDownOffset: _pointerDownOffset,
-                                    pointerUpOffset: _pointerUpOffset);
                               },
                               onDragCompleted: () {
                                 print('ondrag completed');
@@ -284,8 +283,20 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                                     feedbackKey: _feedbackKey,
                                     pointerDownOffset: _pointerDownOffset,
                                     pointerUpOffset: _pointerUpOffset);
+/*
+                                projectProvider.changeItemDropPosition(
+                                    applet: newAppletFuture.data,
+                                    feedbackKey: _feedbackKey,
+                                    pointerDownOffset: _pointerDownOffset,
+                                    pointerUpOffset: _pointerUpOffset);*/
                               },
-
+                              onDraggableCanceled: (v, o) {
+                                projectProvider.changeItemDropPosition(
+                                    applet: newAppletFuture.data,
+                                    feedbackKey: _feedbackKey,
+                                    pointerDownOffset: _pointerDownOffset,
+                                    pointerUpOffset: _pointerUpOffset);
+                              },
                               childWhenDragging: RawMaterialButton(
                                 onPressed: () {},
                                 child: new Icon(
@@ -513,8 +524,7 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
         onLeave: (Applet data) {},
         onAccept: (Applet data) {
           if (!projectProvider.appletMap["parentApplet"].childIds
-              .contains(data.id)) {
-          }
+              .contains(data.id)) {}
 
           if (data.type == 'TextApplet') {
             data.scale = 1.0;
@@ -548,15 +558,15 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
           .toList();
     }
 
-    List<Applet> appletList =
-        projectProvider.appletMap.entries.map((v) => v.value).toList();
+    List<Applet> appletList = projectProvider.appletMap["parentApplet"].childIds
+        .map((v) => projectProvider.appletMap[v])
+        .toList();
 
-    for (int i = 0; i < childIdList.length; i++) {
-      if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
-        stackItemDraggable = WindowWidget(key: childKeyList[i]);
-      } else if (projectProvider.appletMap[childIdList[i]].type ==
-          "TextApplet") {
-        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+    for (int i = 0; i < appletList.length; i++) {
+      if (appletList[i].type == "WindowApplet") {
+        stackItemDraggable = WindowWidget(applet: appletList[i]);
+      } else if (appletList[i].type == "TextApplet") {
+        stackItemDraggable = TextboxWidget(applet: appletList[i]);
       } else {
         stackItemDraggable = Container(width: 0, height: 0);
       }

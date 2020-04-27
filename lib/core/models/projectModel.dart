@@ -360,6 +360,22 @@ class Project with ChangeNotifier {
         (originBoxPosition.dy + (originBoxSize.height / 2)));
   }
 
+  Offset getDropPosition(
+      {Applet applet, Offset pointerDownOffset, Offset pointerUpOffset}) {
+    var itemScale = applet.scale;
+    var targetKey = getKeyFromId(targetId);
+    var targetOffset = getPositionOfRenderBox(targetKey);
+
+    return Offset(
+      ((pointerUpOffset.dx - targetOffset.dx) / itemScale / stackScale -
+          pointerDownOffset.dx),
+      ((pointerUpOffset.dy - targetOffset.dy - headerHeight()) /
+              itemScale /
+              stackScale -
+          pointerDownOffset.dy),
+    );
+  }
+
   void changeItemDropPosition(
       {Applet applet,
       GlobalKey feedbackKey,
@@ -395,10 +411,8 @@ class Project with ChangeNotifier {
     if (targetId == "parentApplet" || targetId == null) {
       stackSizeChange(applet, feedbackKey, pointerUpOffset, pointerDownOffset);
     }
-
-    print(' originId $originId');
     updateApplet(applet: applet, targetId: targetId, originId: originId);
-    //notifyListeners();
+   notifyListeners();
   }
 
   Size sizeOfRenderBox(GlobalKey itemKey) {
@@ -790,8 +804,6 @@ class Project with ChangeNotifier {
   }
 
   void updateApplet({Applet applet, String targetId, String originId}) {
-    print(
-        'update applet id ${applet.id},targetId $targetId, originId $originId');
     //update origin applet
     if (originId != null) {
       _api.updateApplet(projectId, appletMap[originId].toJson(), originId);
@@ -1059,6 +1071,9 @@ class Project with ChangeNotifier {
     maxScale =
         (maxScaleHeight < maxScaleWidth ? maxScaleHeight : maxScaleWidth) *
             scaleRate;
+    if (projectMaxScale == null) {
+      projectMaxScale = maxScale;
+    }
     return maxScale;
   }
 
@@ -1072,6 +1087,7 @@ class Project with ChangeNotifier {
     // and the maximum scale to zoom out
     setMaxOffset(getOuterKeysAsList(keyAtBottomList));
     var maxScale = getMaxScale(getOuterKeysAsList(keyAtBottomList));
+    print('projectMaxScale $projectMaxScale');
     maxScale = projectMaxScale < maxScale ? projectMaxScale : maxScale;
 
     if (appletMap["parentApplet"].childIds.length > 1) {

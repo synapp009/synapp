@@ -8,13 +8,13 @@ import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
 import 'package:zefyr/zefyr.dart';
 
-
 // change: add these two lines to imports section at the top of the file
 import 'dart:convert'; // access to jsonEncode()
 import 'dart:io'; // access to File and Directory classes
 
 class TextboxWidget extends StatefulWidget {
-  TextboxWidget({GlobalKey key}) : super(key: key);
+  final Applet applet;
+  TextboxWidget({this.applet});
 
   @override
   _TextboxWidgetState createState() => _TextboxWidgetState();
@@ -44,14 +44,16 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   @override
   Widget build(BuildContext context) {
     projectProvider = Provider.of<Project>(context);
-    var key = widget.key;
+    Applet _applet = widget.applet;
+    
+    var key = _applet.key;
     Key actualTargetKey = projectProvider.getActualTargetKey(key);
     String actualTargetId = projectProvider.getIdFromKey(actualTargetKey);
-    String id = projectProvider.getIdFromKey(key);
-    Applet _applet = projectProvider.appletMap[id];
-    var initialValue = projectProvider.appletMap[id].content;
-    double itemScale = projectProvider.appletMap[id].scale;
-    Offset boxPosition = projectProvider.appletMap[id].position;
+    String id = _applet.id;
+
+    var initialValue = _applet.content;
+    double itemScale = _applet.scale;
+    Offset boxPosition = _applet.position;
     return Positioned(
       top: boxPosition.dy * itemScale,
       left: boxPosition.dx * itemScale,
@@ -116,21 +118,19 @@ class _TextboxWidgetState extends State<TextboxWidget> {
               } else {
                 setState(() {
                   projectProvider.changeItemDropPosition(
-                      applet:projectProvider.appletMap[id],
+                      applet: projectProvider.appletMap[id],
                       feedbackKey: feedbackKey,
-                      pointerDownOffset:pointerDownOffset,
-                      pointerUpOffset:pointerUpOffset);
+                      pointerDownOffset: pointerDownOffset,
+                      pointerUpOffset: pointerUpOffset);
                 });
               }
             },
             onDraggableCanceled: (vel, off) {
-              
               setState(() {
-               
                 projectProvider.changeItemDropPosition(
                     applet: projectProvider.appletMap[id],
-                    feedbackKey:feedbackKey,
-                   pointerDownOffset: pointerDownOffset,
+                    feedbackKey: feedbackKey,
+                    pointerDownOffset: pointerDownOffset,
                     pointerUpOffset: pointerUpOffset);
               });
             },
@@ -447,8 +447,6 @@ class ScaleContainer extends StatelessWidget {
     );
   }
 }
-
-
 
 class FeedbackTextboxWidget extends StatelessWidget {
   final String id;

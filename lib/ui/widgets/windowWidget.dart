@@ -12,7 +12,8 @@ import 'package:synapp/ui/widgets/textboxWidget.dart';
 import '../../core/models/projectModel.dart';
 
 class WindowWidget extends StatefulWidget {
-  WindowWidget({GlobalKey key}) : super(key: key);
+  final Applet applet;
+  WindowWidget({this.applet});
 
   @override
   _WindowWidgetState createState() => _WindowWidgetState();
@@ -139,15 +140,16 @@ class _WindowWidgetState extends State<WindowWidget>
 
   @override
   Widget build(BuildContext context) {
-    print(
-        '_projectProvider.appletMap[id].position ${_projectProvider.appletMap[id]?.position}');
     _projectProvider = Provider.of<Project>(context);
     _crudProvider = Provider.of<CRUDModel>(context);
-    id = _projectProvider.getIdFromKey(widget.key);
+
+    Applet _applet = widget.applet;
+
+
     _stackScale = _projectProvider.stackScale;
 
-    Applet applet = _projectProvider.appletMap[id];
-    _itemScale = _projectProvider.appletMap[id].scale;
+    id = _applet.id;
+    _itemScale = _applet.scale;
     _stackOffset = _projectProvider.stackOffset;
 
 //animation
@@ -192,8 +194,8 @@ class _WindowWidgetState extends State<WindowWidget>
     }
 
     return Positioned(
-      top: _projectProvider.appletMap[id].position.dy * _itemScale,
-      left: _projectProvider.appletMap[id].position.dx * _itemScale,
+      top: _applet.position.dy * _itemScale,
+      left: _applet.position.dx * _itemScale,
       child: DragTarget(
           builder: (buildContext, List<dynamic> candidateData, rejectData) {
         return Listener(
@@ -312,7 +314,7 @@ class _WindowWidgetState extends State<WindowWidget>
               onDragCompleted: () {
                 //_projectProvider.appletMap[id].onChange = false;
                 _projectProvider.changeItemDropPosition(
-                    applet: applet,
+                    applet: _applet,
                     feedbackKey: feedbackKey,
                     pointerDownOffset: _pointerDownOffset,
                     pointerUpOffset: _pointerUpOffset);
@@ -320,7 +322,7 @@ class _WindowWidgetState extends State<WindowWidget>
               onDraggableCanceled: (vel, Offset off) {
                 //_projectProvider.appletMap[id].onChange = false;
                 _projectProvider.changeItemDropPosition(
-                  applet: applet,
+                  applet: _applet,
                   feedbackKey: feedbackKey,
                   pointerDownOffset: _pointerDownOffset,
                   pointerUpOffset: _pointerUpOffset,
@@ -331,7 +333,7 @@ class _WindowWidgetState extends State<WindowWidget>
               feedback: ChangeNotifierProvider<Project>.value(
                 value: _projectProvider,
                 child: FeedbackWindowWidget(
-                    applet, _pointerDownOffset, feedbackKey),
+                    _applet, _pointerDownOffset, feedbackKey),
               ),
               child: Visibility(
                   visible: _projectProvider.chosenId == id ? false : true,
@@ -626,12 +628,14 @@ class WindowStackBuilder extends StatelessWidget {
     List childKeyList = projectProvider.appletMap[id].childIds
         .map((e) => projectProvider.getKeyFromId(e))
         .toList();
-    for (int i = 0; i < childIdList.length; i++) {
-      if (projectProvider.appletMap[childIdList[i]].type == "WindowApplet") {
-        stackItemDraggable = WindowWidget(key: childKeyList[i]);
-      } else if (projectProvider.appletMap[childIdList[i]].type ==
-          "TextApplet") {
-        stackItemDraggable = TextboxWidget(key: childKeyList[i]);
+    List<Applet> childList = projectProvider.appletMap[id].childIds
+        .map((e) => projectProvider.appletMap[e])
+        .toList();
+    for (int i = 0; i < childList.length; i++) {
+      if (childList[i].type == "WindowApplet") {
+        stackItemDraggable = WindowWidget(applet: childList[i]);
+      } else if (childList[i].type == "TextApplet") {
+        stackItemDraggable = TextboxWidget(applet: childList[i]);
       } else {
         stackItemDraggable = Container(height: 0, width: 0);
       }
