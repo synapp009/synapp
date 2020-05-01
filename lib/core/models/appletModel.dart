@@ -305,7 +305,7 @@ class Applet {
     var dropKey = applet.key;
     var position;
 
-    var targetKey = project.getActualTargetKey(dropKey);
+    var targetKey = project.getActualTargetKey(key:dropKey);
     var targetOffset = project.getPositionOfRenderBox(targetKey);
 
     //checks if there is some relevance of additional offset caused by trag helper offset

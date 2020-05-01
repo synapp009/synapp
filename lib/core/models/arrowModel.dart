@@ -354,7 +354,6 @@ class Arrow {
 
     List<String> allIds = project
         .getAllChildren(applet: project.appletMap[movingAppletId])
-        .map((f) => project.getIdFromKey(f))
         .toList();
     allIds.add(movingAppletId);
 

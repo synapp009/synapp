@@ -260,7 +260,6 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                               _pointerDownOffset = Offset(75, 75);
                             },
                             onPointerMove: (event) {
-                          
                               newAppletFuture.data.position =
                                   projectProvider.getDropPosition(
                                       applet: newAppletFuture.data,
@@ -279,6 +278,7 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                               onDragCompleted: () {
                                 print('ondrag completed');
                                 projectProvider.changeItemDropPosition(
+                                    initialize: true,
                                     applet: newAppletFuture.data,
                                     feedbackKey: _feedbackKey,
                                     pointerDownOffset: _pointerDownOffset,
@@ -292,6 +292,7 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                               },
                               onDraggableCanceled: (v, o) {
                                 projectProvider.changeItemDropPosition(
+                                    initialize: true,
                                     applet: newAppletFuture.data,
                                     feedbackKey: _feedbackKey,
                                     pointerDownOffset: _pointerDownOffset,
@@ -489,24 +490,22 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
           var stackOffset = Offset(projectProvider.notifier.value.row0.a,
               projectProvider.notifier.value.row1.a);
           double _scaleChange = data.scale;
+          projectProvider.targetId = "parentApplet";
+
           data.scale = 1.0;
           projectProvider.currentTargetPosition = stackOffset;
-          projectProvider.targetId = "parentApplet";
           projectProvider.scaleChange = data.scale / _scaleChange;
           projectProvider.notifyListeners();
           if (data.type == "WindowApplet") {
-            List<Key> childrenList =
+            List<String> childrenList =
                 Provider.of<Project>(context, listen: false)
                     .getAllChildren(applet: data);
             if (childrenList != null) {
               childrenList.forEach((element) {
                 if (element != null) {
-                  projectProvider
-                      .appletMap[projectProvider.getIdFromKey(element)]
-                      .scale = projectProvider
-                          .appletMap[projectProvider.getIdFromKey(element)]
-                          .scale *
-                      projectProvider.scaleChange;
+                  projectProvider.appletMap[element].scale =
+                      projectProvider.appletMap[element].scale *
+                          projectProvider.scaleChange;
                 }
               });
             }
