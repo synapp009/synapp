@@ -295,6 +295,52 @@ class Applet {
     }
   }
 
+  connectAndUnselectArrow(Project project, String targetId) {
+    //connects two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
+
+    Arrow tempArrow = arrowMap['parentApplet'];
+
+    if (targetId != null && targetId != this.id) {
+      tempArrow.originId = this.id;
+      tempArrow.target = targetId;
+
+      arrowMap[targetId] = tempArrow;
+    }
+
+    arrowMap.remove('parentApplet');
+    project.updateApplet(applet: this);
+    project.unselectAll();
+    /*
+    project.appletMap.forEach((String id, Applet applet) => {
+          if (id != itemId && applet.selected == true)
+            {
+              targetId = id,
+              targetKey = applet.key,
+              positionOfTarget = project.centerOfRenderBox(id),
+              positionOfTarget = Offset(positionOfTarget.dx,
+                  positionOfTarget.dy + project.headerHeight()),
+              // project.setArrowToPointer(itemId, positionOfTarget),
+              applet.selected = false,
+              //selectedMap[itemId] = false,
+              target = targetId,
+              project.appletMap[itemId].arrowMap[targetId] = this,
+              //project.appletMap[itemId].arrowMap.remove('parentApplet'),
+              project.updateArrow(originKey: project.getKeyFromId(itemId), targetKey: targetKey),
+
+              project.updateApplet(applet: project.appletMap[itemId]),
+            }
+        });
+    project.appletMap[itemId].arrowMap.remove('parentApplet');*/
+  }
+
+  void updateAllArrows(Project project){
+    arrowMap.forEach((targetId, arrow){
+   
+      arrow.updateArrow(project:project, targetKey:project.getKeyFromId(targetId),originKey: this.key);
+   
+    });
+  }
+
   Offset getAppletDropPosition(
       {Project project,
       Applet applet,
@@ -305,11 +351,10 @@ class Applet {
     var dropKey = applet.key;
     var position;
 
-    var targetKey = project.getActualTargetKey(key:dropKey);
+    var targetKey = project.getActualTargetKey(key: dropKey);
     var targetOffset = project.getPositionOfRenderBox(targetKey);
 
     //checks if there is some relevance of additional offset caused by trag helper offset
-    
 
     return position = Offset(
       ((pointerUpOffset.dx - targetOffset.dx) / itemScale / project.stackScale -
@@ -319,7 +364,5 @@ class Applet {
               project.stackScale -
           pointerDownOffset.dy),
     );
-
-
   }
 }

@@ -18,6 +18,7 @@ class ArrowWidget extends StatelessWidget {
 
     var originId = projectProvider.getIdFromKey(originKey);
     var targetId = projectProvider.getIdFromKey(targetKey);
+
     double originScale = projectProvider.appletMap[originId].scale;
     double targetScale = projectProvider.appletMap[targetId].scale;
     var stackScale = projectProvider.stackScale;

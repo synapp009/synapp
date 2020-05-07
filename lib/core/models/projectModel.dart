@@ -15,6 +15,7 @@ class Project with ChangeNotifier {
   String name;
   String description;
   String img;
+  Size stackSize;
   static String projectIdStatic;
   //Key key;
   //structure Map contains all the provider data of the Applets of a project
@@ -39,11 +40,11 @@ class Project with ChangeNotifier {
       this.name,
       this.img,
       this.appletMap,
-      this.description}) {
+      this.description,
+      this.stackSize}) {
     projectIdStatic = this.projectId;
     appletMap = Constants.initializeAppletMap();
     positionForDrop = Constants.initializePositionMap(positionForDrop);
-    stackSize = null;
     notifier = Constants.initializeNotifier(Matrix4.identity());
   }
 
@@ -52,19 +53,23 @@ class Project with ChangeNotifier {
         //key = Key(snapshot['key']) ?? null,
         name = snapshot['name'] ?? '',
         img = snapshot['img'] ?? '',
-        description = snapshot['description'] ?? '';
+        description = snapshot['description'] ?? '',
+        stackSize = Size((snapshot["stackSizeWidth"] as num).toDouble(),
+                (snapshot["stackSizeHeight"] as num).toDouble()) ??
+            null;
 
   toJson() {
     return {
       "id": projectId,
       "name": name,
       "img": img,
-      "description": description
+      "description": description,
+      "stackSizeWidth": stackSize.width,
+      "stackSizeHeight": stackSize.height
     };
   }
 
   Project update(Map<String, Applet> updatedAppletMap) {
-    print('projectupdate ');
     if (appletMap == null) {
       appletMap = {};
     }
@@ -121,16 +126,9 @@ class Project with ChangeNotifier {
         }*/
       });
     }
-    //check if appletMap is onChange
-    int containsOnChange = 0;
-    appletMap.forEach((s, a) {
-      containsOnChange = a.onChange ? containsOnChange + 1 : containsOnChange;
-    });
-    if (containsOnChange == 0) {
-      notifyListeners();
-    }
 
     //update all arrows
+    print('update arrows');
     appletMap.forEach((String appletId, Applet applet) {
       applet.arrowMap.forEach((String targetId, Arrow arrow) {
         arrow.updateArrow(
@@ -141,11 +139,19 @@ class Project with ChangeNotifier {
       });
     });
 
+    //check if appletMap is onChange
+    int containsOnChange = 0;
+    appletMap.forEach((s, a) {
+      containsOnChange = a.onChange ? containsOnChange + 1 : containsOnChange;
+    });
+    if (containsOnChange == 0) {
+      notifyListeners();
+    }
+
     globalStackPositionChange = Offset(0, 0);
     return this;
   }
 
-  Size stackSize;
   Offset positionForDrop;
   Offset currentTargetPosition = Offset(0, 0);
   double stackScale = 1.0;
@@ -282,17 +288,14 @@ class Project with ChangeNotifier {
   Offset getPositionOfRenderBox(GlobalKey targetKey) {
     //with expensive RenderedBox, --> maybe better options?
     Offset tempPosition;
-    print('target ${targetKey.currentContext}');
     if (targetKey != null && targetKey.currentContext != null) {
       RenderBox targetRenderObject =
           targetKey.currentContext.findRenderObject();
       tempPosition = targetRenderObject.localToGlobal(Offset.zero);
-      print('targetRenderObject.size ${targetRenderObject.size}');
       currentTargetPosition =
           Offset(tempPosition.dx, tempPosition.dy - headerHeight());
       return tempPosition = currentTargetPosition;
     } else {
-      print('$targetKey targetkey is null');
       return tempPosition =
           Offset(notifier.value.row0.a, notifier.value.row1.a);
     }
@@ -396,20 +399,12 @@ class Project with ChangeNotifier {
     var targetKey = getKeyFromId(targetId);
     var targetOffset = getPositionOfRenderBox(targetKey);
     var itemHeaderOffset = 0;
-    print('pointerdownoffset $pointerDownOffset');
-    print('pointerupoffset $pointerUpOffset');
-    print('targetId $targetId');
-    print('targetkey $targetKey');
 
     //checks if there is some relevance of additional offset caused by trag helper offset
     if (targetKey != null &&
         appletMap[id].toString().contains('WindowApplet')) {
       itemHeaderOffset = 20;
     }
-    print('targetoffset $targetOffset');
-    print('stackscale $stackScale');
-    print('itemscale $itemScale');
-    print('pointerupoffset $pointerUpOffset');
 
     RenderBox _backgroundStackRenderBox =
         backgroundStackKey.currentContext.findRenderObject();
@@ -439,7 +434,6 @@ class Project with ChangeNotifier {
           initialize: isInitializing);
     }
 
-    print(' originId $originId');
     updateApplet(applet: applet, targetId: targetId, originId: originId);
     notifyListeners();
   }
@@ -522,13 +516,10 @@ class Project with ChangeNotifier {
     // notifyListeners();
   }
 
-  connectAndUnselect(Key originKey) {
-    var originId = getIdFromKey(originKey);
-    appletMap[originId]
-        .arrowMap['parentApplet']
-        .connectAndUnselect(this, originKey);
+  connectAndUnselect({String originId, String targetId}) {
+    appletMap[originId].connectAndUnselectArrow(this, targetId);
 
-    //notifyListeners();
+    notifyListeners();
   }
 
   Key getKeyFromId(String itemId) {
@@ -605,7 +596,7 @@ class Project with ChangeNotifier {
           _backgroundStackPosition.dx +
               _backgroundStackSize.width -
               itemSize.width) {
-        print('//sector1');
+//sector1');
         offsetChange = Offset(
             positionOfItem.dx -
                 _backgroundStackPosition.dx -
@@ -621,7 +612,7 @@ class Project with ChangeNotifier {
           _backgroundStackPosition.dy +
               _backgroundStackSize.height -
               itemSize.height) {
-        print('//sector 2');
+        //sector 2');
 
         offsetChange = Offset(
             offsetChange.dx,
@@ -636,9 +627,7 @@ class Project with ChangeNotifier {
             (_backgroundStackSize.height + offsetChange.dy) - (headerHeight()));
       }
       if (positionOfItem.dx < _backgroundStackPosition.dx) {
-        print('//sector 3');
-        print(
-            'positionOfItem.dx - _backgroundStackPosition.dx ${positionOfItem.dx - _backgroundStackPosition.dx}');
+        //sector 3');
         offsetChange = Offset(
                 positionOfItem.dx - _backgroundStackPosition.dx,
                 positionOfItem.dy >
@@ -697,7 +686,7 @@ class Project with ChangeNotifier {
       }
 
       if (positionOfItem.dy < _backgroundStackPosition.dy) {
-        print(' //sector 4');
+        //sector 4');
 
         offsetChange = Offset(offsetChange.dx,
                 positionOfItem.dy - _backgroundStackPosition.dy) *
@@ -710,6 +699,7 @@ class Project with ChangeNotifier {
                   appletMap[k].position.dy - offsetChange.dy / stackScale),
               updateApplet(applet: appletMap[k])
             });
+
         if (!appletMap["parentApplet"].childIds.contains(applet.id) ||
             initialize) {
           applet.position = Offset(applet.position.dx,
@@ -731,8 +721,19 @@ class Project with ChangeNotifier {
                             : offsetChange.dx / stackScale) /
                         stackScale,
             _backgroundStackSize.height - offsetChange.dy / stackScale);
+        appletMap.forEach((appletId, applet) {
+          if (applet.arrowMap.length > 0) {
+            applet.arrowMap.forEach((targetId, arrow) {
+              arrow.position = Offset(arrow.position.dx * 5,
+                  arrow.position.dy + offsetChange.dy / stackScale);
+            });
+          }
+        });
+
+        notifyListeners();
       }
     }
+    updateProjectDetails();
   }
 
   zoomToBox(selectedKey, context) {
@@ -771,7 +772,7 @@ class Project with ChangeNotifier {
     return isSelected;
   }
 
-  hitTest(key, position, context) {
+  String hitTest(key, position, context) {
     //checks if position of a context layes in a box and gives out the key of the box
     //and select it
 
@@ -786,6 +787,7 @@ class Project with ChangeNotifier {
     Offset tempPosition = position;
     Size itemKeySize;
     String idFromKey;
+    String selectedId;
 
     appletMap.forEach((String itemId, Applet widget) => {
           itemKeyPosition = getPositionOfRenderBox(widget.key),
@@ -821,6 +823,7 @@ class Project with ChangeNotifier {
               !childrenAreSelected(appletMap[getIdFromKey(k)]))
             {
               appletMap[idFromKey].selected = true,
+              selectedId = appletMap[idFromKey].id
             }
           else
             {
@@ -829,11 +832,10 @@ class Project with ChangeNotifier {
                   : appletMap[idFromKey].selected = true
             }
         });
+    return selectedId;
   }
 
   void updateApplet({Applet applet, String targetId, String originId}) {
-    print('updateapplet originId $originId, targetId $targetId');
-
     //update origin applet
     if (originId != null) {
       _api.updateApplet(projectId, appletMap[originId].toJson(), originId);
@@ -856,6 +858,11 @@ class Project with ChangeNotifier {
             projectId, tempChildApplet.toJson(), tempChildApplet.id);
       });
     }
+  }
+
+  Future updateProjectDetails() async {
+    await _api.updateProjectDetails(this.toJson(), projectId);
+    return;
   }
 
   Future addApplet(String projectId, Applet data) async {

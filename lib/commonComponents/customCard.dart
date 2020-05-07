@@ -17,50 +17,47 @@ class CustomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     //var dataProvider = Provider.of<Data>(context);
 
-    // var projectProvider = Provider.of<Project>(context);
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.only(top: 5.0),
-        child: Column(children: <Widget>[
-          Text(projectDetails.name),
-          FlatButton(
-              child: Text("See More"),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StreamProvider<Map<String, Applet>>(
-                      create: (context) =>
-                          projectDetails.fetchAppletsChangesAsStream(),
-                      child: ChangeNotifierProxyProvider<Map<String, Applet>,
-                          Project>(
-                        create: (context) => projectDetails,
-                        update: (context, appletMap, projectDetail) =>
-                            projectDetails.update(appletMap),
-                        child: Builder(builder: (context) {
-                          var snapshot =
-                              Provider.of<Map<String, Applet>>(context);
-                          projectDetails.displaySize =
-                              MediaQuery.of(context).size;
-                          if (snapshot == null) {
-                            return new SpinKitDoubleBounce(
-                              color: Color(0xff875AFF),
-                              size: 50.0,
-                            );
-                          } else {
-                            projectDetails.statusBarHeight =
-                                MediaQuery.of(context).padding.top;
-
-                            return HomeView(project: projectDetails);
-                          }
-                        }),
-                      ),
-                    ),
-                  ),
-                );
+    void _openProject() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => StreamProvider<Map<String, Applet>>.value(
+            value: projectDetails.fetchAppletsChangesAsStream(),
+            child: ChangeNotifierProxyProvider<Map<String, Applet>, Project>(
+              create: (context) => projectDetails,
+              update: (context, appletMap, projectDetail) =>
+                  projectDetails.update(appletMap),
+              child: Builder(builder: (context) {
+                var snapshot = Provider.of<Map<String, Applet>>(context);
+                projectDetails.displaySize = MediaQuery.of(context).size;
+                if (snapshot == null) {
+                  return new SpinKitDoubleBounce(
+                    color: Color(0xff875AFF),
+                    size: 50.0,
+                  );
+                } else {
+                  projectDetails.statusBarHeight =
+                      MediaQuery.of(context).padding.top;
+                  return HomeView(project: projectDetails);
+                }
               }),
-        ]),
-      ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    var crudProvider = Provider.of<CRUDModel>(context);
+    return Card(
+      child: Column(children: <Widget>[
+        ListTile(
+          title: Center(child: Text(projectDetails.name)),
+          onTap: () {
+            _openProject();
+          },
+        ),
+        //FlatButton(child: Text("See More"), onPressed: () {}),
+      ]),
     );
   }
 }

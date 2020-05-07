@@ -147,7 +147,7 @@ class Arrow {
       targetId = project.getIdFromKey(targetKey);
     } else {
       targetId = target;
-      targetKey= project.getKeyFromId(targetId);
+      targetKey = project.getKeyFromId(targetId);
     }
 
     Offset globalStackChange =
@@ -179,7 +179,7 @@ class Arrow {
       targetPosition = project.getPositionOfRenderBox(targetKey);
       targetSize =
           Size(targetRenderBox.size.width, targetRenderBox.size.height);
-    } else if (originKey.currentContext == null) {
+    } else if (targetKey.currentContext == null) {
       targetPosition = project.appletMap[targetId].position;
       targetSize = project.appletMap[targetId].size;
     }
@@ -279,28 +279,39 @@ class Arrow {
     }
   }
 
-  getEdgeOffset(stackScale, itemPosition, itemSize, Angle itemAngle) {
+  getEdgeOffset(
+      double stackScale, Offset itemPosition, Size itemSize, Angle itemAngle) {
     var adjacent;
     var opposite;
     var temp;
     Angle tempAngle;
-    adjacent = (itemSize.height / 2) * stackScale;
+
     if (itemAngle.degrees + 45 < 90 && itemAngle.degrees + 45 > 0) {
+      //'sect1');
+      adjacent = (itemSize.width / 2) * stackScale;
+
       opposite = adjacent * itemAngle.tan;
     } else if (itemAngle.degrees + 45 < 180 && itemAngle.degrees + 45 > 90) {
-      tempAngle = itemAngle - Angle.fromDegrees(90);
+      adjacent = (itemSize.height / 2) * stackScale;
 
+      tempAngle = itemAngle - Angle.fromDegrees(90);
+      //'sect2');
       opposite = adjacent * tempAngle.tan;
       temp = opposite;
       opposite = adjacent;
       adjacent = -temp;
     } else if (itemAngle.degrees + 45 < 270 && itemAngle.degrees + 45 > 180) {
+      //'sect3');
+      adjacent = (itemSize.width / 2) * stackScale;
+
       tempAngle = itemAngle - Angle.fromDegrees(180);
 
       opposite = adjacent * tempAngle.tan;
       opposite = -opposite;
       adjacent = -adjacent;
     } else {
+      //'sect4');
+      adjacent = (itemSize.height / 2) * stackScale;
       tempAngle = itemAngle + Angle.fromDegrees(270);
       opposite = adjacent * tempAngle.tan;
       temp = adjacent;
@@ -313,39 +324,7 @@ class Arrow {
     return Offset(adjacent, opposite);
   }
 
-  connectAndUnselect(Project project, Key itemKey) {
-    String itemId = project.getIdFromKey(itemKey);
-    //connects two widgets with ArrowWidget, unselect all afterwards and delete  arrow if no target
-    Offset positionOfTarget;
-    String targetId;
-    Key targetKey;
-    Arrow tempArrow;
-    project.appletMap.forEach((String id, Applet applet) => {
-          if (id != itemId && applet.selected == true)
-            {
-              targetId = id,
-              targetKey = applet.key,
-              positionOfTarget = project.centerOfRenderBox(id),
-              positionOfTarget = Offset(positionOfTarget.dx,
-                  positionOfTarget.dy + project.headerHeight()),
-              // project.setArrowToPointer(itemId, positionOfTarget),
-              applet.selected = false,
-              //selectedMap[itemId] = false,
-              target = targetId,
-              project.appletMap[itemId].arrowMap[targetId] = this,
-              project.appletMap[itemId].arrowMap.remove('parentApplet'),
-              project.updateArrow(originKey: itemKey, targetKey: targetKey),
 
-              project.updateApplet(applet: project.appletMap[itemId]),
-            }
-        });
-    project.appletMap[itemId].arrowMap.remove('parentApplet');
-    /*for (int i = 0; i < project.appletMap[itemId].arrowMap.length; i++) {
-      if (project.appletMap[itemId].arrowList[i].target == "parentApplet") {
-        project.appletMap[itemId].arrowList.removeAt(i);
-      }
-    }*/
-  }
 
   List<Applet> getAllArrowApplets(Project project, Key key) {
     //get all arrows pointing to or coming from the item and also it's children items

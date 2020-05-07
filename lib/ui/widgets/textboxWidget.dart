@@ -26,7 +26,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   var onDragEndOffset;
 
   var absorbing = true;
-  var projectProvider;
+  Project projectProvider;
 
   final FocusNode _focusNode = FocusNode();
 
@@ -45,12 +45,11 @@ class _TextboxWidgetState extends State<TextboxWidget> {
   Widget build(BuildContext context) {
     projectProvider = Provider.of<Project>(context);
     Applet _applet = widget.applet;
-    
+
     var key = _applet.key;
-    Key actualTargetKey = projectProvider.getActualTargetKey(key);
+    Key actualTargetKey = projectProvider.getActualTargetKey(key: key);
     String actualTargetId = projectProvider.getIdFromKey(actualTargetKey);
     String id = _applet.id;
-
     var initialValue = _applet.content;
     double itemScale = _applet.scale;
     Offset boxPosition = _applet.position;
@@ -86,34 +85,19 @@ class _TextboxWidgetState extends State<TextboxWidget> {
         onPointerMove: (PointerMoveEvent event) {
           absorbing = true;
           projectProvider.pointerMoving = true;
-          /* _timer = new Timer(Duration(milliseconds: 100), () {
-            projectProvider.pointerMoving = false;
-
-            _timer = new Timer(Duration(milliseconds: 1000), () {
-              if (!projectProvider.pointerMoving) {
-                projectProvider.appletMap[actualTargetId].selected = true;
-                setState(() {
-                  _timer = new Timer(Duration(milliseconds: 2000), () {
-                    setState(() {
-                      projectProvider.appletMap[id].selected = false;
-                    });
-                  });
-                });
-              }
-            });
-          });*/
         },
         child: LongPressDraggable(
             maxSimultaneousDrags: _focusNode.hasFocus ? 0 : 1,
-            onDragStarted: () {},
+            onDragStarted: () {
+            },
             dragAnchor: DragAnchor.pointer,
             onDragCompleted: () {
               //position if textbox gets conected to a window
               if (projectProvider.appletMap[id].fixed == true &&
-                  projectProvider.getActualTargetKey(key) != null) {
+                  projectProvider.getActualTargetKey(key: key) != null) {
                 boxPosition = projectProvider
-                    .appletMap[projectProvider
-                        .getIdFromKey(projectProvider.getActualTargetKey(key))]
+                    .appletMap[projectProvider.getIdFromKey(
+                        projectProvider.getActualTargetKey(key: key))]
                     .position;
               } else {
                 setState(() {
@@ -138,17 +122,17 @@ class _TextboxWidgetState extends State<TextboxWidget> {
             feedback: ListenableProvider<Project>.value(
               value: Provider.of<Project>(context),
               child: Material(
-                child: Container(height: 50, width: 50),
-                /* child:
-                    FeedbackTextboxWidget(id, feedbackKey, pointerDownOffset),*/
+                child:
+                    FeedbackTextboxWidget(_applet, feedbackKey, pointerDownOffset),
               ),
             ),
             child: AbsorbPointer(
-              absorbing: false,
+              absorbing: absorbing,
               child: Transform.scale(
                 alignment: Alignment.topLeft,
                 scale: projectProvider.appletMap[id].scale,
                 child: FitTextField(
+                  applet: _applet,
                   myFocusNode: _focusNode,
                   initialValue: initialValue,
                   itemKey: key,
@@ -170,6 +154,7 @@ class _TextboxWidgetState extends State<TextboxWidget> {
 }
 
 class FitTextField extends StatefulWidget {
+  final Applet applet;
   final String initialValue;
   final double minWidth;
   final FocusNode myFocusNode;
@@ -181,7 +166,8 @@ class FitTextField extends StatefulWidget {
   final actualTargetKey;
 
   const FitTextField(
-      {this.itemKey,
+      {this.applet,
+      this.itemKey,
       this.initialValue,
       this.minWidth: 30,
       this.myFocusNode,
@@ -192,10 +178,13 @@ class FitTextField extends StatefulWidget {
       this.actualTargetKey});
 
   @override
-  State<StatefulWidget> createState() => new FitTextFieldState();
+  State<StatefulWidget> createState() => new FitTextFieldState(applet);
 }
 
 class FitTextFieldState extends State<FitTextField> {
+  final applet;
+
+  FitTextFieldState(this.applet);
   TextEditingController txt = TextEditingController();
 
   /// Allows to control the editor and the document.
@@ -215,12 +204,15 @@ class FitTextFieldState extends State<FitTextField> {
     final document = _loadDocument();
     _controller = ZefyrController(document);
 
-    _focusNode = widget.myFocusNode;
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus) {
-        _saveDocument(context);
-      }
-    });
+    if (widget.myFocusNode != null) {
+      _focusNode = widget.myFocusNode;
+      _focusNode.addListener(() {
+        if (!_focusNode.hasFocus) {
+          _saveDocument(context);
+        }
+      });
+    }
+
     _controller.addListener(() {});
   }
 
@@ -228,9 +220,8 @@ class FitTextFieldState extends State<FitTextField> {
   Widget build(BuildContext context) {
     var projectProvider = Provider.of<Project>(context);
     var id = projectProvider.getIdFromKey(widget.itemKey);
-    var textBox = projectProvider.appletMap[id];
-    var size = projectProvider.appletMap[id].size;
-    var position = projectProvider.appletMap[id].position;
+    var size = widget.applet.size;
+    var position = widget.applet.position;
     ZefyrImageDelegate _imageDelegate;
 
     _saveDocument(context);
@@ -254,10 +245,6 @@ class FitTextFieldState extends State<FitTextField> {
     );
     final form = editor;
 
-    bool isFixed = textBox.fixed;
-    var actualTargetId = projectProvider.getIdFromKey(widget.actualTargetKey);
-
-    var targetScale = projectProvider.appletMap[actualTargetId].scale;
     //textWidth = 400;
     return Stack(
       overflow: Overflow.clip,
@@ -449,20 +436,20 @@ class ScaleContainer extends StatelessWidget {
 }
 
 class FeedbackTextboxWidget extends StatelessWidget {
-  final String id;
+  final Applet applet;
   final Offset pointerDownOffset;
   final GlobalKey feedbackKey;
-  FeedbackTextboxWidget(this.id, this.feedbackKey, this.pointerDownOffset);
+  FeedbackTextboxWidget(this.applet, this.feedbackKey, this.pointerDownOffset);
 
   @override
   Widget build(BuildContext context) {
     final projectProvider = Provider.of<Project>(context);
-    var itemKey = projectProvider.getKeyFromId(id);
+    var itemKey = applet.key;
     var stackScale = projectProvider.notifier.value.row0[0];
-    var textBox = projectProvider.appletMap[id];
-    var itemScale = projectProvider.appletMap[id].scale;
+    var textBox = applet;
+    var itemScale = applet.scale;
     var initialValue = textBox.content;
-    var targetScale = projectProvider.getTargetScale(itemKey);
+    // var targetScale = projectProvider.getTargetScale(itemKey);
     return Transform.translate(
       offset: Offset((-pointerDownOffset.dx * stackScale * itemScale),
           -pointerDownOffset.dy * stackScale * itemScale),
@@ -470,6 +457,7 @@ class FeedbackTextboxWidget extends StatelessWidget {
         scale: itemScale,
         alignment: Alignment.topLeft,
         child: FitTextField(
+          applet: applet,
           feedbackKey: feedbackKey,
           itemKey: itemKey,
           initialValue: initialValue,

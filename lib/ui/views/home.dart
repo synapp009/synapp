@@ -83,9 +83,26 @@ class _HomePageState extends State<HomePage> {
                         )
                         .toList();
                     return new ListView.builder(
+ 
                       itemCount: projects.length,
-                      itemBuilder: (buildContext, index) =>
-                          CustomCard(projectDetails: projects[index]),
+                      itemBuilder: (buildContext, index) => Dismissible(
+                        key: UniqueKey(),
+                        onDismissed: (direction) {
+                          crudProvider.removeProject(projects[index].projectId);
+                        },
+                        background: Container(),
+                        direction: DismissDirection.endToStart,
+                        secondaryBackground: Container(
+                          child: Center(
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          color: Colors.red,
+                        ),
+                        child: CustomCard(projectDetails: projects[index]),
+                      ),
                     );
                 }
               },
@@ -139,6 +156,7 @@ class _HomePageState extends State<HomePage> {
                     if (taskDescripInputController.text.isNotEmpty &&
                         taskTitleInputController.text.isNotEmpty) {
                       Project project = new Project(
+                          stackSize: Size(140,140),
                           name: taskTitleInputController.text,
                           description: taskDescripInputController.text,
                           appletMap: {});
@@ -151,8 +169,6 @@ class _HomePageState extends State<HomePage> {
                                 taskDescripInputController.clear(),
                               })
                           .catchError((err) => print(err));
-                
-
                     }
                   })
             ],

@@ -1,15 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:synapp/core/constants.dart';
 import 'package:synapp/core/models/appletModel.dart';
 import 'package:synapp/core/models/projectModel.dart';
-import 'package:synapp/core/viewmodels/CRUDModel.dart';
 import 'package:synapp/ui/widgets/arrowWidget.dart';
 import 'package:synapp/ui/widgets/textboxWidget.dart';
 import 'package:synapp/ui/widgets/windowWidget.dart';
-import 'package:flutter/src/foundation/change_notifier.dart';
 
 import 'package:after_layout/after_layout.dart';
 
@@ -31,16 +28,29 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> with AfterLayoutMixin<HomeView> {
   bool isExec = false;
+  ValueNotifier selectedNotifier = ValueNotifier(0);
+
+  @override
+  void initState() {
+    selectedNotifier.addListener(
+      () => print(
+        widget.project.appletMap.values.map((f) => f.selected),
+      ),
+    );
+    super.initState();
+  }
 
   @override
   void afterFirstLayout(BuildContext context) {
     var projectProvider = Provider.of<Project>(context, listen: false);
 
     setState(() {
-      projectProvider.setInitialStackSizeAndOffset();
+      projectProvider.appletMap.entries.where((test)=> test.value.type == "WindowApplet").toList().length > 1 ? projectProvider.setInitialStackSizeAndOffset() : null;
       projectProvider.getInitialStackViewAsMatrix(Matrix4.identity());
     });
   }
+
+  int actionSelector;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +59,7 @@ class _HomeViewState extends State<HomeView> with AfterLayoutMixin<HomeView> {
     if (projectProvider.stackSize == null) {
       projectProvider.stackSize = MediaQuery.of(context).size;
     }
-    if (!isExec) {
+    if (!isExec) { 
       //projectProvider.updateStackWithMatrix(Matrix4.identity());
       isExec = true;
     }
@@ -59,15 +69,14 @@ class _HomeViewState extends State<HomeView> with AfterLayoutMixin<HomeView> {
       backgroundColor: Colors.grey,
       appBar: AppBar(
         backgroundColor: Colors.white, //Color.fromRGBO(153, 56, 255, 1),
-        title: Text(widget.project.name, style: TextStyle(color: Colors.black)),
-
+        title: Text(widget.project.name,
+            style: TextStyle(color: Colors.grey[900])),
+        actions: _getActions(actionSelector),
         leading: new IconButton(
           onPressed: () {
-            //crudProvider.updateProject(projectProvider, widget.project.projectId);
-
             Navigator.pop(context);
           },
-          color: Colors.black,
+          color: Colors.grey[900],
           icon: Icon(Icons.close),
         ),
       ),
@@ -76,6 +85,22 @@ class _HomeViewState extends State<HomeView> with AfterLayoutMixin<HomeView> {
         child: MyHome(widget.project),
       ),
     );
+  }
+}
+
+_getActions(int actionSelector) {
+  switch (actionSelector) {
+    case 0:
+      return [
+        /*Icon(Icons.settings, color: Colors.grey[900]),
+        Icon(Icons.home, color: Colors.grey[900]),*/
+      ]; // Home Screen
+
+    case 1:
+      return [
+        Icon(Icons.delete_outline, color: Colors.grey[900]),
+        Icon(Icons.settings, color: Colors.grey[900]),
+      ]; // Settings Screen
   }
 }
 
@@ -272,11 +297,8 @@ class _BottomSheetAppState extends State<BottomSheetApp> {
                               setState(() {});
                             },
                             child: Draggable(
-                              onDragEnd: (details) {
-                                print('ondragend');
-                              },
+                              onDragEnd: (details) {},
                               onDragCompleted: () {
-                                print('ondrag completed');
                                 projectProvider.changeItemDropPosition(
                                     initialize: true,
                                     applet: newAppletFuture.data,
@@ -365,7 +387,7 @@ class FeedbackChooser extends StatelessWidget {
     if (applet.type == "WindowApplet") {
       return FeedbackWindowWidget(applet, Offset(75.0, 75.0), feedbackKey);
     } else if (applet.type == "TextApplet") {
-      return FeedbackTextboxWidget(applet, feedbackKey, Offset(25.0, 25.0));
+      return Text('Enter Text',key:feedbackKey);//FeedbackTextboxWidget(applet, feedbackKey, Offset(25.0, 25.0));
     } else {
       return Container();
     }
@@ -520,7 +542,6 @@ class _ItemStackBuilderState extends State<ItemStackBuilder>
             return false;
           }
         },
-        onLeave: (Applet data) {},
         onAccept: (Applet data) {
           if (!projectProvider.appletMap["parentApplet"].childIds
               .contains(data.id)) {}
@@ -584,11 +605,11 @@ List<Widget> arrowItems(BuildContext context) {
   Key targetKey;
   for (int i = 0; i < appletList.length; i++) {
     if (appletList[i].arrowMap != null) {
-      appletList[i].arrowMap.forEach((String id, Arrow arrow) => {
+      appletList[i].arrowMap.forEach((String originId, Arrow arrow) => {
             originKey = projectProvider.getKeyFromId(appletList[i].id),
             if (originKey != null)
               {
-                targetKey = projectProvider.getKeyFromId(id),
+                targetKey = projectProvider.getKeyFromId(originId),
                 arrowItemsList.add(ArrowWidget(originKey, targetKey)),
               }
           });

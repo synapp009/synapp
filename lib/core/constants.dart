@@ -55,21 +55,6 @@ static Map<String,Arrow> initializeArrowMap(){
     structureMap.forEach((String id, Applet applet) => tempMap[id] = false);
     return tempMap;
   }
-
-  /*static Map<String, List<Arrow>> initializeArrowMap(
-      Map<String, List<Arrow>> arrowMap) {
-    return arrowMap = {
-      null: [
-        Arrow(
-            angle: Angle.fromDegrees(0),
-            arrowed: false,
-            position: Offset(0, 0),
-            size: 0,
-            target: null)
-      ]
-    };
-  }*/
-
   static ValueNotifier<Matrix4> initializeNotifier(
       Matrix4 initialMatrix) {
     return ValueNotifier(initialMatrix);

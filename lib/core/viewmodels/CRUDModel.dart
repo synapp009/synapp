@@ -33,10 +33,7 @@ class CRUDModel extends ChangeNotifier {
     return;
   }
 
-  Future updateProject(Project data, String id) async {
-    await _api.updateDocument(data.toJson(), id);
-    return;
-  }
+
 
   Future addProject(Project data) async {
     _api.addDocument(data.toJson());

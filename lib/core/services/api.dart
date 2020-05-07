@@ -52,6 +52,7 @@ Stream<DocumentSnapshot> getAppletByIdAsStream(String projectId,String appletId)
     return ref.document(id).delete();
   }
 
+
   Future<void> addDocument(Map<String, dynamic> data) async {
     //Map<String, dynamic> tempAppletList = data['appletList'];
     //data.remove('appletList');
@@ -78,15 +79,10 @@ Stream<DocumentSnapshot> getAppletByIdAsStream(String projectId,String appletId)
     //.then((result) => addAppletMap(data, result.documentID));
   }
 
-  Future<void> updateDocument(Map data, String id) {
-    Map<String, dynamic> tempAppletList = data['appletList'];
-    data.remove('appletList');
-    var tempData = data;
-    ref.document(id).updateData(tempData);
-    tempAppletList.forEach((key, value) {
-      ref.document(id).collection('applets').document(key).setData(value);
-    });
-    return ref.document(id).updateData(data);
+
+
+  Future<void> updateProjectDetails(Map data, String projectId){
+    ref.document(projectId).updateData(data);
   }
 
   Future<void> updateApplet(String projectId, Map data, String appletId) {
